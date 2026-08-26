@@ -547,7 +547,9 @@ function renderLongTextRow(
 
 function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean, label = '') {
   const goalIdSets = trainings.map((t) =>
-    [t.trainingGoal1, t.trainingGoal2, t.trainingGoal3].filter((g) => g != null).map((g) => g!.id)
+    [t.trainingGoalSkill1, t.trainingGoalSkill2, t.trainingGoalSkill3]
+      .filter((g) => g != null)
+      .map((g) => g!.id)
   )
   const same = allEqual(goalIdSets, sameSortedIds)
   if (showOnlyDiffs && same) return null
@@ -559,7 +561,9 @@ function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean, label 
         {label}
       </div>
       {trainings.map((t, i) => {
-        const goals = [t.trainingGoal1, t.trainingGoal2, t.trainingGoal3].filter((g) => g != null)
+        const goals = [t.trainingGoalSkill1, t.trainingGoalSkill2, t.trainingGoalSkill3].filter(
+          (g) => g != null
+        )
         return (
           <div
             key={i}

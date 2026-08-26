@@ -32,7 +32,7 @@ public class PlayerSkillCatalogService(FloorballTrainingContext context, UserMan
     {
         var categories = await context.SkillCategories
             .Include(c => c.Skills)
-            .Where(c => positions.Contains(c.Position))
+            .Where(c => positions.Contains(c.Position) || c.Position == SkillCategoryPosition.Both)
             .OrderBy(c => c.SortOrder)
             .ToListAsync();
 

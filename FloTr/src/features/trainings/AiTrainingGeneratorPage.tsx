@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { PageHeader } from '../../components/shared/PageHeader'
-import { tagsApi, ageGroupsApi, equipmentApi, aiApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, equipmentApi, aiApi, playerSkillsApi } from '../../api/index'
 import { streamAi, AiStreamError } from '../../api/aiStream'
 import { useAuthStore } from '../../store/authStore'
 import { useAiDraftStore } from '../../store/aiDraftStore'
@@ -23,6 +23,7 @@ export function AiTrainingGeneratorPage() {
   const setDraft = useAiDraftStore((s) => s.setDraft)
 
   // Form parameters (simple controlled inputs — validation happens server-side too)
+  const [goalSkillIds, setGoalSkillIds] = useState<number[]>([])
   const [goalTagIds, setGoalTagIds] = useState<number[]>([])
   const [ageGroupId, setAgeGroupId] = useState<number | ''>('')
   const [duration, setDuration] = useState(90)
@@ -47,6 +48,10 @@ export function AiTrainingGeneratorPage() {
   } | null>(null)
 
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
+  })
   const { data: ageGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: equipment } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.getAll })
   const { data: status } = useQuery({
@@ -84,6 +89,7 @@ export function AiTrainingGeneratorPage() {
 
     const request: TrainingGenerationRequest = {
       clubId: activeClubId,
+      goalSkillIds,
       goalTagIds,
       ageGroupId,
       durationMinutes: duration,
@@ -189,14 +195,37 @@ export function AiTrainingGeneratorPage() {
               {t('ai.generator.goals')}
             </label>
             <div className="flex flex-wrap gap-1.5">
+              {(allSkills ?? []).map((skill) => (
+                <button
+                  key={skill.skillId}
+                  type="button"
+                  onClick={() => setGoalSkillIds((ids) => toggleId(ids, skill.skillId, 3))}
+                  className={`rounded-full border px-3 py-1 text-xs ${
+                    goalSkillIds.includes(skill.skillId)
+                      ? 'border-sky-500 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {skill.skillName}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-gray-500">{t('ai.generator.goalsHint')}</p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('ai.generator.tags')}
+            </label>
+            <div className="flex flex-wrap gap-1.5">
               {goalTags.map((tag) => (
                 <button
                   key={tag.id}
                   type="button"
-                  onClick={() => setGoalTagIds((ids) => toggleId(ids, tag.id, 3))}
+                  onClick={() => setGoalTagIds((ids) => toggleId(ids, tag.id))}
                   className={`rounded-full border px-3 py-1 text-xs ${
                     goalTagIds.includes(tag.id)
-                      ? 'border-sky-500 bg-sky-50 text-sky-700'
+                      ? 'border-gray-400 bg-gray-100 text-gray-800'
                       : 'border-gray-200 text-gray-600 hover:border-gray-300'
                   }`}
                 >
@@ -204,7 +233,7 @@ export function AiTrainingGeneratorPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-gray-500">{t('ai.generator.goalsHint')}</p>
+            <p className="mt-1 text-xs text-gray-500">{t('ai.generator.tagsHint')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

@@ -18,7 +18,7 @@ public class TrainingValidatorTests
         GoaliesMin = 1,
         GoaliesMax = 2,
         Duration = 60,
-        TrainingGoal1 = new TagDto { Name = "Obrana" },
+        TrainingGoalSkill1 = new SkillDto { Name = "Obrana" },
         TrainingParts = new List<TrainingPartDto>
         {
             new() { Name = "Část 1", Duration = 60 }
@@ -66,17 +66,36 @@ public class TrainingValidatorTests
     }
 
     [Fact]
-    public void No_training_goal_is_invalid()
+    public void No_goal_skill_is_invalid()
     {
         var dto = ValidBase();
-        dto.TrainingGoal1 = null;
-        dto.TrainingGoal2 = null;
-        dto.TrainingGoal3 = null;
+        dto.TrainingGoalSkill1 = null;
+        dto.TrainingGoalSkill2 = null;
+        dto.TrainingGoalSkill3 = null;
 
         var result = _validator.TestValidate(dto);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage.Contains("alespoň jedno zaměření"));
+        result.Errors.Should().Contain(e => e.ErrorMessage.Contains("alespoň jednu cílovou dovednost"));
+    }
+
+    [Fact]
+    public void No_goal_skill_but_marked_NoSpecificGoal_is_valid()
+    {
+        // #163: a training with no developmental focus (scrimmage, free play...) can opt out
+        // of the goal-skill requirement instead of forcing a meaningless skill pick.
+        var dto = ValidBase();
+        dto.Duration = 1;
+        dto.TrainingGoalSkill1 = null;
+        dto.TrainingGoalSkill2 = null;
+        dto.TrainingGoalSkill3 = null;
+        dto.NoSpecificGoal = true;
+        dto.TrainingParts = new List<TrainingPartDto>
+        {
+            new() { Name = "Část 1", Duration = 1, TrainingGroups = new List<TrainingGroupDto>() }
+        };
+
+        _validator.TestValidate(dto).IsValid.Should().BeTrue();
     }
 
     [Fact]

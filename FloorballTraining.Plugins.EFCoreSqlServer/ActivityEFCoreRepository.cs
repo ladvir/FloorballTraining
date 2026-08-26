@@ -16,6 +16,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return await db.Activities
                 .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
                 .Include(a => a.ActivityMedium)
+                .Include(a => a.ActivitySkills).ThenInclude(ase => ase.Skill)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -69,6 +70,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             SetActivityTagsAsUnchanged(activity, db);
 
+            SetActivitySkillsAsUnchanged(activity, db);
+
             db.Activities.Add(activity);
             await db.SaveChangesAsync();
         }
@@ -110,6 +113,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
+        private static void SetActivitySkillsAsUnchanged(Activity activity, DbContext floorballTrainingContext)
+        {
+            if (activity.ActivitySkills.Any())
+            {
+                foreach (var activitySkill in activity.ActivitySkills)
+                {
+                    if (activitySkill.Skill != null) floorballTrainingContext.Entry(activitySkill.Skill).State = EntityState.Unchanged;
+                }
+            }
+        }
+
         public async Task<Activity> GetActivityByIdAsync(int activityId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -119,6 +133,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityEquipments).ThenInclude(t => t.Equipment)
                 .Include(a => a.ActivityMedium)
                 .Include(a => a.ActivityTags).ThenInclude(t => t.Tag)
+                .Include(a => a.ActivitySkills).ThenInclude(t => t.Skill)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
@@ -162,7 +177,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 ActivityTags = activity.ActivityTags,
                 ActivityEquipments = activity.ActivityEquipments,
                 ActivityMedium = activity.ActivityMedium,
-                ActivityAgeGroups = activity.ActivityAgeGroups
+                ActivityAgeGroups = activity.ActivityAgeGroups,
+                ActivitySkills = activity.ActivitySkills
             };
 
             foreach (var activityTag in clone.ActivityTags)
@@ -187,6 +203,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (activityAgeGroup.AgeGroup != null) db.Entry(activityAgeGroup.AgeGroup!).State = EntityState.Unchanged;
             }
 
+            foreach (var activitySkill in clone.ActivitySkills)
+            {
+                activitySkill.Id = default;
+                db.Entry(activitySkill).State = EntityState.Added;
+                if (activitySkill.Skill != null) db.Entry(activitySkill.Skill!).State = EntityState.Unchanged;
+            }
+
             foreach (var activityMedia in clone.ActivityMedium)
             {
                 activityMedia.Id = default;
@@ -207,6 +230,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             SetActivityEquipmentsAsUnchanged(activity, db);
 
             SetActivityTagsAsUnchanged(activity, db);
+
+            SetActivitySkillsAsUnchanged(activity, db);
 
             db.Activities.Remove(activity);
 
@@ -290,6 +315,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityEquipments)
                                                    .Include(a => a.ActivityMedium)
                                                    .Include(a => a.ActivityTags)
+                                                   .Include(a => a.ActivitySkills)
 
                 .AsSplitQuery()
                 .First();
@@ -299,6 +325,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             UpdateActivityEquipments(activity, existingActivity, db);
 
             UpdateActivityTags(activity, existingActivity, db);
+
+            UpdateActivitySkills(activity, existingActivity, db);
 
             UpdateActivityMedium(activity, existingActivity);
 
@@ -395,6 +423,33 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (!isExisting)
                 {
                     existingActivity.ActivityEquipments.Remove(existingActivityEquipment);
+                    db.Entry(existingActivity).State = EntityState.Unchanged;
+                }
+            }
+        }
+
+        private static void UpdateActivitySkills(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        {
+            foreach (var activitySkill in activity.ActivitySkills)
+            {
+                var existingActivitySkill = existingActivity.ActivitySkills
+                    .FirstOrDefault(p => p.SkillId == activitySkill.Skill!.Id);
+
+                if (existingActivitySkill == null)
+                {
+                    existingActivity.AddSkill(activitySkill.Skill!);
+                    db.Entry(activitySkill.Skill!).State = EntityState.Unchanged;
+                }
+            }
+
+            foreach (var existingActivitySkill in existingActivity.ActivitySkills.Where(a => a.Id > 0)
+                         .ToList())
+            {
+                var isExisting = activity.ActivitySkills.Any(p => p.SkillId == existingActivitySkill.SkillId);
+
+                if (!isExisting)
+                {
+                    existingActivity.ActivitySkills.Remove(existingActivitySkill);
                     db.Entry(existingActivity).State = EntityState.Unchanged;
                 }
             }

@@ -9,8 +9,10 @@ public class ActivityDto : ActivityBaseDto
     public List<ActivityMediaDto> ActivityMedium { get; set; } = new();
 
     public List<ActivityAgeGroupDto> ActivityAgeGroups { get; set; } = new();
-    
-    
+
+    public List<ActivitySkillDto> ActivitySkills { get; set; } = new();
+
+
      public List<string?> GetAgeGroupList()
         {
             return ActivityAgeGroups.Select(a=>a.AgeGroup?.Name).OrderBy(n => n).ToList() ?? [];

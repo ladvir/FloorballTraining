@@ -47,6 +47,10 @@ public static class RecommendationPromptBuilder
                 a.ActivityTags
                     .Where(at => at.Tag != null)
                     .Select(at => at.Tag!.Name)
+                    .ToList(),
+                a.ActivitySkills
+                    .Where(s => s.Skill != null)
+                    .Select(s => s.Skill!.Name)
                     .ToList()))
             .ToListAsync(cancellationToken);
 

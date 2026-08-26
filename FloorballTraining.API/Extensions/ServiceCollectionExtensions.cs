@@ -115,6 +115,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IActivityEquipmentRepository, ActivityEquipmentEFCoreRepository>();
         services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreRepository>();
         services.AddScoped<IActivityAgeGroupRepository, ActivityAgeGroupEFCoreRepository>();
+        services.AddScoped<IActivitySkillRepository, ActivitySkillEFCoreRepository>();
+        services.AddScoped<ITrainingTagRepository, TrainingTagEFCoreRepository>();
         services.AddScoped<IClubRepository, ClubEFCoreRepository>();
         services.AddScoped<ITeamRepository, TeamEFCoreRepository>();
         services.AddScoped<IMemberRepository, MemberEFCoreRepository>();
@@ -135,6 +137,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IActivityEquipmentFactory, ActivityEquipmentEFCoreFactory>();
         services.AddScoped<IActivityMediaFactory, ActivityMediaEFCoreFactory>();
         services.AddScoped<IActivityAgeGroupFactory, ActivityAgeGroupEFCoreFactory>();
+        services.AddScoped<IActivitySkillFactory, ActivitySkillEFCoreFactory>();
+        services.AddScoped<ITrainingTagFactory, TrainingTagEFCoreFactory>();
         services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
         services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
         services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();

@@ -11,8 +11,8 @@ public class TrainingPromptBuilderTests
 {
     private static readonly List<ActivityCandidate> Candidates =
     [
-        new(1, "Rozcvička s míčkem", "Zahřátí", 5, 15, 4, 30, 3, ["rozcvičení"]),
-        new(2, "Střelba z křídel", "Střelecké cvičení", 10, 20, 6, 20, 7, ["střelba"]),
+        new(1, "Rozcvička s míčkem", "Zahřátí", 5, 15, 4, 30, 3, ["rozcvičení"], []),
+        new(2, "Střelba z křídel", "Střelecké cvičení", 10, 20, 6, 20, 7, ["střelba"], ["Střelba"]),
     ];
 
     private static TrainingGenerationRequest Request(int duration = 60) => new()

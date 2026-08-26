@@ -5,6 +5,8 @@ public class TrainingGenerationRequest
 {
     public int ClubId { get; set; }
     public List<int> GoalTagIds { get; set; } = [];
+    /// <summary>Cílové dovednosti (#163) — primární "co tento trénink rozvíjí", nahrazuje GoalTagIds.</summary>
+    public List<int> GoalSkillIds { get; set; } = [];
     public int AgeGroupId { get; set; }
     public int DurationMinutes { get; set; }
     public int PersonsMin { get; set; }
@@ -29,6 +31,7 @@ public class TrainingDraftDto
     public int? Intensity { get; set; }
     public int AgeGroupId { get; set; }
     public List<int> GoalTagIds { get; set; } = [];
+    public List<int> GoalSkillIds { get; set; } = [];
     public List<TrainingDraftPartDto> Parts { get; set; } = [];
 }
 

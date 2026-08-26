@@ -57,7 +57,7 @@ import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, teamsApi, ageGroupsApi, aiApi } from '../../api/index'
+import { tagsApi, teamsApi, ageGroupsApi, aiApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useAiDraftStore } from '../../store/aiDraftStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
@@ -72,12 +72,16 @@ import type {
   ActivityDto,
   ActivityMediaDto,
   TagDto,
+  SkillDto,
   SimilarTrainingDto,
+  SkillCatalogEntryDto,
 } from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { ActivityEditModal } from '../activities/ActivityEditModal'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
 import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
+import { skillPalette } from '../../utils/skillColors'
+import { TagMultiPicker } from '../../components/shared/TagMultiPicker'
 import { SimilarityBanner } from './SimilarityBanner'
 import { SimilaritySaveModal } from './SimilaritySaveModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
@@ -281,9 +285,11 @@ function makeSchema(maxDuration = 120, maxPartDuration = 40) {
       .max(maxDuration)
       .optional()
       .or(z.literal('')),
-    trainingGoal1Id: z.number().nullable().optional(),
-    trainingGoal2Id: z.number().nullable().optional(),
-    trainingGoal3Id: z.number().nullable().optional(),
+    trainingGoalSkill1Id: z.number().nullable().optional(),
+    trainingGoalSkill2Id: z.number().nullable().optional(),
+    trainingGoalSkill3Id: z.number().nullable().optional(),
+    noSpecificGoal: z.boolean().optional(),
+    trainingTagIds: z.array(z.number()).default([]),
     trainingParts: z.array(partSchema),
     personsMin: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
     personsMax: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
@@ -547,9 +553,18 @@ function SortablePartRow({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: `trainingParts.${index}.duration` as any,
   }) as number | ''
-  const watchGoal1 = useWatch({ control, name: 'trainingGoal1Id' }) as number | null | undefined
-  const watchGoal2 = useWatch({ control, name: 'trainingGoal2Id' }) as number | null | undefined
-  const watchGoal3 = useWatch({ control, name: 'trainingGoal3Id' }) as number | null | undefined
+  const watchGoal1 = useWatch({ control, name: 'trainingGoalSkill1Id' }) as
+    | number
+    | null
+    | undefined
+  const watchGoal2 = useWatch({ control, name: 'trainingGoalSkill2Id' }) as
+    | number
+    | null
+    | undefined
+  const watchGoal3 = useWatch({ control, name: 'trainingGoalSkill3Id' }) as
+    | number
+    | null
+    | undefined
   const watchAgeGroupIds = useWatch({ control, name: 'trainingAgeGroupIds' }) as
     | number[]
     | undefined
@@ -563,7 +578,10 @@ function SortablePartRow({
     enabled: activeClubId != null,
   })
   const aiEnabled = !!aiStatus?.enabled && !!aiStatus?.hasCredential
-  const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
+  })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const [aiGroupIndex, setAiGroupIndex] = useState<number | null>(null)
 
@@ -766,8 +784,8 @@ function SortablePartRow({
             .map((agId) => allAgeGroups?.find((ag) => ag.id === agId)?.name)
             .filter((n): n is string => !!n)}
           goalNames={[watchGoal1, watchGoal2, watchGoal3]
-            .map((tagId) =>
-              tagId != null ? allTags?.find((tag) => tag.id === tagId)?.name : undefined
+            .map((skillId) =>
+              skillId != null ? allSkills?.find((s) => s.skillId === skillId)?.skillName : undefined
             )
             .filter((n): n is string => !!n)}
           durationMinutes={partDuration === '' ? undefined : partDuration}
@@ -851,6 +869,7 @@ export function TrainingFormPage() {
       setDownloadingPdf(false)
     }
   }
+
   const queryClient = useQueryClient()
 
   const { data: existingTraining, isLoading: loadingTraining } = useQuery({
@@ -860,6 +879,10 @@ export function TrainingFormPage() {
   })
 
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
+  })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: allTrainings } = useQuery({ queryKey: ['trainings'], queryFn: trainingsApi.getAll })
   const { data: allActivities = [] } = useQuery({
@@ -873,7 +896,16 @@ export function TrainingFormPage() {
     enabled: !!user?.defaultTeamId,
   })
 
-  const goalTags = useMemo(() => allTags?.filter((tag) => tag.isTrainingGoal) ?? [], [allTags])
+  const skillsByCategory = useMemo(() => {
+    const groups = new Map<number, { categoryName: string; skills: SkillCatalogEntryDto[] }>()
+    for (const skill of allSkills ?? []) {
+      if (!groups.has(skill.categoryId)) {
+        groups.set(skill.categoryId, { categoryName: skill.categoryName, skills: [] })
+      }
+      groups.get(skill.categoryId)!.skills.push(skill)
+    }
+    return Array.from(groups.entries()).map(([categoryId, group]) => ({ categoryId, ...group }))
+  }, [allSkills])
 
   const maxDuration = defaultTeam?.maxTrainingDuration ?? 120
   const maxPartDuration = defaultTeam?.maxTrainingPartDuration ?? 40
@@ -900,9 +932,11 @@ export function TrainingFormPage() {
       name: '',
       duration: '',
       trainingParts: [],
-      trainingGoal1Id: null,
-      trainingGoal2Id: null,
-      trainingGoal3Id: null,
+      trainingGoalSkill1Id: null,
+      trainingGoalSkill2Id: null,
+      trainingGoalSkill3Id: null,
+      noSpecificGoal: false,
+      trainingTagIds: [],
       personsMin: 1,
       personsMax: 30,
       environment: 1,
@@ -922,9 +956,13 @@ export function TrainingFormPage() {
       reset({
         name: existingTraining.name,
         duration: existingTraining.duration || '',
-        trainingGoal1Id: existingTraining.trainingGoal1?.id ?? null,
-        trainingGoal2Id: existingTraining.trainingGoal2?.id ?? null,
-        trainingGoal3Id: existingTraining.trainingGoal3?.id ?? null,
+        trainingGoalSkill1Id: existingTraining.trainingGoalSkill1?.id ?? null,
+        trainingGoalSkill2Id: existingTraining.trainingGoalSkill2?.id ?? null,
+        trainingGoalSkill3Id: existingTraining.trainingGoalSkill3?.id ?? null,
+        noSpecificGoal: existingTraining.noSpecificGoal ?? false,
+        trainingTagIds: (existingTraining.trainingTags ?? [])
+          .map((tt) => tt.tagId ?? tt.tag?.id ?? 0)
+          .filter((tagId) => tagId > 0),
         trainingParts: (existingTraining.trainingParts ?? [])
           .slice()
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -965,9 +1003,10 @@ export function TrainingFormPage() {
         reset({
           name: aiDraft.name,
           duration: aiDraft.duration,
-          trainingGoal1Id: aiDraft.goalTagIds[0] ?? null,
-          trainingGoal2Id: aiDraft.goalTagIds[1] ?? null,
-          trainingGoal3Id: aiDraft.goalTagIds[2] ?? null,
+          trainingGoalSkill1Id: aiDraft.goalSkillIds[0] ?? null,
+          trainingGoalSkill2Id: aiDraft.goalSkillIds[1] ?? null,
+          trainingGoalSkill3Id: aiDraft.goalSkillIds[2] ?? null,
+          trainingTagIds: aiDraft.goalTagIds,
           trainingParts: aiDraft.parts.map((p, i) => ({
             id: -(i + 1),
             name: p.name,
@@ -1006,8 +1045,18 @@ export function TrainingFormPage() {
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
-      const findTag = (tagId: number | null | undefined): TagDto | undefined =>
-        tagId != null ? goalTags.find((tg) => tg.id === tagId) : undefined
+      const findSkill = (skillId: number | null | undefined): SkillDto | undefined => {
+        const entry = skillId != null ? allSkills?.find((s) => s.skillId === skillId) : undefined
+        return entry
+          ? {
+              id: entry.skillId,
+              name: entry.skillName,
+              skillCategoryId: entry.categoryId,
+              skillCategoryName: entry.categoryName,
+            }
+          : undefined
+      }
+      const findTag = (tagId: number): TagDto | undefined => allTags?.find((tg) => tg.id === tagId)
 
       const kdokolivId = allAgeGroups?.find((ag) => ag.name === 'Kdokoliv')?.id
       const ageGroupIds =
@@ -1019,9 +1068,11 @@ export function TrainingFormPage() {
         id: isEdit ? Number(id) : 0,
         name: data.name,
         duration: Number(data.duration) || 0,
-        trainingGoal1: findTag(data.trainingGoal1Id),
-        trainingGoal2: findTag(data.trainingGoal2Id),
-        trainingGoal3: findTag(data.trainingGoal3Id),
+        trainingGoalSkill1: findSkill(data.trainingGoalSkill1Id),
+        trainingGoalSkill2: findSkill(data.trainingGoalSkill2Id),
+        trainingGoalSkill3: findSkill(data.trainingGoalSkill3Id),
+        noSpecificGoal: data.noSpecificGoal ?? false,
+        trainingTags: data.trainingTagIds.map((tagId) => ({ id: 0, tagId, tag: findTag(tagId) })),
         trainingParts: data.trainingParts.map((p, i) => ({
           id: p.id > 0 ? p.id : 0,
           name: p.name,
@@ -1299,9 +1350,10 @@ export function TrainingFormPage() {
     (partsSum > totalDuration || partsSum < minPartsSum)
 
   // Goal toggle helpers
-  const watchGoal1 = watch('trainingGoal1Id')
-  const watchGoal2 = watch('trainingGoal2Id')
-  const watchGoal3 = watch('trainingGoal3Id')
+  const watchGoal1 = watch('trainingGoalSkill1Id')
+  const watchGoal2 = watch('trainingGoalSkill2Id')
+  const watchGoal3 = watch('trainingGoalSkill3Id')
+  const watchNoSpecificGoal = watch('noSpecificGoal')
   const selectedGoalIds = [watchGoal1, watchGoal2, watchGoal3].filter((x) => x != null) as number[]
 
   const isComplete = isEdit
@@ -1310,17 +1362,17 @@ export function TrainingFormPage() {
       watchedParts.length > 0 &&
       partsSum === totalDuration &&
       watch('name').length > 0 &&
-      selectedGoalIds.length > 0
+      (selectedGoalIds.length > 0 || !!watchNoSpecificGoal)
 
-  // Goal coverage calculation (mirrors backend GetTrainingGoalActivitiesDuration)
+  // Goal coverage calculation (mirrors backend GetGoalSkillActivitiesDuration, #163)
   const GOAL_MIN_PERCENT = 25
   const goalMatchingDuration = watchedParts.reduce((sum, part) => {
     const hasMatch = (part.trainingGroups ?? []).some((g) => {
       if (!g.activityId) return false
       const activity = allActivities.find((a) => a.id === g.activityId)
       return (
-        activity?.activityTags?.some(
-          (at) => at.tagId != null && selectedGoalIds.includes(at.tagId)
+        activity?.activitySkills?.some(
+          (s) => s.skillId != null && selectedGoalIds.includes(s.skillId)
         ) ?? false
       )
     })
@@ -1330,11 +1382,11 @@ export function TrainingFormPage() {
     totalDuration > 0 ? Math.floor((GOAL_MIN_PERCENT / 100) * totalDuration) : 0
   const goalPercent =
     totalDuration > 0 ? Math.round((goalMatchingDuration / totalDuration) * 100) : 0
-  const meetsGoalCoverage = goalMatchingDuration >= requiredGoalDuration
+  const meetsGoalCoverage = watchNoSpecificGoal || goalMatchingDuration >= requiredGoalDuration
   const showGoalProgress =
     selectedGoalIds.length > 0 && totalDuration > 0 && watchedParts.length > 0
 
-  // Per-goal-tag duration percentage — deps use serialized keys for stable memo
+  // Per-goal-skill duration percentage — deps use serialized keys for stable memo
   const partsFingerprint = JSON.stringify(
     watchedParts.map((p) => ({
       d: p.duration,
@@ -1346,21 +1398,21 @@ export function TrainingFormPage() {
 
   const goalTagPercents = useMemo(() => {
     if (totalDuration <= 0 || relevantGoalIds.length === 0) return new Map<number, number>()
-    const tagDur = new Map<number, number>()
+    const skillDur = new Map<number, number>()
     for (const part of watchedParts) {
       const dur = Number(part.duration) || 0
       for (const g of part.trainingGroups ?? []) {
         if (!g.activityId) continue
         const activity = allActivities.find((a) => a.id === g.activityId)
-        if (!activity?.activityTags) continue
-        for (const at of activity.activityTags) {
-          if (at.tagId == null || !relevantGoalIds.includes(at.tagId)) continue
-          tagDur.set(at.tagId, (tagDur.get(at.tagId) ?? 0) + dur)
+        if (!activity?.activitySkills) continue
+        for (const s of activity.activitySkills) {
+          if (s.skillId == null || !relevantGoalIds.includes(s.skillId)) continue
+          skillDur.set(s.skillId, (skillDur.get(s.skillId) ?? 0) + dur)
         }
       }
     }
     const result = new Map<number, number>()
-    for (const [id, dur] of tagDur) {
+    for (const [id, dur] of skillDur) {
       result.set(id, Math.round((dur / totalDuration) * 100))
     }
     return result
@@ -1521,18 +1573,18 @@ export function TrainingFormPage() {
   const tierAMatches = useMemo(() => similarMatches.filter((m) => m.tier === 'A'), [similarMatches])
 
   const toggleGoal = useCallback(
-    (tagId: number) => {
+    (skillId: number) => {
       const slots = [
-        { key: 'trainingGoal1Id' as const, val: watchGoal1 },
-        { key: 'trainingGoal2Id' as const, val: watchGoal2 },
-        { key: 'trainingGoal3Id' as const, val: watchGoal3 },
+        { key: 'trainingGoalSkill1Id' as const, val: watchGoal1 },
+        { key: 'trainingGoalSkill2Id' as const, val: watchGoal2 },
+        { key: 'trainingGoalSkill3Id' as const, val: watchGoal3 },
       ]
-      const existing = slots.find((s) => s.val === tagId)
+      const existing = slots.find((s) => s.val === skillId)
       if (existing) {
         setValue(existing.key, null, { shouldDirty: true })
       } else {
         const free = slots.find((s) => s.val == null)
-        if (free) setValue(free.key, tagId, { shouldDirty: true })
+        if (free) setValue(free.key, skillId, { shouldDirty: true })
       }
       setSuggestedGoalIds([])
     },
@@ -1540,32 +1592,31 @@ export function TrainingFormPage() {
   )
 
   const computeTopGoals = useCallback(() => {
-    const tagDuration = new Map<number, number>()
+    const skillDuration = new Map<number, number>()
     for (const part of watchedParts) {
       const dur = Number(part.duration) || 0
       for (const g of part.trainingGroups ?? []) {
         if (!g.activityId) continue
         const activity = allActivities.find((a) => a.id === g.activityId)
-        if (!activity?.activityTags) continue
-        for (const at of activity.activityTags) {
-          if (at.tagId == null) continue
-          if (!goalTags.some((tg) => tg.id === at.tagId)) continue
-          tagDuration.set(at.tagId, (tagDuration.get(at.tagId) ?? 0) + dur)
+        if (!activity?.activitySkills) continue
+        for (const s of activity.activitySkills) {
+          if (s.skillId == null) continue
+          skillDuration.set(s.skillId, (skillDuration.get(s.skillId) ?? 0) + dur)
         }
       }
     }
-    return [...tagDuration.entries()]
+    return [...skillDuration.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([id]) => id)
-  }, [watchedParts, allActivities, goalTags])
+  }, [watchedParts, allActivities])
 
   // Apply goals directly (used by auto mode)
   const applyGoals = useCallback(
     (top3: number[]) => {
-      setValue('trainingGoal1Id', top3[0] ?? null, { shouldDirty: true })
-      setValue('trainingGoal2Id', top3[1] ?? null, { shouldDirty: true })
-      setValue('trainingGoal3Id', top3[2] ?? null, { shouldDirty: true })
+      setValue('trainingGoalSkill1Id', top3[0] ?? null, { shouldDirty: true })
+      setValue('trainingGoalSkill2Id', top3[1] ?? null, { shouldDirty: true })
+      setValue('trainingGoalSkill3Id', top3[2] ?? null, { shouldDirty: true })
       setSuggestedGoalIds([])
     },
     [setValue]
@@ -1592,7 +1643,7 @@ export function TrainingFormPage() {
   const generateName = useCallback(() => {
     const goalNames = [watchGoal1, watchGoal2, watchGoal3]
       .filter((id): id is number => id != null)
-      .map((id) => goalTags.find((tg) => tg.id === id)?.name)
+      .map((id) => allSkills?.find((s) => s.skillId === id)?.skillName)
       .filter((n): n is string => !!n)
 
     const ageNames = (watchAgeGroupIds ?? [])
@@ -1648,7 +1699,7 @@ export function TrainingFormPage() {
     watchGoal3,
     watchAgeGroupIds,
     watchedParts,
-    goalTags,
+    allSkills,
     allAgeGroups,
     allTrainings,
     watch,
@@ -1932,12 +1983,12 @@ export function TrainingFormPage() {
           </CardContent>
         </Card>
 
-        {/* Goals */}
+        {/* Goals — cílové dovednosti (#163), max 3, primární validovaný koncept */}
         <Card>
           <CardContent className="py-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-medium text-gray-700">{t('trainings.formGoals')}</p>
-              {watchedParts.length > 0 && (
+              {watchedParts.length > 0 && !watchNoSpecificGoal && (
                 <div className="flex items-center gap-3">
                   <label className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-500">
                     <input
@@ -1968,51 +2019,138 @@ export function TrainingFormPage() {
                 </div>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {goalTags.map((tag) => {
-                const isSelected = selectedGoalIds.includes(tag.id)
-                const isSuggested = !isSelected && suggestedGoalIds.includes(tag.id)
-                const canSelect = isSelected || selectedGoalIds.length < 3
-                const pct = goalTagPercents.get(tag.id)
-                const isDominant =
-                  isSelected &&
-                  pct != null &&
-                  pct > 0 &&
-                  pct === maxGoalPercent &&
-                  selectedGoalIds.length > 1
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    disabled={!canSelect && !isSuggested}
-                    onClick={() => toggleGoal(tag.id)}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                      isSelected
-                        ? isDominant
-                          ? 'border-sky-600 bg-sky-600 text-white ring-2 ring-sky-300'
-                          : 'border-sky-500 bg-sky-500 text-white'
-                        : isSuggested
-                          ? 'border-dashed border-sky-400 bg-sky-50 text-sky-700 hover:bg-sky-100'
-                          : canSelect
-                            ? 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                            : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
-                    }`}
-                  >
-                    {tag.name}
-                    {isSelected && pct != null && pct > 0 && (
-                      <span className="ml-1.5 text-xs opacity-80">{pct}%</span>
-                    )}
-                    {isSuggested && pct != null && pct > 0 && (
-                      <span className="ml-1.5 text-xs text-sky-500">{pct}%</span>
-                    )}
-                    {isSuggested && <span className="ml-1 text-xs text-sky-500">✦</span>}
-                  </button>
-                )
-              })}
-              {goalTags.length === 0 && (
-                <p className="text-sm text-gray-400">{t('trainings.noGoalsFound')}</p>
+
+            <label className="mb-3 flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+              <Controller
+                name="noSpecificGoal"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="checkbox"
+                    checked={field.value ?? false}
+                    onChange={(e) => {
+                      field.onChange(e.target.checked)
+                      if (e.target.checked) applyGoals([])
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                  />
+                )}
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  {t('trainings.formNoSpecificGoal')}
+                </span>
+                <p className="text-xs text-gray-400">{t('trainings.formNoSpecificGoalDesc')}</p>
+              </div>
+            </label>
+
+            {!watchNoSpecificGoal && (
+              <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-start">
+                {skillsByCategory.map((group) => {
+                  const catPalette = skillPalette(group.categoryId)
+                  return (
+                    <div
+                      key={group.categoryId}
+                      className="rounded-lg border p-3 sm:min-w-[220px] sm:flex-1"
+                      style={{
+                        backgroundColor: catPalette.categoryBg,
+                        borderColor: catPalette.categoryBorder,
+                      }}
+                    >
+                      <p
+                        className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: catPalette.categoryText }}
+                      >
+                        {group.categoryName}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.skills.map((skill, idx) => {
+                          const isSelected = selectedGoalIds.includes(skill.skillId)
+                          const isSuggested =
+                            !isSelected && suggestedGoalIds.includes(skill.skillId)
+                          const canSelect = isSelected || selectedGoalIds.length < 3
+                          const disabled = !canSelect && !isSuggested
+                          const pct = goalTagPercents.get(skill.skillId)
+                          const isDominant =
+                            isSelected &&
+                            pct != null &&
+                            pct > 0 &&
+                            pct === maxGoalPercent &&
+                            selectedGoalIds.length > 1
+                          const palette = skillPalette(group.categoryId, idx, group.skills.length)
+                          const style = disabled
+                            ? undefined
+                            : isSelected
+                              ? {
+                                  backgroundColor: palette.activeBg,
+                                  borderColor: palette.activeBorder,
+                                  color: '#fff',
+                                }
+                              : isSuggested
+                                ? {
+                                    backgroundColor: palette.idleBg,
+                                    borderColor: palette.activeBorder,
+                                    borderStyle: 'dashed' as const,
+                                    color: palette.categoryText,
+                                  }
+                                : {
+                                    backgroundColor: palette.idleBg,
+                                    borderColor: palette.idleBorder,
+                                    color: palette.idleText,
+                                  }
+                          return (
+                            <button
+                              key={skill.skillId}
+                              type="button"
+                              disabled={disabled}
+                              onClick={() => toggleGoal(skill.skillId)}
+                              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                                disabled
+                                  ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
+                                  : isDominant
+                                    ? 'ring-2 ring-white ring-offset-1'
+                                    : ''
+                              }`}
+                              style={style}
+                            >
+                              {skill.skillName}
+                              {isSelected && pct != null && pct > 0 && (
+                                <span className="ml-1.5 text-xs opacity-80">{pct}%</span>
+                              )}
+                              {isSuggested && pct != null && pct > 0 && (
+                                <span className="ml-1.5 text-xs opacity-70">{pct}%</span>
+                              )}
+                              {isSuggested && <span className="ml-1 text-xs opacity-70">✦</span>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+                {skillsByCategory.length === 0 && (
+                  <p className="text-sm text-gray-400">{t('trainings.noGoalsFound')}</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Doplňující štítky (#163) — neomezené, jen informativní, bez vlivu na validaci */}
+        <Card>
+          <CardContent className="py-4">
+            <p className="mb-3 text-sm font-medium text-gray-700">{t('trainings.formTags')}</p>
+            <Controller
+              name="trainingTagIds"
+              control={control}
+              render={({ field }) => (
+                <TagMultiPicker
+                  tags={allTags ?? []}
+                  selectedIds={field.value ?? []}
+                  onChange={field.onChange}
+                />
               )}
-            </div>
+            />
           </CardContent>
         </Card>
 
@@ -2331,8 +2469,20 @@ export function TrainingFormPage() {
       {compareOpen &&
         (() => {
           const values = getValues()
-          const findTag = (tagId: number | null | undefined): TagDto | undefined =>
-            tagId != null ? goalTags.find((tg) => tg.id === tagId) : undefined
+          const findSkill = (skillId: number | null | undefined): SkillDto | undefined => {
+            const entry =
+              skillId != null ? allSkills?.find((s) => s.skillId === skillId) : undefined
+            return entry
+              ? {
+                  id: entry.skillId,
+                  name: entry.skillName,
+                  skillCategoryId: entry.categoryId,
+                  skillCategoryName: entry.categoryName,
+                }
+              : undefined
+          }
+          const findTag = (tagId: number): TagDto | undefined =>
+            allTags?.find((tg) => tg.id === tagId)
           const draft: TrainingDto = {
             ...(existingTraining ?? ({} as TrainingDto)),
             id: 0,
@@ -2342,9 +2492,15 @@ export function TrainingFormPage() {
             personsMax: values.personsMax !== '' ? Number(values.personsMax) : undefined,
             environment: values.environment,
             isDraft: true,
-            trainingGoal1: findTag(values.trainingGoal1Id),
-            trainingGoal2: findTag(values.trainingGoal2Id),
-            trainingGoal3: findTag(values.trainingGoal3Id),
+            trainingGoalSkill1: findSkill(values.trainingGoalSkill1Id),
+            trainingGoalSkill2: findSkill(values.trainingGoalSkill2Id),
+            trainingGoalSkill3: findSkill(values.trainingGoalSkill3Id),
+            noSpecificGoal: values.noSpecificGoal ?? false,
+            trainingTags: (values.trainingTagIds ?? []).map((tagId) => ({
+              id: 0,
+              tagId,
+              tag: findTag(tagId),
+            })),
             trainingAgeGroups: (values.trainingAgeGroupIds ?? [])
               .map((agId) => allAgeGroups?.find((ag) => ag.id === agId))
               .filter((ag): ag is NonNullable<typeof ag> => !!ag),

@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { User, Dumbbell, Target, Copy } from 'lucide-react'
+import { User, Dumbbell, Copy } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { trainingsApi } from '../../api/trainings.api'
+import { skillPalette } from '../../utils/skillColors'
 import type { TrainingDto } from '../../types/domain.types'
 
 interface Props {
@@ -44,12 +45,21 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
   const difficultyLabels = ['', 'Začátečník', 'Mírně pokročilý', 'Pokročilý', 'Expert']
   const intensityLabels = ['', 'Nízká', 'Střední', 'Vysoká', 'Maximální']
 
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
-    Boolean
-  )
+  const supplementaryTags = (training.trainingTags ?? [])
+    .map((tt) => tt.tag)
+    .filter((tag): tag is NonNullable<typeof tag> => tag != null)
   const ageGroups =
     training.trainingAgeGroups?.map((ag) => ag.name ?? ag.description).filter(Boolean) ?? []
   const parts = training.trainingParts ?? []
+  const derivedSkills = Array.from(
+    new Map(
+      parts
+        .flatMap((p) => p.trainingGroups ?? [])
+        .flatMap((g) => g.activity?.activitySkills ?? [])
+        .filter((s) => s.skillId != null && s.skillName)
+        .map((s) => [s.skillId, s] as const)
+    ).values()
+  )
 
   return (
     <Modal isOpen={true} onClose={onClose} title={training.name} maxWidth="lg">
@@ -129,20 +139,38 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
           )}
         </div>
 
-        {goals.length > 0 && (
+        {derivedSkills.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              {t('trainings.detailGoals')}
+              {t('trainings.detailSkills')}
             </h4>
             <div className="flex flex-wrap gap-1">
-              {goals.map((g) => (
-                <span
-                  key={g!.id}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-sky-50 text-sky-700"
-                >
-                  <Target className="h-3 w-3" />
-                  {g!.name}
-                </span>
+              {derivedSkills.map((s) => {
+                const palette = skillPalette(s.skillCategoryId ?? 0)
+                return (
+                  <span
+                    key={s.skillId}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                    style={{ backgroundColor: palette.activeBg }}
+                  >
+                    {s.skillName}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {supplementaryTags.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              {t('trainings.formTags')}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {supplementaryTags.map((tag) => (
+                <Badge key={tag.id} variant="default">
+                  {tag.name}
+                </Badge>
               ))}
             </div>
           </div>

@@ -38,8 +38,9 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
     (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env)) &&
     (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
     (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
-    (string.IsNullOrEmpty(parameters.AgeGroup) || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge 
-        || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
+    (string.IsNullOrEmpty(parameters.AgeGroup) || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge
+        || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s)))) &&
+    (parameters.SkillIds == null || !parameters.SkillIds.Any() || x.ActivitySkills.AsEnumerable().Any(t => t.Skill != null && parameters.SkillIds.AsEnumerable().Any(s => t.Skill.Id == s)))
 
     )
 
@@ -50,6 +51,8 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
         AddInclude("ActivityAgeGroups.AgeGroup");
         AddInclude(t => t.ActivityEquipments);
         AddInclude("ActivityEquipments.Equipment");
+        AddInclude(t => t.ActivitySkills);
+        AddInclude("ActivitySkills.Skill");
     }
 
 }

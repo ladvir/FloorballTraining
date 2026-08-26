@@ -27,10 +27,13 @@ public class TrainingDto : BaseEntityDto
 
     public Environment Environment { get; set; } = Environment.Anywhere;
 
-    public TagDto? TrainingGoal1 { get; set; }
+    public List<TrainingTagDto> TrainingTags { get; set; } = [];
 
-    public TagDto? TrainingGoal3 { get; set; }
-    public TagDto? TrainingGoal2 { get; set; }
+    public bool NoSpecificGoal { get; set; }
+
+    public SkillDto? TrainingGoalSkill1 { get; set; }
+    public SkillDto? TrainingGoalSkill2 { get; set; }
+    public SkillDto? TrainingGoalSkill3 { get; set; }
 
     public bool IsDraft { get; set; } = true;
 
@@ -66,17 +69,16 @@ public class TrainingDto : BaseEntityDto
         return TrainingParts.Sum(t => t.Duration);
     }
 
-    public int GetTrainingGoalActivitiesDuration()
+    /// <summary>Minutes of training parts whose activities carry one of the 3 goal skills
+    /// (#163) — the validated "does this training's content match its stated focus" check.</summary>
+    public int GetGoalSkillActivitiesDuration()
     {
         if (TrainingParts.Sum(tp => tp.TrainingGroups?.Count) == 0) return 0;
 
-
-        var trainingPartsWithTrainingGoal = TrainingParts.Where(t => t.TrainingGroups != null).Where(tp =>
+        return TrainingParts.Where(t => t.TrainingGroups != null).Where(tp =>
             tp.TrainingGroups!.Any(tga =>
-                tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>
-                    tag.TagId == TrainingGoal1?.Id || tag.TagId == TrainingGoal2?.Id || tag.TagId == TrainingGoal3?.Id))).Sum(tp => tp.Duration);
-
-        return trainingPartsWithTrainingGoal;
+                tga.Activity != null && tga.Activity.ActivitySkills.Any(s =>
+                    s.SkillId == TrainingGoalSkill1?.Id || s.SkillId == TrainingGoalSkill2?.Id || s.SkillId == TrainingGoalSkill3?.Id))).Sum(tp => tp.Duration);
     }
 
     public void AddAgeGroup(AgeGroupDto ageGroup)
@@ -113,6 +115,16 @@ public class TrainingDto : BaseEntityDto
             .Select(tga => tga.Activity!.Name).ToList();
     }
 
+    /// <summary>Skills this training develops, aggregated from its activities' ActivitySkills (#171).</summary>
+    public List<string?> GetSkillNames()
+    {
+        return TrainingParts.Where(t => t.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!)
+            .Where(tga => tga.Activity != null)
+            .SelectMany(tga => tga.Activity!.ActivitySkills)
+            .Select(ase => ase.SkillName)
+            .Distinct().ToList();
+    }
+
     public void AddTrainingPart(TrainingPartDto trainingPart)
     {
         TrainingParts.Add(trainingPart);
@@ -137,17 +149,35 @@ public class TrainingDto : BaseEntityDto
 
     public List<TagDto> GetTrainingGoals()
     {
-        var goals = new List<TagDto>();
-
-        if (TrainingGoal1 != null) goals.Add(TrainingGoal1);
-        if (TrainingGoal2 != null) goals.Add(TrainingGoal2);
-        if (TrainingGoal3 != null) goals.Add(TrainingGoal3);
-        return goals;
+        return TrainingTags.Where(tt => tt.Tag != null).Select(tt => tt.Tag!).ToList();
     }
 
     public string GetTrainingGoalsAsString(string separator = ", ")
     {
         return string.Join(separator, GetTrainingGoals().Select(g => g.Name));
+    }
+
+    public void AddTag(TagDto tag)
+    {
+        if (TrainingTags.All(tt => tt.TagId != tag.Id))
+        {
+            TrainingTags.Add(new TrainingTagDto { TagId = tag.Id, Tag = tag });
+        }
+    }
+
+    public List<SkillDto> GetGoalSkills()
+    {
+        var goals = new List<SkillDto>();
+
+        if (TrainingGoalSkill1 != null) goals.Add(TrainingGoalSkill1);
+        if (TrainingGoalSkill2 != null) goals.Add(TrainingGoalSkill2);
+        if (TrainingGoalSkill3 != null) goals.Add(TrainingGoalSkill3);
+        return goals.DistinctBy(g => g.Id).ToList();
+    }
+
+    public string GetGoalSkillsAsString(string separator = ", ")
+    {
+        return string.Join(separator, GetGoalSkills().Select(g => g.Name));
     }
 
     public string GetAgeGroupNamesAsString(string separator=", " )

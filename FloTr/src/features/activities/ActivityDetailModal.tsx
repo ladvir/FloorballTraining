@@ -12,6 +12,7 @@ import { AnimatedSvgPlayer } from '../../components/shared/AnimatedSvgPlayer'
 import { hasSmilAnimation } from '../../components/ui/drawing/utils/smilGenerator'
 import { activitiesApi } from '../../api/activities.api'
 import { useAuthStore } from '../../store/authStore'
+import { skillPalette } from '../../utils/skillColors'
 import type { ActivityMediaDto } from '../../types/domain.types'
 
 function isDrawingImage(img: ActivityMediaDto): boolean {
@@ -94,6 +95,7 @@ export function ActivityDetailModal({
 
   const images = activity.activityMedium?.filter((m) => m.mediaType === 0) ?? []
   const tagNames = activity.activityTags?.map((at) => at.tag?.name).filter(Boolean) ?? []
+  const skillEntries = activity.activitySkills?.filter((s) => s.skillId != null) ?? []
   const ageGroups =
     activity.activityAgeGroups
       ?.map((ag) => ag.ageGroup?.name ?? ag.ageGroup?.description)
@@ -195,6 +197,29 @@ export function ActivityDetailModal({
             </div>
           )}
         </div>
+
+        {/* Skills — rozvíjené dovednosti (#163) */}
+        {skillEntries.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              {t('activities.formSkills')}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {skillEntries.map((s) => (
+                <span
+                  key={s.id}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700"
+                >
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: skillPalette(s.skillCategoryId ?? 0).dot }}
+                  />
+                  {s.skillName}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tags */}
         {tagNames.length > 0 && (

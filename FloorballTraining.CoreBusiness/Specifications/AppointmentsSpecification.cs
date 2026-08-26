@@ -22,9 +22,8 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
         AddInclude(m => m.Location);
         AddInclude(m => m.Training);
         
-        AddInclude("Training.TrainingGoal1");
-        AddInclude("Training.TrainingGoal2");
-        AddInclude("Training.TrainingGoal3");
+        AddInclude("Training.TrainingTags");
+        AddInclude("Training.TrainingTags.Tag");
         
         AddInclude(m => m.RepeatingPattern);
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);

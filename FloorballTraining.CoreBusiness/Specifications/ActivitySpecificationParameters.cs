@@ -7,4 +7,6 @@ public class ActivitySpecificationParameters : ActivityBaseSpecificationParamete
 
     public string? AgeGroup { get; set; }
     public List<int>? AgeGroupsIds { get; set; }
+
+    public List<int>? SkillIds { get; set; }
 }

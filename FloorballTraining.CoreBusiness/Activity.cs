@@ -44,6 +44,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
 
+        public List<ActivitySkill> ActivitySkills { get; set; } = new();
+
         public List<TrainingGroup> TrainingGroups { get; set; } = new();
 
         public void AddTag(Tag tag)
@@ -93,6 +95,20 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
+        public void AddSkill(Skill skill)
+        {
+            if (ActivitySkills.All(at => at.Skill != skill))
+            {
+                ActivitySkills.Add(new ActivitySkill
+                {
+                    Activity = this,
+                    ActivityId = Id,
+                    Skill = skill,
+                    SkillId = skill.Id
+                });
+            }
+        }
+
         public object Clone()
         {
             return new Activity
@@ -115,6 +131,7 @@ namespace FloorballTraining.CoreBusiness
                 ActivityEquipments = ActivityEquipments,
                 ActivityMedium = ActivityMedium,
                 ActivityAgeGroups = ActivityAgeGroups,
+                ActivitySkills = ActivitySkills,
                 TrainingGroups = TrainingGroups,
             };
         }
@@ -138,6 +155,7 @@ namespace FloorballTraining.CoreBusiness
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;
             ActivityAgeGroups = activity.ActivityAgeGroups;
+            ActivitySkills = activity.ActivitySkills;
             TrainingGroups = activity.TrainingGroups;
         }
 
@@ -171,6 +189,13 @@ namespace FloorballTraining.CoreBusiness
             return ActivityAgeGroups
                 .Where(ae => ae.AgeGroup != null)
                 .Select(s => s.AgeGroup!.Description).ToList();
+        }
+
+        public List<string?> GetSkillNames()
+        {
+            return ActivitySkills.Where(tp => tp.Skill != null)
+                .Select(ase => ase.Skill?.Name)
+                .Distinct().ToList();
         }
 
 

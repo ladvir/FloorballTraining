@@ -17,7 +17,8 @@ public record ActivityCandidate(
     int PersonsMin,
     int PersonsMax,
     int Intensity,
-    List<string> Tags);
+    List<string> Tags,
+    List<string> Skills);
 
 /// <summary>
 /// Prompt grounding for AI training generation: the model only composes from real
@@ -62,18 +63,29 @@ public static class TrainingPromptBuilder
                 TagNames = a.ActivityTags
                     .Where(at => at.Tag != null)
                     .Select(at => at.Tag!.Name)
+                    .ToList(),
+                SkillIds = a.ActivitySkills
+                    .Where(s => s.SkillId != null)
+                    .Select(s => s.SkillId!.Value)
+                    .ToList(),
+                SkillNames = a.ActivitySkills
+                    .Where(s => s.Skill != null)
+                    .Select(s => s.Skill!.Name)
                     .ToList()
             })
             .ToListAsync(cancellationToken);
 
         var goalTags = request.GoalTagIds.ToHashSet();
+        var goalSkills = request.GoalSkillIds.ToHashSet();
 
         return activities
             .Select(a => new
             {
                 Activity = a,
-                // Goal-tag overlap first, then activities that at least fit the head count.
-                Score = a.TagIds.Count(goalTags.Contains) * 100
+                // Goal-skill overlap first (primary concept, #163), then goal-tag overlap
+                // (supplementary), then activities that at least fit the head count.
+                Score = a.SkillIds.Count(goalSkills.Contains) * 100
+                        + a.TagIds.Count(goalTags.Contains) * 100
                         + (a.PersonsMin <= request.PersonsMax && a.PersonsMax >= request.PersonsMin ? 10 : 0)
             })
             .OrderByDescending(x => x.Score)
@@ -88,7 +100,8 @@ public static class TrainingPromptBuilder
                 x.Activity.PersonsMin,
                 x.Activity.PersonsMax,
                 x.Activity.Intensity,
-                x.Activity.TagNames))
+                x.Activity.TagNames,
+                x.Activity.SkillNames))
             .ToList();
     }
 
@@ -116,11 +129,13 @@ public static class TrainingPromptBuilder
         IReadOnlyList<ActivityCandidate> candidates,
         IReadOnlyList<string> goalTagNames,
         string ageGroupName,
-        IReadOnlyList<string> equipmentNames)
+        IReadOnlyList<string> equipmentNames,
+        IReadOnlyList<string>? goalSkillNames = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine("Sestav trénink podle zadání:");
-        sb.AppendLine($"- cíle: {(goalTagNames.Count > 0 ? string.Join(", ", goalTagNames) : "všestranný rozvoj")}");
+        var goalNames = (goalSkillNames ?? []).Concat(goalTagNames).ToList();
+        sb.AppendLine($"- cíle: {(goalNames.Count > 0 ? string.Join(", ", goalNames) : "všestranný rozvoj")}");
         sb.AppendLine($"- věková kategorie: {ageGroupName}");
         sb.AppendLine($"- délka: {request.DurationMinutes} minut");
         sb.AppendLine($"- počet hráčů: {request.PersonsMin}–{request.PersonsMax}");
@@ -144,7 +159,8 @@ public static class TrainingPromptBuilder
                 pMin = c.PersonsMin,
                 pMax = c.PersonsMax,
                 intensity = c.Intensity,
-                tags = c.Tags
+                tags = c.Tags,
+                skills = c.Skills
             }, Json));
         }
         return sb.ToString();
@@ -173,7 +189,8 @@ public static class TrainingPromptBuilder
         IReadOnlyList<ActivityCandidate> candidates,
         IReadOnlyList<string> goalTagNames,
         string ageGroupName,
-        IReadOnlyList<string> equipmentNames)
+        IReadOnlyList<string> equipmentNames,
+        IReadOnlyList<string>? goalSkillNames = null)
     {
         var request = regenerate.Request;
         var draft = regenerate.Draft;
@@ -181,7 +198,8 @@ public static class TrainingPromptBuilder
 
         var sb = new StringBuilder();
         sb.AppendLine("Zadání tréninku:");
-        sb.AppendLine($"- cíle: {(goalTagNames.Count > 0 ? string.Join(", ", goalTagNames) : "všestranný rozvoj")}");
+        var goalNames = (goalSkillNames ?? []).Concat(goalTagNames).ToList();
+        sb.AppendLine($"- cíle: {(goalNames.Count > 0 ? string.Join(", ", goalNames) : "všestranný rozvoj")}");
         sb.AppendLine($"- věková kategorie: {ageGroupName}");
         sb.AppendLine($"- počet hráčů: {request.PersonsMin}–{request.PersonsMax}");
         if (request.Intensity.HasValue)
@@ -223,7 +241,8 @@ public static class TrainingPromptBuilder
                 pMin = c.PersonsMin,
                 pMax = c.PersonsMax,
                 intensity = c.Intensity,
-                tags = c.Tags
+                tags = c.Tags,
+                skills = c.Skills
             }, Json));
         }
         return sb.ToString();
@@ -451,7 +470,8 @@ public static class TrainingPromptBuilder
             PersonsMax = request.PersonsMax,
             Intensity = request.Intensity,
             AgeGroupId = request.AgeGroupId,
-            GoalTagIds = request.GoalTagIds
+            GoalTagIds = request.GoalTagIds,
+            GoalSkillIds = request.GoalSkillIds
         };
 
         foreach (var rawPart in raw.Parts)

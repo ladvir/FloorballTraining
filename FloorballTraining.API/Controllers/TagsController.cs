@@ -55,7 +55,6 @@ namespace FloorballTraining.API.Controllers
             return await viewTagByIdUseCase.ExecuteAsync(tagId);
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<TagDto>> Create([FromBody] TagDto tag)
         {

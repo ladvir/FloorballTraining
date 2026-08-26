@@ -44,8 +44,10 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
+import { SkillCategoryCheckboxList } from '../../components/shared/SkillCategoryCheckboxList'
+import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, ageGroupsApi, aiApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, aiApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import type { ActivityDto, TagDto } from '../../types/domain.types'
@@ -160,6 +162,16 @@ function DraggableActivityCard({
               className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
             />
           </div>
+
+          <SkillColorStripes
+            skills={(activity.activitySkills ?? [])
+              .filter((s) => s.skillId != null)
+              .map((s) => ({
+                skillId: s.skillId!,
+                skillName: s.skillName ?? '',
+                skillCategoryId: s.skillCategoryId ?? 0,
+              }))}
+          />
 
           {activity.description && (
             <p className="mt-1 text-sm text-gray-500 line-clamp-2">{activity.description}</p>
@@ -531,6 +543,7 @@ export function ActivitiesPage() {
   }
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([])
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([])
   const [selectedAuthor, setSelectedAuthor] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('name-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -542,8 +555,10 @@ export function ActivitiesPage() {
   }
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false)
   const [ageGroupDropdownOpen, setAgeGroupDropdownOpen] = useState(false)
+  const [skillDropdownOpen, setSkillDropdownOpen] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const ageGroupDropdownRef = useRef<HTMLDivElement>(null)
+  const skillDropdownRef = useRef<HTMLDivElement>(null)
   const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
   const [pdfTarget, setPdfTarget] = useState<ActivityDto | null>(null)
   const [downloadingPdfId, setDownloadingPdfId] = useState<number | null>(null)
@@ -568,6 +583,11 @@ export function ActivitiesPage() {
     queryFn: () => ageGroupsApi.getAll(),
   })
 
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
+  })
+
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -575,6 +595,8 @@ export function ActivitiesPage() {
         setTagDropdownOpen(false)
       if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node))
         setAgeGroupDropdownOpen(false)
+      if (skillDropdownRef.current && !skillDropdownRef.current.contains(e.target as Node))
+        setSkillDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -609,6 +631,11 @@ export function ActivitiesPage() {
             .filter(Boolean) as number[]) ?? []
         if (!selectedAgeGroupIds.some((id) => actAgIds.includes(id))) return false
       }
+      if (selectedSkillIds.length > 0) {
+        const actSkillIds =
+          (a.activitySkills?.map((s) => s.skillId).filter(Boolean) as number[]) ?? []
+        if (!selectedSkillIds.some((id) => actSkillIds.includes(id))) return false
+      }
       if (selectedAuthor && a.createdByUserName !== selectedAuthor) return false
       if (statusFilter === 'draft' && a.isDraft === false) return false
       if (statusFilter === 'complete' && a.isDraft !== false) return false
@@ -620,6 +647,7 @@ export function ActivitiesPage() {
     searchText,
     selectedTagIds,
     selectedAgeGroupIds,
+    selectedSkillIds,
     selectedAuthor,
     sortKey,
     statusFilter,
@@ -702,12 +730,14 @@ export function ActivitiesPage() {
     searchText ||
     selectedTagIds.length > 0 ||
     selectedAgeGroupIds.length > 0 ||
+    selectedSkillIds.length > 0 ||
     selectedAuthor ||
     statusFilter !== 'all'
   const clearFilters = () => {
     setSearchText('')
     setSelectedTagIds([])
     setSelectedAgeGroupIds([])
+    setSelectedSkillIds([])
     setSelectedAuthor('')
     setStatusFilter('all')
   }
@@ -916,6 +946,44 @@ export function ActivitiesPage() {
                       </label>
                     )
                   })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Skill filter (#163) */}
+          {allSkills && allSkills.length > 0 && (
+            <div ref={skillDropdownRef} className="relative min-w-[180px]">
+              <button
+                onClick={() => {
+                  setSkillDropdownOpen(!skillDropdownOpen)
+                  setTagDropdownOpen(false)
+                  setAgeGroupDropdownOpen(false)
+                }}
+                className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <span className="truncate">
+                  {selectedSkillIds.length === 0
+                    ? t('activities.skillFilter')
+                    : t('activities.skillCount', { count: selectedSkillIds.length })}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+              </button>
+              {skillDropdownOpen && (
+                <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {selectedSkillIds.length > 0 && (
+                    <button
+                      onClick={() => setSelectedSkillIds([])}
+                      className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
+                    >
+                      {t('activities.clearSelection')}
+                    </button>
+                  )}
+                  <SkillCategoryCheckboxList
+                    skills={allSkills}
+                    selectedIds={selectedSkillIds}
+                    onChange={setSelectedSkillIds}
+                  />
                 </div>
               )}
             </div>

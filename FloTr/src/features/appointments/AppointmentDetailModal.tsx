@@ -79,9 +79,11 @@ function TrainingDetailModal({
   if (!training) return null
 
   const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
-    Boolean
-  )
+  const goals = [
+    training.trainingGoalSkill1,
+    training.trainingGoalSkill2,
+    training.trainingGoalSkill3,
+  ].filter(Boolean)
   const parts = training.trainingParts ?? []
 
   return (

@@ -64,9 +64,13 @@ public class TrainingSpecificationParameters
 
     public int? TrainingGoalId { get; set; }
 
+    public int? GoalSkillId { get; set; }
+    public List<int>? GoalSkillIds { get; set; }
+
     public List<int>? AgeGroupsIds { get; set; }
     public List<int>? TrainingPartIds { get; set; }
     public List<int>? EquipmentsIds { get; set; }
+    public List<int>? SkillIds { get; set; }
     public string? Text { get; set; }
     public IEnumerable<int>? TrainingGoalIds { get; set; }
     public int? GoaliesMin { get; set; }

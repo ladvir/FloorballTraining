@@ -121,6 +121,20 @@ export interface TrainingPartDto {
   trainingGroups?: TrainingGroupDto[]
 }
 
+export interface TrainingTagDto {
+  id: number
+  trainingId?: number
+  tagId?: number
+  tag?: TagDto
+}
+
+export interface SkillDto {
+  id: number
+  name: string
+  skillCategoryId: number
+  skillCategoryName?: string
+}
+
 export interface TrainingDto {
   id: number
   name: string
@@ -141,9 +155,14 @@ export interface TrainingDto {
   createdByUserId?: string
   createdByUserName?: string
   activitySignature?: string
-  trainingGoal1?: TagDto
-  trainingGoal2?: TagDto
-  trainingGoal3?: TagDto
+  /** Doplňující, neomezené a nevalidované štítky (#163) — nahrazuje dřívější trainingGoal1/2/3. */
+  trainingTags?: TrainingTagDto[]
+  /** Trénink záměrně nerozvíjí žádnou konkrétní dovednost (volná hra, zápas...). */
+  noSpecificGoal?: boolean
+  /** Cílové dovednosti (#163) — max 3, primární validovaný koncept "co tento trénink rozvíjí". */
+  trainingGoalSkill1?: SkillDto
+  trainingGoalSkill2?: SkillDto
+  trainingGoalSkill3?: SkillDto
   trainingParts?: TrainingPartDto[]
   trainingAgeGroups?: AgeGroupDto[]
   createdAt?: string
@@ -204,6 +223,15 @@ export interface ActivityEquipmentDto {
   equipment?: EquipmentDto
 }
 
+export interface ActivitySkillDto {
+  id: number
+  activityId?: number
+  skillId?: number
+  skillName?: string
+  skillCategoryId?: number
+  skillCategoryName?: string
+}
+
 export interface ActivityDto {
   id: number
   name: string
@@ -222,6 +250,7 @@ export interface ActivityDto {
   activityTags?: ActivityTagDto[]
   activityAgeGroups?: ActivityAgeGroupDto[]
   activityEquipments?: ActivityEquipmentDto[]
+  activitySkills?: ActivitySkillDto[]
   activityMedium?: ActivityMediaDto[]
   createdAt?: string
 }
@@ -1350,6 +1379,8 @@ export interface AiStatusDto {
 export interface TrainingGenerationRequest {
   clubId: number
   goalTagIds: number[]
+  /** Cílové dovednosti (#163) — primární "co tento trénink rozvíjí", nahrazuje goalTagIds. */
+  goalSkillIds: number[]
   ageGroupId: number
   durationMinutes: number
   personsMin: number
@@ -1383,6 +1414,7 @@ export interface TrainingDraftDto {
   intensity?: number | null
   ageGroupId: number
   goalTagIds: number[]
+  goalSkillIds: number[]
   parts: TrainingDraftPartDto[]
 }
 

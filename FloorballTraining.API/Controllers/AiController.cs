@@ -64,6 +64,10 @@ public class AiController(
             .Where(t => request.GoalTagIds.Contains(t.Id))
             .Select(t => t.Name)
             .ToListAsync(cancellationToken);
+        var goalSkillNames = await context.Skills
+            .Where(s => request.GoalSkillIds.Contains(s.Id))
+            .Select(s => s.Name)
+            .ToListAsync(cancellationToken);
         var ageGroupName = await context.AgeGroups
             .Where(g => g.Id == request.AgeGroupId)
             .Select(g => g.Description)
@@ -77,7 +81,7 @@ public class AiController(
 
         var chatRequest = new AiChatRequest(
             TrainingPromptBuilder.BuildSystemPrompt(),
-            TrainingPromptBuilder.BuildUserPrompt(request, candidates, goalTagNames, ageGroupName, equipmentNames),
+            TrainingPromptBuilder.BuildUserPrompt(request, candidates, goalTagNames, ageGroupName, equipmentNames, goalSkillNames),
             credential.Model,
             MaxTokens: 8000);
 
@@ -209,6 +213,10 @@ public class AiController(
             .Where(t => regenerate.Request.GoalTagIds.Contains(t.Id))
             .Select(t => t.Name)
             .ToListAsync(cancellationToken);
+        var goalSkillNames = await context.Skills
+            .Where(s => regenerate.Request.GoalSkillIds.Contains(s.Id))
+            .Select(s => s.Name)
+            .ToListAsync(cancellationToken);
         var ageGroupName = await context.AgeGroups
             .Where(g => g.Id == regenerate.Request.AgeGroupId)
             .Select(g => g.Description)
@@ -225,7 +233,7 @@ public class AiController(
                 ? TrainingPromptBuilder.BuildReplaceActivitySystemPrompt()
                 : TrainingPromptBuilder.BuildRegeneratePartSystemPrompt(),
             TrainingPromptBuilder.BuildRegenerateUserPrompt(
-                regenerate, candidates, goalTagNames, ageGroupName, equipmentNames),
+                regenerate, candidates, goalTagNames, ageGroupName, equipmentNames, goalSkillNames),
             credential.Model,
             MaxTokens: 4000);
 

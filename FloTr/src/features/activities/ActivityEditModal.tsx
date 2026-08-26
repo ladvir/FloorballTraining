@@ -21,7 +21,7 @@ import type {
 const schema = z
   .object({
     name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
-    description: z.string().max(1000, 'Max. 1000 znaků').optional(),
+    description: z.string().max(5000, 'Max. 5000 znaků').optional(),
     durationMin: z.coerce.number().min(1, 'Min. 1 min'),
     durationMax: z.coerce.number().min(1, 'Min. 1 min'),
     personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),

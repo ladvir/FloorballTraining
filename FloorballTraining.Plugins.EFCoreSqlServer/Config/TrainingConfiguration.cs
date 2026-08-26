@@ -15,9 +15,10 @@ public class TrainingConfiguration : IEntityTypeConfiguration<Training>
         builder.Property(p => p.CreatedByUserId).HasMaxLength(450);
         builder.Property(p => p.UpdatedByUserId).HasMaxLength(450);
         builder.HasIndex(p => p.CreatedByUserId);
-        builder.HasOne(t => t.TrainingGoal1).WithMany(x => x.Trainings1).HasForeignKey(x => x.TrainingGoal1Id);
-        builder.HasOne(t => t.TrainingGoal2).WithMany(x => x.Trainings2).HasForeignKey(x => x.TrainingGoal2Id);
-        builder.HasOne(t => t.TrainingGoal3).WithMany(x => x.Trainings3).HasForeignKey(x => x.TrainingGoal3Id);
+        builder.HasOne(t => t.TrainingGoalSkill1).WithMany().HasForeignKey(x => x.TrainingGoalSkill1Id);
+        builder.HasOne(t => t.TrainingGoalSkill2).WithMany().HasForeignKey(x => x.TrainingGoalSkill2Id);
+        builder.HasOne(t => t.TrainingGoalSkill3).WithMany().HasForeignKey(x => x.TrainingGoalSkill3Id);
+        builder.HasMany(t => t.TrainingTags).WithOne(tt => tt.Training).HasForeignKey(tt => tt.TrainingId);
         builder.HasMany(t => t.TrainingAgeGroups).WithOne(a => a.Training).HasForeignKey(a => a.TrainingId);
         builder.HasMany(t => t.TrainingParts).WithOne(a => a.Training).HasForeignKey(a => a.TrainingId);
     }

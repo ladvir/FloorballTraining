@@ -11,6 +11,7 @@ public class ActivityEFCoreFactory(
     IActivityTagFactory activityTagFactory,
     IActivityEquipmentFactory activityEquipmentFactory,
     IActivityAgeGroupFactory activityAgeGroupFactory,
+    IActivitySkillFactory activitySkillFactory,
     IActivityMediaFactory activityMediaFactory)
     : IActivityFactory
 {
@@ -43,6 +44,7 @@ public class ActivityEFCoreFactory(
         await TagsMergeOrBuild(entity, dto);
         await EquipmentsMergeOrBuild(entity, dto);
         await AgeGroupsMergeOrBuild(entity, dto);
+        await SkillsMergeOrBuild(entity, dto);
         await MediumMergeOrBuild(entity, dto);
     }
 
@@ -76,6 +78,20 @@ public class ActivityEFCoreFactory(
             if (x.TagId > 0)
             {
                 entity.ActivityTags.Add(x);
+            }
+        }
+    }
+
+    private async Task SkillsMergeOrBuild(Activity entity, ActivityDto dto)
+    {
+        if (!dto.ActivitySkills.Any()) return;
+
+        foreach (var activitySkill in dto.ActivitySkills.Select(async skillDto => await activitySkillFactory.GetMergedOrBuild(skillDto)))
+        {
+            var x = await activitySkill;
+            if (x.SkillId is > 0)
+            {
+                entity.ActivitySkills.Add(x);
             }
         }
     }

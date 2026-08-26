@@ -121,6 +121,7 @@ public class ActivityDocument : IDocument
                 row.Spacing(4);
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Tag!.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Equipment!.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Dovednosti", string.Join(", ", Model.ActivitySkills.Select(s => s.SkillName).OrderBy(s => s)), "tags.png", HorizontalAlignment.Left));
             });
 
             //Description

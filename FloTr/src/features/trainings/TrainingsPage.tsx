@@ -33,13 +33,15 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
+import { SkillCategoryCheckboxList } from '../../components/shared/SkillCategoryCheckboxList'
+import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
 import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
 import { trainingsApi } from '../../api/trainings.api'
-import { tagsApi, ageGroupsApi, aiApi } from '../../api/index'
+import { ageGroupsApi, aiApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { TrainingDto, TagDto } from '../../types/domain.types'
+import type { TrainingDto, SkillCatalogEntryDto } from '../../types/domain.types'
 
 // ── Sort options ──────────────────────────────────────────────────────────────
 
@@ -99,13 +101,14 @@ export function TrainingsPage() {
   const [searchText, setSearchText] = useState('')
   const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])
   const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([])
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([])
   const [selectedAuthor, setSelectedAuthor] = useState('')
   const [individualOnly, setIndividualOnly] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('name-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const groupByTag = searchParams.get('group') === 'tag'
-  const setGroupByTag = (value: boolean) => {
-    if (value) searchParams.set('group', 'tag')
+  const groupBySkill = searchParams.get('group') === 'skill'
+  const setGroupBySkill = (value: boolean) => {
+    if (value) searchParams.set('group', 'skill')
     else searchParams.delete('group')
     setSearchParams(searchParams, { replace: true })
   }
@@ -122,8 +125,10 @@ export function TrainingsPage() {
   }
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
   const [ageGroupDropdownOpen, setAgeGroupDropdownOpen] = useState(false)
+  const [skillDropdownOpen, setSkillDropdownOpen] = useState(false)
   const goalDropdownRef = useRef<HTMLDivElement>(null)
   const ageGroupDropdownRef = useRef<HTMLDivElement>(null)
+  const skillDropdownRef = useRef<HTMLDivElement>(null)
 
   const { data: trainings, isLoading } = useQuery({
     queryKey: ['trainings'],
@@ -175,15 +180,21 @@ export function TrainingsPage() {
     },
   })
 
-  const { data: goalTags } = useQuery({
-    queryKey: ['tags'],
-    queryFn: () => tagsApi.getAll(),
-    select: (tags) => tags.filter((t) => t.isTrainingGoal),
+  // Cílové dovednosti (#163) — nahrazuje dřívější goal-tag filtr/group-by. Obecný filtr
+  // "Dovednosti" (selectedSkillIds, #171) je samostatný, jiný koncept (všechny odvozené dovednosti).
+  const { data: goalSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
   })
 
   const { data: allAgeGroups } = useQuery({
     queryKey: ['ageGroups'],
     queryFn: () => ageGroupsApi.getAll(),
+  })
+
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
   })
 
   // Close dropdowns on outside click
@@ -193,6 +204,8 @@ export function TrainingsPage() {
         setGoalDropdownOpen(false)
       if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node))
         setAgeGroupDropdownOpen(false)
+      if (skillDropdownRef.current && !skillDropdownRef.current.contains(e.target as Node))
+        setSkillDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -221,17 +234,26 @@ export function TrainingsPage() {
         if (!nameMatch && !descMatch && !authorMatch && !activityMatch && !individualMatch)
           return false
       }
-      if (!groupByTag && selectedGoalIds.length > 0) {
-        const trainingGoalIds = [
-          t.trainingGoal1?.id,
-          t.trainingGoal2?.id,
-          t.trainingGoal3?.id,
+      if (!groupBySkill && selectedGoalIds.length > 0) {
+        const trainingGoalSkillIds = [
+          t.trainingGoalSkill1?.id,
+          t.trainingGoalSkill2?.id,
+          t.trainingGoalSkill3?.id,
         ].filter(Boolean) as number[]
-        if (!selectedGoalIds.some((id) => trainingGoalIds.includes(id))) return false
+        if (!selectedGoalIds.some((id) => trainingGoalSkillIds.includes(id))) return false
       }
       if (selectedAgeGroupIds.length > 0) {
         const trainingAgIds = t.trainingAgeGroups?.map((ag) => ag.id) ?? []
         if (!selectedAgeGroupIds.some((id) => trainingAgIds.includes(id))) return false
+      }
+      if (selectedSkillIds.length > 0) {
+        const trainingSkillIds =
+          t.trainingParts
+            ?.flatMap((p) => p.trainingGroups ?? [])
+            .flatMap((g) => g.activity?.activitySkills ?? [])
+            .map((s) => s.skillId)
+            .filter((id): id is number => id != null) ?? []
+        if (!selectedSkillIds.some((id) => trainingSkillIds.includes(id))) return false
       }
       if (selectedAuthor && t.createdByUserName !== selectedAuthor) return false
       if (statusFilter === 'draft' && !t.isDraft) return false
@@ -245,49 +267,56 @@ export function TrainingsPage() {
     searchText,
     selectedGoalIds,
     selectedAgeGroupIds,
+    selectedSkillIds,
     selectedAuthor,
     individualOnly,
     sortKey,
     statusFilter,
-    groupByTag,
+    groupBySkill,
   ])
 
-  const sortedGoalTags = useMemo(
+  const sortedGoalSkills = useMemo(
     () =>
-      goalTags
-        ? [...goalTags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+      goalSkills
+        ? [...goalSkills].sort((a, b) => (a.skillName || '').localeCompare(b.skillName || '', 'cs'))
         : [],
-    [goalTags]
+    [goalSkills]
   )
 
-  const tagSections = useMemo(() => {
-    if (!groupByTag || !sortedGoalTags.length)
-      return [] as { tag: TagDto | null; trainings: TrainingDto[] }[]
+  const skillSections = useMemo(() => {
+    if (!groupBySkill || !sortedGoalSkills.length)
+      return [] as { skill: SkillCatalogEntryDto | null; trainings: TrainingDto[] }[]
     const hasSelection = selectedGoalIds.length > 0
-    const visibleTags = hasSelection
-      ? sortedGoalTags.filter((t) => selectedGoalIds.includes(t.id))
-      : sortedGoalTags
-    const rawSections = visibleTags.map((tag) => ({
-      tag: tag as TagDto | null,
+    const visibleSkills = hasSelection
+      ? sortedGoalSkills.filter((s) => selectedGoalIds.includes(s.skillId))
+      : sortedGoalSkills
+    const rawSections = visibleSkills.map((skill) => ({
+      skill: skill as SkillCatalogEntryDto | null,
       trainings: filteredTrainings.filter((t) => {
-        const ids = [t.trainingGoal1?.id, t.trainingGoal2?.id, t.trainingGoal3?.id].filter(
-          Boolean
-        ) as number[]
-        return ids.includes(tag!.id)
+        const ids = [
+          t.trainingGoalSkill1?.id,
+          t.trainingGoalSkill2?.id,
+          t.trainingGoalSkill3?.id,
+        ].filter(Boolean) as number[]
+        return ids.includes(skill!.skillId)
       }),
     }))
     const sections = hasSelection ? rawSections : rawSections.filter((s) => s.trainings.length > 0)
     if (!hasSelection) {
-      const noTagTrainings = filteredTrainings.filter((t) => {
-        const ids = [t.trainingGoal1?.id, t.trainingGoal2?.id, t.trainingGoal3?.id].filter(Boolean)
+      const noGoalTrainings = filteredTrainings.filter((t) => {
+        const ids = [
+          t.trainingGoalSkill1?.id,
+          t.trainingGoalSkill2?.id,
+          t.trainingGoalSkill3?.id,
+        ].filter(Boolean)
         return ids.length === 0
       })
-      if (noTagTrainings.length > 0) {
-        sections.push({ tag: null, trainings: noTagTrainings })
+      if (noGoalTrainings.length > 0) {
+        sections.push({ skill: null, trainings: noGoalTrainings })
       }
     }
     return sections
-  }, [groupByTag, sortedGoalTags, selectedGoalIds, filteredTrainings])
+  }, [groupBySkill, sortedGoalSkills, selectedGoalIds, filteredTrainings])
 
   const validateAllMutation = useMutation({
     mutationFn: () => trainingsApi.validateAll(),
@@ -315,6 +344,7 @@ export function TrainingsPage() {
     searchText ||
     selectedGoalIds.length > 0 ||
     selectedAgeGroupIds.length > 0 ||
+    selectedSkillIds.length > 0 ||
     selectedAuthor ||
     individualOnly ||
     statusFilter !== 'all'
@@ -322,6 +352,7 @@ export function TrainingsPage() {
     setSearchText('')
     setSelectedGoalIds([])
     setSelectedAgeGroupIds([])
+    setSelectedSkillIds([])
     setSelectedAuthor('')
     setIndividualOnly(false)
     setStatusFilter('all')
@@ -358,6 +389,18 @@ export function TrainingsPage() {
             />
           </div>
         </div>
+
+        <SkillColorStripes
+          skills={(training.trainingParts ?? [])
+            .flatMap((p) => p.trainingGroups ?? [])
+            .flatMap((g) => g.activity?.activitySkills ?? [])
+            .filter((s) => s.skillId != null)
+            .map((s) => ({
+              skillId: s.skillId!,
+              skillName: s.skillName ?? '',
+              skillCategoryId: s.skillCategoryId ?? 0,
+            }))}
+        />
 
         {training.description && (
           <p className="mt-1 text-sm text-gray-500 line-clamp-2">{training.description}</p>
@@ -634,8 +677,8 @@ export function TrainingsPage() {
           )}
         </div>
 
-        {/* Goal filter */}
-        {goalTags && goalTags.length > 0 && (
+        {/* Goal filter — cílové dovednosti (#163) */}
+        {goalSkills && goalSkills.length > 0 && (
           <div ref={goalDropdownRef} className="relative min-w-[180px]">
             <button
               onClick={() => {
@@ -661,27 +704,11 @@ export function TrainingsPage() {
                     {t('trainings.clearSelection')}
                   </button>
                 )}
-                {goalTags.map((tag) => {
-                  const selected = selectedGoalIds.includes(tag.id)
-                  return (
-                    <label
-                      key={tag.id}
-                      className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() =>
-                          setSelectedGoalIds((prev) =>
-                            selected ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
-                          )
-                        }
-                        className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                      />
-                      <span className="text-sm">{tag.name}</span>
-                    </label>
-                  )
-                })}
+                <SkillCategoryCheckboxList
+                  skills={goalSkills}
+                  selectedIds={selectedGoalIds}
+                  onChange={setSelectedGoalIds}
+                />
               </div>
             )}
           </div>
@@ -735,6 +762,44 @@ export function TrainingsPage() {
                     </label>
                   )
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Skill filter (#171) */}
+        {allSkills && allSkills.length > 0 && (
+          <div ref={skillDropdownRef} className="relative min-w-[180px]">
+            <button
+              onClick={() => {
+                setSkillDropdownOpen(!skillDropdownOpen)
+                setGoalDropdownOpen(false)
+                setAgeGroupDropdownOpen(false)
+              }}
+              className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <span className="truncate">
+                {selectedSkillIds.length === 0
+                  ? t('activities.skillFilter')
+                  : t('activities.skillCount', { count: selectedSkillIds.length })}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+            </button>
+            {skillDropdownOpen && (
+              <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                {selectedSkillIds.length > 0 && (
+                  <button
+                    onClick={() => setSelectedSkillIds([])}
+                    className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
+                  >
+                    {t('trainings.clearSelection')}
+                  </button>
+                )}
+                <SkillCategoryCheckboxList
+                  skills={allSkills}
+                  selectedIds={selectedSkillIds}
+                  onChange={setSelectedSkillIds}
+                />
               </div>
             )}
           </div>
@@ -819,8 +884,8 @@ export function TrainingsPage() {
           </button>
           <span className="mx-1 h-4 w-px bg-gray-300" />
           <button
-            onClick={() => setGroupByTag(!groupByTag)}
-            className={`rounded p-1.5 ${groupByTag ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
+            onClick={() => setGroupBySkill(!groupBySkill)}
+            className={`rounded p-1.5 ${groupBySkill ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
             title={t('trainings.groupByGoal')}
           >
             <Tags className="h-4 w-4" />
@@ -828,21 +893,21 @@ export function TrainingsPage() {
         </div>
       </div>
 
-      {/* Tag switches (by-tag view) */}
-      {groupByTag && sortedGoalTags.length > 0 && (
+      {/* Skill switches (by-goal-skill view, #163) */}
+      {groupBySkill && sortedGoalSkills.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <span className="mr-1 text-xs font-medium text-gray-500">
             {t('trainings.groupGoalLabel')}
           </span>
-          {sortedGoalTags.map((tag) => {
-            const active = selectedGoalIds.includes(tag.id)
+          {sortedGoalSkills.map((skill) => {
+            const active = selectedGoalIds.includes(skill.skillId)
             return (
               <button
-                key={tag.id}
+                key={skill.skillId}
                 type="button"
                 onClick={() =>
                   setSelectedGoalIds((prev) =>
-                    active ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                    active ? prev.filter((id) => id !== skill.skillId) : [...prev, skill.skillId]
                   )
                 }
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
@@ -851,13 +916,7 @@ export function TrainingsPage() {
                     : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300 hover:bg-sky-50'
                 }`}
               >
-                {tag.color && (
-                  <span
-                    className="inline-block h-2 w-2 rounded-full"
-                    style={{ backgroundColor: active ? 'white' : tag.color }}
-                  />
-                )}
-                {tag.name}
+                {skill.skillName}
               </button>
             )
           })}
@@ -873,8 +932,8 @@ export function TrainingsPage() {
         </div>
       )}
 
-      {groupByTag ? (
-        tagSections.length === 0 ? (
+      {groupBySkill ? (
+        skillSections.length === 0 ? (
           <EmptyState
             title={hasFilters ? t('trainings.noResults') : t('trainings.noTrainings')}
             description={hasFilters ? t('trainings.noResultsDesc') : t('trainings.noTrainingsDesc')}
@@ -893,21 +952,15 @@ export function TrainingsPage() {
           />
         ) : (
           <div className="space-y-8">
-            {tagSections.map((section) => {
-              const { tag, trainings: sectionTrainings } = section
-              const sectionKey = tag?.id ?? 'no-tag'
-              const keyPrefix = `tag-${sectionKey}-`
+            {skillSections.map((section) => {
+              const { skill, trainings: sectionTrainings } = section
+              const sectionKey = skill?.skillId ?? 'no-goal'
+              const keyPrefix = `goal-${sectionKey}-`
               return (
                 <section key={sectionKey}>
                   <div className="mb-3 flex items-center gap-2 border-b border-gray-200 pb-2">
-                    {tag?.color && (
-                      <span
-                        className="inline-block h-3 w-3 rounded-full"
-                        style={{ backgroundColor: tag.color }}
-                      />
-                    )}
                     <h2 className="text-base font-semibold text-gray-800">
-                      {tag?.name ?? t('trainings.noGoalGroup')}
+                      {skill?.skillName ?? t('trainings.noGoalGroup')}
                     </h2>
                     <span className="text-sm text-gray-400">({sectionTrainings.length})</span>
                   </div>

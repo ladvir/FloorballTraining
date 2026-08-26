@@ -30,6 +30,7 @@ public static class ActivityConverter
             ActivityTags = entity.ActivityTags.Select(t => t.ToDto()!).ToList(),
             ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.ToDto()!).ToList(),
             ActivityMedium = entity.ActivityMedium.Select(media => media.ToDto()!).ToList(),
+            ActivitySkills = entity.ActivitySkills.Select(s => s.ToDto()!).ToList(),
         };
     }
 }

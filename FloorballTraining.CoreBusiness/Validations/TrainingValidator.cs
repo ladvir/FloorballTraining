@@ -92,17 +92,17 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
         RuleFor(a => a.GoaliesMin).LessThanOrEqualTo(a => a.GoaliesMax).WithMessage("Počet brankářů min. je větší než počet brankářů max.");
 
         RuleFor(t => t)
-            .Must(t => t.TrainingGoal1 != null || t.TrainingGoal2 != null || t.TrainingGoal3 != null)
-            .WithMessage("Zadej alespoň jedno zaměření tréninku");
+            .Must(t => t.TrainingGoalSkill1 != null || t.TrainingGoalSkill2 != null || t.TrainingGoalSkill3 != null || t.NoSpecificGoal)
+            .WithMessage("Zadej alespoň jednu cílovou dovednost tréninku, nebo označ, že trénink nemá cílenou dovednost");
 
         RuleFor(t => t.TrainingParts)
             .NotEmpty().WithMessage("Trénink musí obsahovat alespoň jednu tréninkovou část");
 
         RuleFor(t => t)
-           .Must(t => t.GetTrainingGoalActivitiesDuration() >= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
-           .When(t => t.TrainingGoal1 != null &&  t.TrainingParts.Any())
-           .WithMessage(t => "Obsah tréninku nedopovídá zvolenému zaměření. Je potřeba, aby byly vybrány aktivity se štítkem " +
-                           $"{t.TrainingGoal1?.Name} alespoň po dobu odpovídající přibližně {_minimalDurationTrainingGoalPercent}% " +
+           .Must(t => t.GetGoalSkillActivitiesDuration() >= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
+           .When(t => t.TrainingGoalSkill1 != null && t.TrainingParts.Any())
+           .WithMessage(t => "Obsah tréninku neodpovídá zvolené cílové dovednosti. Je potřeba, aby byly vybrány aktivity s dovedností " +
+                           $"{t.TrainingGoalSkill1?.Name} alespoň po dobu odpovídající přibližně {_minimalDurationTrainingGoalPercent}% " +
                            $"z celkové doby tréninku tj.{Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
         RuleFor(t => t)

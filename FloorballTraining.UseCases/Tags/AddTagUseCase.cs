@@ -10,6 +10,7 @@ namespace FloorballTraining.UseCases.Tags
         {
             var tag = await tagFactory.GetMergedOrBuild(tagDto);
             await tagRepository.AddTagAsync(tag);
+            tagDto.Id = tag.Id;
         }
     }
 }

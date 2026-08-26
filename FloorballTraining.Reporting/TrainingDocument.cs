@@ -188,7 +188,12 @@ public class TrainingDocument : IDocument
                 {
                     row.Spacing(4);
                     row.RelativeItem().Element((e) =>
-                        RoundedInfoBox(e, "Zaměření", Model.GetTrainingGoalsAsString(), "tags.png", HorizontalAlignment.Left));
+                        RoundedInfoBox(e, "Zaměření",
+                            Model.NoSpecificGoal ? "Bez cílené dovednosti" : Model.GetGoalSkillsAsString(),
+                            "tags.png", HorizontalAlignment.Left));
+
+                    row.RelativeItem().Element((e) => RoundedInfoBox(e, "Doplňující štítky", Model.GetTrainingGoalsAsString(),
+                        "tags.png", HorizontalAlignment.Left));
 
                     row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
                         "equipment.png", HorizontalAlignment.Left));

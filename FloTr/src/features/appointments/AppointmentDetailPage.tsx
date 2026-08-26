@@ -74,9 +74,11 @@ function TrainingDetailModal({
     1: t('appointments.env.indoor'),
     2: t('appointments.env.outdoor'),
   }
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
-    Boolean
-  )
+  const goals = [
+    training.trainingGoalSkill1,
+    training.trainingGoalSkill2,
+    training.trainingGoalSkill3,
+  ].filter(Boolean)
   const parts = training.trainingParts ?? []
 
   return (

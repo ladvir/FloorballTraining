@@ -38,7 +38,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
             (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
             (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
             (string.IsNullOrEmpty(parameters.AgeGroup) || parameters.AgeGroup.Split(";", StringSplitOptions.RemoveEmptyEntries).Contains("1") || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s)))) &&
-            (parameters.AgeGroupsIds == null || !parameters.AgeGroupsIds.Any() || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.AgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
+            (parameters.AgeGroupsIds == null || !parameters.AgeGroupsIds.Any() || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.AgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s))) &&
+            (parameters.SkillIds == null || !parameters.SkillIds.Any() || x.ActivitySkills.AsEnumerable().Any(t => t.Skill != null && parameters.SkillIds.AsEnumerable().Any(s => t.Skill.Id == s)))
             )
     {
         AddInclude(t => t.ActivityTags);
@@ -47,6 +48,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
         AddInclude("ActivityAgeGroups.AgeGroup");
         AddInclude(t => t.ActivityEquipments);
         AddInclude("ActivityEquipments.Equipment");
+        AddInclude(t => t.ActivitySkills);
+        AddInclude("ActivitySkills.Skill");
         //AddInclude(t => t.ActivityMedium);
 
         AddOrderBy(t => t.Name);
@@ -62,6 +65,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
         AddInclude("ActivityAgeGroups.AgeGroup");
         AddInclude(t => t.ActivityEquipments);
         AddInclude("ActivityEquipments.Equipment");
+        AddInclude(t => t.ActivitySkills);
+        AddInclude("ActivitySkills.Skill");
         AddOrderBy(t => t.Name);
     }
 

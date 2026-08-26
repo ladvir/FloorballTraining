@@ -24,18 +24,27 @@ namespace FloorballTraining.CoreBusiness
         public string? CommentAfter { get; set; } = string.Empty;
 
         public Environment Environment { get; set; } = Environment.Anywhere;
-        
-        public Tag? TrainingGoal1 { get; set; }
 
-        public int? TrainingGoal1Id { get; set; }
+        // Doplňující, nevalidované štítky (#163) — libovolný počet, na rozdíl od cílových
+        // dovedností níže nejsou nijak omezené ani povinné.
+        public List<TrainingTag> TrainingTags { get; set; } = new();
 
-        public Tag? TrainingGoal2 { get; set; }
+        // Explicitní "tenhle trénink záměrně nerozvíjí žádnou konkrétní dovednost" (volná hra,
+        // zápas, team building...) — obchází požadavek na aspoň jednu cílovou dovednost níže.
+        public bool NoSpecificGoal { get; set; }
 
-        public int? TrainingGoal2Id { get; set; }
+        // Cílové dovednosti (#163) — primární, validovaný koncept "co tento trénink rozvíjí".
+        public Skill? TrainingGoalSkill1 { get; set; }
 
-        public Tag? TrainingGoal3 { get; set; }
+        public int? TrainingGoalSkill1Id { get; set; }
 
-        public int? TrainingGoal3Id { get; set; }
+        public Skill? TrainingGoalSkill2 { get; set; }
+
+        public int? TrainingGoalSkill2Id { get; set; }
+
+        public Skill? TrainingGoalSkill3 { get; set; }
+
+        public int? TrainingGoalSkill3Id { get; set; }
 
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
         public List<TrainingPart>? TrainingParts { get; set; }
@@ -65,12 +74,14 @@ namespace FloorballTraining.CoreBusiness
                 PersonsMax = PersonsMax,
                 GoaliesMin = GoaliesMin,
                 GoaliesMax = GoaliesMax,
-                TrainingGoal1 = TrainingGoal1,
-                TrainingGoal1Id = TrainingGoal1Id,
-                TrainingGoal2 = TrainingGoal2,
-                TrainingGoal2Id = TrainingGoal2Id,
-                TrainingGoal3 = TrainingGoal3,
-                TrainingGoal3Id = TrainingGoal3Id,
+                TrainingTags = TrainingTags,
+                NoSpecificGoal = NoSpecificGoal,
+                TrainingGoalSkill1 = TrainingGoalSkill1,
+                TrainingGoalSkill1Id = TrainingGoalSkill1Id,
+                TrainingGoalSkill2 = TrainingGoalSkill2,
+                TrainingGoalSkill2Id = TrainingGoalSkill2Id,
+                TrainingGoalSkill3 = TrainingGoalSkill3,
+                TrainingGoalSkill3Id = TrainingGoalSkill3Id,
                 Difficulty = Difficulty,
                 Intensity = Intensity,
                 CommentBefore = CommentBefore,
@@ -106,12 +117,14 @@ namespace FloorballTraining.CoreBusiness
             PersonsMax = other.PersonsMax;
             GoaliesMin = other.GoaliesMin;
             GoaliesMax = other.GoaliesMax;
-            TrainingGoal1 = other.TrainingGoal1;
-            TrainingGoal1Id = other.TrainingGoal1Id;
-            TrainingGoal2 = other.TrainingGoal2;
-            TrainingGoal2Id = other.TrainingGoal2Id;
-            TrainingGoal3 = other.TrainingGoal3;
-            TrainingGoal3Id = other.TrainingGoal3Id;
+            TrainingTags = other.TrainingTags;
+            NoSpecificGoal = other.NoSpecificGoal;
+            TrainingGoalSkill1 = other.TrainingGoalSkill1;
+            TrainingGoalSkill1Id = other.TrainingGoalSkill1Id;
+            TrainingGoalSkill2 = other.TrainingGoalSkill2;
+            TrainingGoalSkill2Id = other.TrainingGoalSkill2Id;
+            TrainingGoalSkill3 = other.TrainingGoalSkill3;
+            TrainingGoalSkill3Id = other.TrainingGoalSkill3Id;
             Difficulty = other.Difficulty;
             Intensity = other.Intensity;
             TrainingParts = other.TrainingParts;
@@ -165,22 +178,37 @@ namespace FloorballTraining.CoreBusiness
             return TrainingParts?.Sum(t => t.Duration) ?? 0;
         }
 
-        public int GetTrainingGoalActivitiesDuration()
+        public void AddTag(Tag tag)
         {
-            if (TrainingParts == null || TrainingParts != null && TrainingParts.Sum(tp => tp.TrainingGroups!.Count) == 0) return 0;
+            if (TrainingTags.All(tt => tt.Tag != tag))
+            {
+                TrainingTags.Add(new TrainingTag
+                {
+                    Training = this,
+                    TrainingId = Id,
+                    Tag = tag,
+                    TagId = tag.Id
+                });
+            }
+        }
 
-            if (TrainingGoal1 == null && TrainingGoal2 == null && TrainingGoal3 == null) return 0;
+        /// <summary>Minutes of training parts whose activities carry one of the 3 goal skills
+        /// (#163) — the validated "does this training's content match its stated focus" check.</summary>
+        public int GetGoalSkillActivitiesDuration()
+        {
+            if (TrainingParts == null || TrainingParts.Sum(tp => tp.TrainingGroups!.Count) == 0) return 0;
 
-            var trainingPartsWithTrainingGoal = TrainingParts!.Where(tp =>
+            if (TrainingGoalSkill1 == null && TrainingGoalSkill2 == null && TrainingGoalSkill3 == null) return 0;
+
+            return TrainingParts.Where(tp =>
                     tp.TrainingGroups!.Any(tga =>
-                        tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal1?.Id || tag.TagId == TrainingGoal2?.Id || tag.TagId == TrainingGoal3?.Id)))
+                        tga.Activity != null && tga.Activity.ActivitySkills.Any(s =>
+                            s.SkillId == TrainingGoalSkill1?.Id || s.SkillId == TrainingGoalSkill2?.Id || s.SkillId == TrainingGoalSkill3?.Id)))
                 .Sum(tp => tp.Duration);
-
-            return trainingPartsWithTrainingGoal;
         }
 
         /// <summary>
-        /// Same shape as <see cref="GetTrainingGoalActivitiesDuration"/> but measured against an
+        /// Same shape as <see cref="GetGoalSkillActivitiesDuration"/> but measured against an
         /// external tag set (season-plan cycle goals): minutes of training parts whose activities
         /// carry any of the given tags. Requires TrainingParts→TrainingGroups→Activity→ActivityTags loaded.
         /// </summary>
@@ -239,14 +267,21 @@ namespace FloorballTraining.CoreBusiness
                 .Select(tga => tga.Activity!.Name).ToList();
         }
 
+        /// <summary>Skills this training develops, aggregated from its activities' ActivitySkills (#171).</summary>
+        public List<string?> GetSkillNames()
+        {
+            if (TrainingParts == null) return new List<string?>();
+
+            return TrainingParts.SelectMany(tp => tp.TrainingGroups!)
+                .Where(tga => tga.Activity != null)
+                .SelectMany(tga => tga.Activity!.ActivitySkills)
+                .Select(ase => ase.Skill?.Name)
+                .Distinct().ToList();
+        }
+
         public string GetTrainingGoalsNames()
         {
-            var goals = new List<string>();
-            if (TrainingGoal1 != null) goals.Add(TrainingGoal1.Name);
-            if (TrainingGoal2 != null) goals.Add(TrainingGoal2.Name);
-            if (TrainingGoal3 != null) goals.Add(TrainingGoal3.Name);
-            
-            return string.Join(", ",goals);
+            return string.Join(", ", TrainingTags.Where(tt => tt.Tag != null).Select(tt => tt.Tag!.Name));
         }
     }
 }

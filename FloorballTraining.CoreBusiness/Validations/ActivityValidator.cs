@@ -12,7 +12,7 @@ namespace FloorballTraining.CoreBusiness.Validations
                 .MaximumLength(80).WithMessage("Překročen limit 80 znaků");
 
             RuleFor(p => p.Description)
-                .MaximumLength(1000).WithMessage("Překročen limit 1000 znaků");
+                .MaximumLength(5000).WithMessage("Překročen limit 5000 znaků");
 
             RuleFor(a => a.PersonsMin).InclusiveBetween(1, 100).WithMessage("Počet osob min.");
 

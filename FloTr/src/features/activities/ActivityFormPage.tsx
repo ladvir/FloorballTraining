@@ -35,7 +35,7 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, equipmentApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useAiActivityStore } from '../../store/aiActivityStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
@@ -47,11 +47,15 @@ import DrawingComponent, {
 import { hasSmilAnimation } from '../../components/ui/drawing/utils/smilGenerator'
 import { AnimatedSvgPlayer } from '../../components/shared/AnimatedSvgPlayer'
 import { ActivityHelpModal } from './ActivityHelpModal'
+import { skillPalette } from '../../utils/skillColors'
+import { TagMultiPicker } from '../../components/shared/TagMultiPicker'
 import type {
   ActivityTagDto,
   ActivityAgeGroupDto,
   ActivityEquipmentDto,
+  ActivitySkillDto,
   ActivityMediaDto,
+  SkillCatalogEntryDto,
 } from '../../types/domain.types'
 
 // ── Validation result modal ───────────────────────────────────────────────────
@@ -512,7 +516,7 @@ function ImagesSection({
 const schema = z
   .object({
     name: z.string().min(1, 'activities.nameRequired').max(50, 'activities.max50'),
-    description: z.string().max(1000, 'activities.max1000').optional(),
+    description: z.string().max(5000, 'activities.max5000').optional(),
     durationMin: z.coerce.number().min(1, 'activities.min1min'),
     durationMax: z.coerce.number().min(1, 'activities.min1min'),
     personsMin: z.coerce.number().min(1, 'activities.min1').max(100, 'activities.max100'),
@@ -520,6 +524,7 @@ const schema = z
     activityTagIds: z.array(z.number()),
     activityAgeGroupIds: z.array(z.number()),
     activityEquipmentIds: z.array(z.number()),
+    activitySkillIds: z.array(z.number()),
   })
   .refine((d) => d.durationMin <= d.durationMax, {
     message: 'activities.durationOrderError',
@@ -565,6 +570,10 @@ export function ActivityFormPage() {
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: allEquipment } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.getAll })
+  const { data: allSkills } = useQuery({
+    queryKey: ['skillCatalog'],
+    queryFn: playerSkillsApi.getCatalog,
+  })
   const { data: allActivities } = useQuery({
     queryKey: ['activities'],
     queryFn: () => activitiesApi.getAll(),
@@ -616,6 +625,7 @@ export function ActivityFormPage() {
       activityTagIds: [],
       activityAgeGroupIds: [],
       activityEquipmentIds: [],
+      activitySkillIds: [],
     },
   })
 
@@ -655,6 +665,9 @@ export function ActivityFormPage() {
         activityEquipmentIds: (existingActivity.activityEquipments ?? [])
           .map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0)
           .filter((id) => id > 0),
+        activitySkillIds: (existingActivity.activitySkills ?? [])
+          .map((s) => s.skillId ?? 0)
+          .filter((id) => id > 0),
       })
       requestAnimationFrame(() => {
         formReady.current = true
@@ -679,6 +692,7 @@ export function ActivityFormPage() {
         activityTagIds: aiSuggestion.tagIds,
         activityAgeGroupIds: aiSuggestion.ageGroupIds,
         activityEquipmentIds: aiSuggestion.equipmentIds,
+        activitySkillIds: [],
       })
       requestAnimationFrame(() => {
         formReady.current = true
@@ -689,17 +703,7 @@ export function ActivityFormPage() {
   const watchTagIds = watch('activityTagIds')
   const watchAgeGroupIds = watch('activityAgeGroupIds')
   const watchEquipmentIds = watch('activityEquipmentIds')
-
-  const toggleTag = useCallback(
-    (tagId: number) => {
-      const current = watchTagIds ?? []
-      setValue(
-        'activityTagIds',
-        current.includes(tagId) ? current.filter((x) => x !== tagId) : [...current, tagId]
-      )
-    },
-    [watchTagIds, setValue]
-  )
+  const watchSkillIds = watch('activitySkillIds')
 
   const toggleAgeGroup = useCallback(
     (agId: number) => {
@@ -722,6 +726,28 @@ export function ActivityFormPage() {
     },
     [watchEquipmentIds, setValue]
   )
+
+  const toggleSkill = useCallback(
+    (skillId: number) => {
+      const current = watchSkillIds ?? []
+      setValue(
+        'activitySkillIds',
+        current.includes(skillId) ? current.filter((x) => x !== skillId) : [...current, skillId]
+      )
+    },
+    [watchSkillIds, setValue]
+  )
+
+  const skillsByCategory = useMemo(() => {
+    const groups = new Map<number, { categoryName: string; skills: SkillCatalogEntryDto[] }>()
+    for (const skill of allSkills ?? []) {
+      if (!groups.has(skill.categoryId)) {
+        groups.set(skill.categoryId, { categoryName: skill.categoryName, skills: [] })
+      }
+      groups.get(skill.categoryId)!.skills.push(skill)
+    }
+    return Array.from(groups.entries()).map(([categoryId, group]) => ({ categoryId, ...group }))
+  }, [allSkills])
 
   const handleAddEquipment = async () => {
     const name = newEquipmentName.trim()
@@ -759,6 +785,10 @@ export function ActivityFormPage() {
         const equipment = allEquipment?.find((e) => e.id === eqId)
         return { id: 0, equipmentId: eqId, equipment }
       })
+      const skillDtos: ActivitySkillDto[] = data.activitySkillIds.map((skillId) => ({
+        id: 0,
+        skillId,
+      }))
       const dto = {
         id: isEdit ? Number(id) : 0,
         name: data.name,
@@ -770,6 +800,7 @@ export function ActivityFormPage() {
         activityTags: tagDtos,
         activityAgeGroups: ageGroupDtos,
         activityEquipments: equipmentDtos,
+        activitySkills: skillDtos,
       }
       return (
         isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)
@@ -1129,34 +1160,79 @@ export function ActivityFormPage() {
           </CardContent>
         </Card>
 
+        {/* Skills — which player skills this activity develops (#163) */}
+        <Card>
+          <CardContent className="py-4">
+            <p className="mb-3 text-sm font-medium text-gray-700">{t('activities.formSkills')}</p>
+            {skillsByCategory.length === 0 ? (
+              <p className="text-sm text-gray-400">{t('activities.noSkills')}</p>
+            ) : (
+              <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-start">
+                {skillsByCategory.map((group) => {
+                  const catPalette = skillPalette(group.categoryId)
+                  return (
+                    <div
+                      key={group.categoryId}
+                      className="rounded-lg border p-3 sm:min-w-[220px] sm:flex-1"
+                      style={{
+                        backgroundColor: catPalette.categoryBg,
+                        borderColor: catPalette.categoryBorder,
+                      }}
+                    >
+                      <p
+                        className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: catPalette.categoryText }}
+                      >
+                        {group.categoryName}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.skills.map((skill, idx) => {
+                          const isSelected = (watchSkillIds ?? []).includes(skill.skillId)
+                          const palette = skillPalette(group.categoryId, idx, group.skills.length)
+                          return (
+                            <button
+                              key={skill.skillId}
+                              type="button"
+                              onClick={() => toggleSkill(skill.skillId)}
+                              className="rounded-full border px-3 py-1 text-sm transition-colors"
+                              style={
+                                isSelected
+                                  ? {
+                                      borderColor: palette.activeBorder,
+                                      backgroundColor: palette.activeBg,
+                                      color: '#fff',
+                                    }
+                                  : {
+                                      borderColor: palette.idleBorder,
+                                      backgroundColor: palette.idleBg,
+                                      color: palette.idleText,
+                                    }
+                              }
+                            >
+                              {skill.skillName}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Tags */}
         <Card>
           <CardContent className="py-4">
             <p className="mb-3 text-sm font-medium text-gray-700">
               {t('activities.formTagsLabel')}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {(allTags ?? []).map((tag) => {
-                const isSelected = (watchTagIds ?? []).includes(tag.id)
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                      isSelected
-                        ? 'border-sky-500 bg-sky-500 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                    }`}
-                  >
-                    {tag.name}
-                  </button>
-                )
-              })}
-              {(allTags ?? []).length === 0 && (
-                <p className="text-sm text-gray-400">{t('activities.noTags')}</p>
-              )}
-            </div>
+            <TagMultiPicker
+              tags={allTags ?? []}
+              selectedIds={watchTagIds ?? []}
+              onChange={(ids) => setValue('activityTagIds', ids)}
+            />
           </CardContent>
         </Card>
 

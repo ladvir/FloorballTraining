@@ -24,15 +24,26 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<ActivityAgeGroup, ActivityAgeGroupDto>();
             CreateMap<ActivityEquipment, ActivityEquipmentDto>();
             CreateMap<ActivityMedia, ActivityMediaDto>();
+            CreateMap<ActivitySkill, ActivitySkillDto>()
+                .ForMember(t => t.SkillName, o => o.MapFrom(s => s.Skill != null ? s.Skill.Name : null))
+                .ForMember(t => t.SkillCategoryId, o => o.MapFrom(s => s.Skill != null ? s.Skill.SkillCategoryId : (int?)null))
+                .ForMember(t => t.SkillCategoryName, o => o.MapFrom(s => s.Skill != null && s.Skill.SkillCategory != null ? s.Skill.SkillCategory.Name : null));
 
             CreateMap<Activity, ActivityDto>();
+
+            CreateMap<Skill, SkillDto>()
+                .ForMember(t => t.SkillCategoryName, o => o.MapFrom(s => s.SkillCategory != null ? s.SkillCategory.Name : null));
+
+            CreateMap<TrainingTag, TrainingTagDto>();
 
             CreateMap<Training, TrainingDto>()
                 .ForMember(t => t.IsDraft, o => o.MapFrom(s => s.IsDraft))
                 .ForMember(t => t.IsIndividual, o => o.MapFrom(s => s.IsIndividual))
-                .ForMember(t => t.TrainingGoal1, o => o.MapFrom(s => s.TrainingGoal1))
-                .ForMember(t => t.TrainingGoal2, o => o.MapFrom(s => s.TrainingGoal2))
-                .ForMember(t => t.TrainingGoal3, o => o.MapFrom(s => s.TrainingGoal3))
+                .ForMember(t => t.TrainingTags, o => o.MapFrom(s => s.TrainingTags))
+                .ForMember(t => t.NoSpecificGoal, o => o.MapFrom(s => s.NoSpecificGoal))
+                .ForMember(t => t.TrainingGoalSkill1, o => o.MapFrom(s => s.TrainingGoalSkill1))
+                .ForMember(t => t.TrainingGoalSkill2, o => o.MapFrom(s => s.TrainingGoalSkill2))
+                .ForMember(t => t.TrainingGoalSkill3, o => o.MapFrom(s => s.TrainingGoalSkill3))
                 .ForMember(t => t.TrainingAgeGroups, o => o.MapFrom(s => s.TrainingAgeGroups.Select(t => t.AgeGroup)))
                 ;
 
