@@ -12,6 +12,7 @@ import { ErrorState, LoadingState } from '../../components/StatusView'
 import { homeTrainingsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { colors, gradeColors, glass, radius, spacing, typography } from '../../theme/tokens'
+import { isoDate } from '../../utils/date'
 import type { HomeTrainingLogDto } from '../../types/domain.types'
 
 interface Params {
@@ -19,8 +20,6 @@ interface Params {
   /** Deep-link from a challenge's "start" action (#108) — seeds the free-text title. */
   prefillTitle?: string
 }
-
-const isoDate = (d: Date) => d.toISOString().slice(0, 10)
 
 // Confirmed = grade-1 green, Rejected = danger, Pending = muted (matches the web status colours).
 const statusColor = (s: HomeTrainingLogDto['status']) =>

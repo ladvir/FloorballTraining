@@ -1,3 +1,6 @@
+/** "YYYY-MM-DD" for a date-only API field (loggedAt, testDate, ...). */
+export const isoDate = (d: Date): string => d.toISOString().slice(0, 10)
+
 // Deliberately not Intl.DateTimeFormat - avoids depending on Hermes' ICU data being present
 // on every target (native + web + emulator), for one simple Czech "d. m. yyyy" date format.
 export const formatDate = (iso: string): string => {

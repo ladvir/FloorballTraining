@@ -100,6 +100,15 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
                 active={mode === 'category'}
                 onPress={() => setCategoryPickerOpen(true)}
               />
+              {/* Coach-only entry point to rate a skill for the first time (#92) - a never-rated
+                  skill is otherwise hidden from every other filter mode, see filterSkillSections. */}
+              {editable && (
+                <FilterChip
+                  label={t('skills.filterUnrated')}
+                  active={mode === 'unrated'}
+                  onPress={() => selectMode('unrated')}
+                />
+              )}
             </View>
           </>
         }

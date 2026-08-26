@@ -68,6 +68,7 @@ export type StringKey =
   | 'skills.filterWeakest'
   | 'skills.filterStrongest'
   | 'skills.filterCategory'
+  | 'skills.filterUnrated'
   | 'skills.empty'
   | 'skills.noResults'
   | 'skills.noRecommendation'
@@ -81,6 +82,15 @@ export type StringKey =
   | 'skillDetail.setGradeFirst'
   | 'skillDetail.saveError'
   | 'skillDetail.saveForbidden'
+  | 'skillDetail.recordTest'
+  | 'recordTest.title'
+  | 'recordTest.selectTest'
+  | 'recordTest.value'
+  | 'recordTest.date'
+  | 'recordTest.note'
+  | 'recordTest.notePlaceholder'
+  | 'recordTest.submit'
+  | 'recordTest.saveError'
   | 'common.cancel'
   | 'stats.title'
   | 'stats.bestSkills'
@@ -314,6 +324,7 @@ const cs: Record<StringKey, string> = {
   'skills.filterWeakest': 'Nejslabší',
   'skills.filterStrongest': 'Nejsilnější',
   'skills.filterCategory': 'Kategorie',
+  'skills.filterUnrated': 'Nehodnocené',
   'skills.empty': 'Žádné dovednosti k zobrazení.',
   'skills.noResults': 'Žádná dovednost neodpovídá filtru.',
   'skills.noRecommendation': 'Bez doporučení',
@@ -327,6 +338,15 @@ const cs: Record<StringKey, string> = {
   'skillDetail.setGradeFirst': 'Nejprve nastavte známku klepnutím na odznak výše.',
   'skillDetail.saveError': 'Uložení se nezdařilo. Zkuste to prosím znovu.',
   'skillDetail.saveForbidden': 'K úpravě tohoto hráče nemáte oprávnění.',
+  'skillDetail.recordTest': 'Zaznamenat test',
+  'recordTest.title': 'Zaznamenat výsledek testu',
+  'recordTest.selectTest': 'Test',
+  'recordTest.value': 'Výsledek',
+  'recordTest.date': 'Datum',
+  'recordTest.note': 'Poznámka',
+  'recordTest.notePlaceholder': 'Volitelná poznámka',
+  'recordTest.submit': 'Uložit výsledek',
+  'recordTest.saveError': 'Uložení výsledku se nezdařilo.',
   'common.cancel': 'Zrušit',
   'stats.title': 'Statistiky',
   'stats.bestSkills': 'Nejlepší dovednosti',

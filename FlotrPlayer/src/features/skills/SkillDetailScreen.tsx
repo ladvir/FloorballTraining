@@ -8,15 +8,16 @@ import { GradeBadge } from '../../components/GradeBadge'
 import { GradePickerSheet } from '../../components/GradePickerSheet'
 import { HistoryChart } from '../../components/HistoryChart'
 import { Icon } from '../../components/Icon'
+import { RecordTestSheet } from '../../components/RecordTestSheet'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
-import { playerSkillsApi } from '../../api'
+import { playerSkillsApi, testsApi } from '../../api'
 import { gradeLabel, t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
 import { formatDate } from '../../utils/date'
 import { useSaveSkill } from '../../utils/saveSkill'
-import type { PlayerSkillDto } from '../../types/domain.types'
+import type { CreateTestResultDto, PlayerSkillCardDto, PlayerSkillDto } from '../../types/domain.types'
 
 interface SkillDetailParams {
   memberId: number
@@ -38,11 +39,15 @@ export function SkillDetailScreen() {
 
   const saveSkill = useSaveSkill(memberId)
   // The route param is a snapshot from whichever list navigated here - once a save on *this*
-  // screen succeeds, the response becomes the source of truth so the badge/fields update in place.
+  // screen succeeds (manual grade via saveSkill, or a derived grade via recordTestMutation below),
+  // the freshest full card becomes the source of truth so the badge/fields update in place. Written
+  // from each mutation's own onSuccess callback (event-driven), never from a useEffect syncing off
+  // saveSkill.data - see recordTestMutation and the saveSkill.mutate(...) call sites below.
+  const [latestCard, setLatestCard] = useState<PlayerSkillCardDto | null>(null)
   const skill = useMemo(() => {
-    if (!saveSkill.data) return routeSkill
-    return saveSkill.data.categories.flatMap((c) => c.skills).find((s) => s.skillId === routeSkill.skillId) ?? routeSkill
-  }, [saveSkill.data, routeSkill])
+    if (!latestCard) return routeSkill
+    return latestCard.categories.flatMap((c) => c.skills).find((s) => s.skillId === routeSkill.skillId) ?? routeSkill
+  }, [latestCard, routeSkill])
 
   // A never-rated skill must get its initial grade (tap the badge above) before target
   // grade/recommendation can be set - the write payload always needs a real grade, not null.
@@ -65,6 +70,31 @@ export function SkillDetailScreen() {
 
   const [gradePickerOpen, setGradePickerOpen] = useState(false)
   const [targetPickerOpen, setTargetPickerOpen] = useState(false)
+
+  // "Zaznamenat test" (#92): tests linked to this skill - club libraries are small, so filtering
+  // by skillId happens client-side rather than adding a backend query param (see TestDefinitionDto).
+  const testsQuery = useQuery({ queryKey: ['testdefinitions'], queryFn: testsApi.getAll, enabled: canEdit })
+  const linkedTests = (testsQuery.data ?? []).filter((td) => td.skillId === skill.skillId)
+  const [recordTestOpen, setRecordTestOpen] = useState(false)
+  const [recordTestError, setRecordTestError] = useState<string | null>(null)
+  const recordTestMutation = useMutation({
+    mutationFn: async (payload: Omit<CreateTestResultDto, 'memberId'>) => {
+      await testsApi.createResult({ ...payload, memberId })
+      // Backend only returns the created TestResultDto - refetch the full card so the derived
+      // grade shows up here exactly like a manual save (spec: "refetch playerskills dat").
+      return playerSkillsApi.getCard(memberId)
+    },
+    onSuccess: (refreshedCard) => {
+      queryClient.setQueryData(['playerskills', 'card', memberId], refreshedCard)
+      queryClient.invalidateQueries({ queryKey: ['playerskills', 'me'] })
+      queryClient.invalidateQueries({ queryKey: ['playerskills', 'roster'] })
+      queryClient.invalidateQueries({ queryKey: ['playerskills', 'history', memberId, skill.skillId] })
+      setLatestCard(refreshedCard)
+      setRecordTestOpen(false)
+      setRecordTestError(null)
+    },
+    onError: () => setRecordTestError(t('recordTest.saveError')),
+  })
 
   const {
     data: history,
@@ -100,6 +130,14 @@ export function SkillDetailScreen() {
           </Pressable>
           <Text style={styles.verbal}>{verbalLabel(skill.grade)}</Text>
           {saveSkill.isPending && <ActivityIndicator color={colors.accent} size="small" />}
+          {/* Only shown when a test in the club's library is linked to this skill (TestDefinition.SkillId,
+              #92) - otherwise the skill stays manual-grade-only, same as before this stage. */}
+          {canEdit && linkedTests.length > 0 && (
+            <Pressable style={styles.recordTestButton} onPress={() => setRecordTestOpen(true)}>
+              <Icon name="stopwatch-outline" size={16} color={colors.accent} />
+              <Text style={styles.recordTestButtonText}>{t('skillDetail.recordTest')}</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -110,7 +148,12 @@ export function SkillDetailScreen() {
               multiline
               value={recommendationDraft}
               onChangeText={setRecommendationDraft}
-              onBlur={() => saveSkill.mutate({ skill, patch: { recommendation: recommendationDraft || null } })}
+              onBlur={() =>
+                saveSkill.mutate(
+                  { skill, patch: { recommendation: recommendationDraft || null } },
+                  { onSuccess: setLatestCard },
+                )
+              }
               placeholder={t('skills.noRecommendation')}
               placeholderTextColor={colors.textMuted}
             />
@@ -169,14 +212,22 @@ export function SkillDetailScreen() {
         <GradePickerSheet
           visible={gradePickerOpen}
           value={skill.grade}
-          onSelect={(grade) => saveSkill.mutate({ skill, patch: { grade } })}
+          onSelect={(grade) => saveSkill.mutate({ skill, patch: { grade } }, { onSuccess: setLatestCard })}
           onClose={() => setGradePickerOpen(false)}
         />
         <GradePickerSheet
           visible={targetPickerOpen}
           value={skill.targetGrade}
-          onSelect={(grade) => saveSkill.mutate({ skill, patch: { targetGrade: grade } })}
+          onSelect={(grade) => saveSkill.mutate({ skill, patch: { targetGrade: grade } }, { onSuccess: setLatestCard })}
           onClose={() => setTargetPickerOpen(false)}
+        />
+        <RecordTestSheet
+          visible={recordTestOpen}
+          tests={linkedTests}
+          onSubmit={(payload) => recordTestMutation.mutate(payload)}
+          onClose={() => setRecordTestOpen(false)}
+          submitting={recordTestMutation.isPending}
+          error={recordTestError}
         />
       </ScrollView>
     </Screen>
@@ -220,6 +271,22 @@ const styles = StyleSheet.create({
   verbal: {
     color: colors.textPrimary,
     fontSize: typography.body.fontSize,
+    fontWeight: '600',
+  },
+  recordTestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.border,
+  },
+  recordTestButtonText: {
+    color: colors.accent,
+    fontSize: typography.body.fontSize - 2,
     fontWeight: '600',
   },
   recommendationCard: {

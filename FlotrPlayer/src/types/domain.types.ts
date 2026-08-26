@@ -106,6 +106,47 @@ export interface PlayerSkillBatchItemDto {
   recommendation: string | null
 }
 
+export type TestType = 'Number' | 'Grade'
+
+/** One selectable answer of a Grade-type test - GradeOptionDto (#92). */
+export interface GradeOptionDto {
+  id: number
+  label: string
+  numericValue: number
+  colour: string | null
+  sortOrder: number
+  /** Fixed skill grade (1-5) this option implies, when the test is linked to a Skill. */
+  skillGrade: number | null
+}
+
+/** GET /testdefinitions - club's test library, filtered client-side by skillId (#92). */
+export interface TestDefinitionDto {
+  id: number
+  name: string
+  testType: TestType
+  unit: string | null
+  skillId: number | null
+  gradeOptions: GradeOptionDto[]
+}
+
+/** POST /testresults request body - only the fields the mobile "Zaznamenat test" form fills in (#92). */
+export interface CreateTestResultDto {
+  testDefinitionId: number
+  memberId: number
+  numericValue: number | null
+  gradeOptionId: number | null
+  testDate: string
+  note: string | null
+}
+
+/** POST /testresults response - DerivedSkillGrade is only populated when the test is linked to a Skill (#92). */
+export interface TestResultDto {
+  id: number
+  testDefinitionId: number
+  memberId: number
+  derivedSkillGrade: number | null
+}
+
 /** GET /guardian/children - a child a guardian is linked to (guardian's own read-only view, #102). */
 export interface GuardianChildDto {
   memberId: number
