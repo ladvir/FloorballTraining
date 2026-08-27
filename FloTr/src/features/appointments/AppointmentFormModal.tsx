@@ -65,6 +65,8 @@ interface Props {
   defaultTestIds?: number[]
   /** Called with the new appointment's id + type right after a (non-edit) create succeeds. */
   onCreated?: (id: number, appointmentType: number) => void
+  /** Called after any successful save/delete so the opener can force-refresh its own view. */
+  onSaved?: () => void
 }
 
 export function AppointmentFormModal({
@@ -76,6 +78,7 @@ export function AppointmentFormModal({
   defaultAppointmentType,
   defaultTestIds,
   onCreated,
+  onSaved,
 }: Props) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -357,6 +360,7 @@ export function AppointmentFormModal({
         const newId = (response as { data?: { id?: number } })?.data?.id
         if (newId) onCreated?.(newId, Number(variables.data.appointmentType))
       }
+      onSaved?.()
       onClose()
     },
     onError: (err: unknown) => {
@@ -395,6 +399,7 @@ export function AppointmentFormModal({
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      onSaved?.()
       onClose()
     },
     onError: () => {

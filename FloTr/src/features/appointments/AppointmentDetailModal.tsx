@@ -530,9 +530,12 @@ function AssignmentsSection({ apt, canEdit }: { apt: AppointmentDto; canEdit: bo
 export function AppointmentDetailModal({
   appointmentId,
   onClose,
+  onChanged,
 }: {
   appointmentId: number | null
   onClose: () => void
+  /** Fired after an edit/delete succeeds so the opener can force-refresh its list/calendar. */
+  onChanged?: () => void
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -572,6 +575,7 @@ export function AppointmentDetailModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      onChanged?.()
       onClose()
     },
   })
@@ -815,6 +819,7 @@ export function AppointmentDetailModal({
         onClose={() => setEditOpen(false)}
         appointment={apt}
         defaultDate={null}
+        onSaved={onChanged}
       />
 
       {attendanceOpen && apt && (

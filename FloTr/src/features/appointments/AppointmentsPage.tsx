@@ -257,7 +257,11 @@ export function AppointmentsPage() {
     return params
   }, [selectedSeason])
 
-  const { data: appointments, isLoading } = useQuery({
+  const {
+    data: appointments,
+    isLoading,
+    refetch: refetchAppointments,
+  } = useQuery({
     queryKey: ['appointments', queryParams],
     queryFn: () => appointmentsApi.getAll(queryParams),
   })
@@ -618,11 +622,13 @@ export function AppointmentsPage() {
         appointment={editingAppointment}
         defaultDate={defaultDate}
         defaultTeamId={currentTeamId || undefined}
+        onSaved={() => refetchAppointments()}
       />
 
       <AppointmentDetailModal
         appointmentId={detailAppointmentId}
         onClose={() => setDetailAppointmentId(null)}
+        onChanged={() => refetchAppointments()}
       />
 
       <ExportWorkTimeModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
