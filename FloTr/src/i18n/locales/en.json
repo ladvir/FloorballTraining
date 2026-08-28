@@ -622,6 +622,7 @@
     "copyTraining": "Copy",
     "copySuffix": "copy",
     "schedule": "Schedule",
+    "formPreview": "Preview",
     "checkAll": "Validate All",
     "compare": "Compare",
     "compareTip": "Select at least 2 trainings by checking the checkboxes",

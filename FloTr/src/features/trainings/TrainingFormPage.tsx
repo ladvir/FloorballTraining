@@ -86,6 +86,7 @@ import { TagMultiPicker } from '../../components/shared/TagMultiPicker'
 import { SimilarityBanner } from './SimilarityBanner'
 import { SimilaritySaveModal } from './SimilaritySaveModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
+import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingHelpModal } from './TrainingHelpModal'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
@@ -167,12 +168,14 @@ function ActivityNameModal({
   activities,
   drawingData,
   queryClient,
+  newActivityDefaults,
   onCreated,
   onClose,
 }: {
   activities: ActivityDto[]
   drawingData: DrawingSaveData
   queryClient: ReturnType<typeof useQueryClient>
+  newActivityDefaults?: { personsMax?: number; durationMax?: number }
   onCreated: (activityId: number, name: string) => void
   onClose: () => void
 }) {
@@ -193,7 +196,11 @@ function ActivityNameModal({
     setSaving(true)
     setError(null)
     try {
-      const newActivity = await activitiesApi.create({ name: trimmed })
+      const newActivity = await activitiesApi.create({
+        name: trimmed,
+        personsMax: newActivityDefaults?.personsMax,
+        durationMax: newActivityDefaults?.durationMax,
+      })
       await activitiesApi.addImage(newActivity.id, {
         name: 'kresba.svg',
         data: drawingData.stateJson,
@@ -201,7 +208,7 @@ function ActivityNameModal({
         isThumbnail: true,
       })
       setCreated(true)
-      await queryClient.invalidateQueries({ queryKey: ['activities'] })
+      await queryClient.refetchQueries({ queryKey: ['activities'] })
       onCreated(newActivity.id, trimmed)
     } catch (err) {
       const msg =
@@ -308,10 +315,12 @@ function ActivityPicker({
   value,
   onChange,
   activities,
+  newActivityDefaults,
 }: {
   value: number | null | undefined
   onChange: (id: number | null) => void
   activities: ActivityDto[]
+  newActivityDefaults?: { personsMax?: number; durationMax?: number }
 }) {
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
@@ -320,9 +329,14 @@ function ActivityPicker({
   const queryClient = useQueryClient()
 
   const createMutation = useMutation({
-    mutationFn: (name: string) => activitiesApi.create({ name }),
-    onSuccess: (newActivity) => {
-      queryClient.invalidateQueries({ queryKey: ['activities'] })
+    mutationFn: (name: string) =>
+      activitiesApi.create({
+        name,
+        personsMax: newActivityDefaults?.personsMax,
+        durationMax: newActivityDefaults?.durationMax,
+      }),
+    onSuccess: async (newActivity) => {
+      await queryClient.refetchQueries({ queryKey: ['activities'] })
       onChange(newActivity.id)
       setOpen(false)
     },
@@ -513,6 +527,7 @@ function SortablePartRow({
   onViewActivity,
   onEditActivity,
   dropHighlight,
+  newActivityDefaults,
 }: {
   id: number
   index: number
@@ -528,6 +543,7 @@ function SortablePartRow({
   onViewActivity: (activityId: number) => void
   onEditActivity: (activityId: number) => void
   dropHighlight?: boolean
+  newActivityDefaults?: { personsMax?: number; durationMax?: number }
 }) {
   const { t } = useTranslation()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -698,6 +714,7 @@ function SortablePartRow({
                         }
                       }}
                       activities={allActivities}
+                      newActivityDefaults={newActivityDefaults}
                     />
                   )}
                 />
@@ -880,6 +897,7 @@ export function TrainingFormPage() {
   const [pendingSaveData, setPendingSaveData] = useState<FormData | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingTraining) return
@@ -931,6 +949,12 @@ export function TrainingFormPage() {
 
   const maxDuration = defaultTeam?.maxTrainingDuration ?? 120
   const maxPartDuration = defaultTeam?.maxTrainingPartDuration ?? 40
+
+  // Defaults applied to activities created inline from this form
+  const newActivityDefaults = {
+    personsMax: defaultTeam?.personsMax,
+    durationMax: defaultTeam?.maxTrainingPartDuration,
+  }
   const resolverRef = useRef(zodResolver(makeSchema(maxDuration, maxPartDuration)))
   useEffect(() => {
     resolverRef.current = zodResolver(makeSchema(maxDuration, maxPartDuration))
@@ -1815,6 +1839,16 @@ export function TrainingFormPage() {
                 type="button"
                 variant="outline"
                 size="sm"
+                onClick={() => setPreviewOpen(true)}
+                className="whitespace-nowrap"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                {t('trainings.formPreview')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setScheduleOpen(true)}
                 className="whitespace-nowrap"
               >
@@ -2316,6 +2350,7 @@ export function TrainingFormPage() {
                         onViewActivity={setDetailActivityId}
                         onEditActivity={setEditActivityId}
                         dropHighlight={dragOverPartId === field.id}
+                        newActivityDefaults={newActivityDefaults}
                       />
                     ))}
                   </div>
@@ -2384,7 +2419,7 @@ export function TrainingFormPage() {
         onClose={() => setEditActivityId(null)}
         onSaved={() => {
           setEditActivityId(null)
-          queryClient.invalidateQueries({ queryKey: ['activities'] })
+          queryClient.refetchQueries({ queryKey: ['activities'] })
           if (autoGoals) {
             // Delay to let activities refetch, then recalculate goals
             setTimeout(() => applyGoals(computeTopGoals()), 500)
@@ -2402,6 +2437,10 @@ export function TrainingFormPage() {
           isOpen={scheduleOpen}
           onClose={() => setScheduleOpen(false)}
         />
+      )}
+
+      {isEdit && previewOpen && (
+        <TrainingDetailModal trainingId={Number(id)} onClose={() => setPreviewOpen(false)} />
       )}
 
       <PdfOptionsModal
@@ -2463,6 +2502,7 @@ export function TrainingFormPage() {
           activities={allActivities}
           drawingData={pendingDrawing}
           queryClient={queryClient}
+          newActivityDefaults={newActivityDefaults}
           onCreated={handleActivityCreated}
           onClose={() => {
             setPendingDrawing(null)

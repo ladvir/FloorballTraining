@@ -149,8 +149,8 @@ export function AiGroupActivityModal({
         activityEquipments: equipmentDtos,
       })
     },
-    onSuccess: (activity) => {
-      queryClient.invalidateQueries({ queryKey: ['activities'] })
+    onSuccess: async (activity) => {
+      await queryClient.refetchQueries({ queryKey: ['activities'] })
       onUse(activity)
       setResult(null)
       onClose()
