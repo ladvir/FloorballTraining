@@ -184,24 +184,18 @@ function IconFeedback({ className = 'h-5 w-5' }: { className?: string }) {
 function AppScreenshot({
   src,
   alt,
-  gradient,
   fallbackIcon,
   className = '',
 }: {
   src: string
   alt: string
-  gradient: string
   fallbackIcon: React.ReactNode
   className?: string
 }) {
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl shadow-2xl shadow-slate-900/20 ring-1 ring-slate-900/8 ${className}`}
-    >
-      {/* Gradient fallback — vždy zobrazeno jako podklad, překryto screenshotem po načtení */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${gradient}`}
-      >
+    <div className={`relative overflow-hidden rounded-2xl ${className}`}>
+      {/* Fallback — zobrazeno jako podklad, překryto screenshotem po načtení */}
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sky-400 to-sky-600">
         <div className="rounded-2xl bg-white/15 p-6 text-white backdrop-blur-sm">
           {fallbackIcon}
         </div>
@@ -226,8 +220,6 @@ function AppScreenshot({
 const featureMeta = [
   {
     Icon: IconTraining,
-    gradient: 'from-sky-500 to-blue-600',
-    accent: 'sky',
     image: '/screenshots/trainings.png',
     flip: false,
     prefix: 'featurePreparation' as const,
@@ -235,8 +227,6 @@ const featureMeta = [
   },
   {
     Icon: IconTactical,
-    gradient: 'from-violet-500 to-purple-600',
-    accent: 'violet',
     image: '/screenshots/tactical.png',
     flip: true,
     prefix: 'featureTactical' as const,
@@ -244,8 +234,6 @@ const featureMeta = [
   },
   {
     Icon: IconStats,
-    gradient: 'from-emerald-500 to-green-600',
-    accent: 'emerald',
     image: '/screenshots/stats.png',
     flip: false,
     prefix: 'featureStats' as const,
@@ -253,8 +241,6 @@ const featureMeta = [
   },
   {
     Icon: IconStopwatch,
-    gradient: 'from-orange-500 to-amber-600',
-    accent: 'orange',
     image: '/screenshots/physical-tests.png',
     flip: true,
     prefix: 'featureTesting' as const,
@@ -262,8 +248,6 @@ const featureMeta = [
   },
   {
     Icon: IconMembers,
-    gradient: 'from-pink-500 to-rose-600',
-    accent: 'pink',
     image: '/screenshots/members.png',
     flip: false,
     prefix: 'featureMembers' as const,
@@ -271,8 +255,6 @@ const featureMeta = [
   },
   {
     Icon: IconTrophy,
-    gradient: 'from-cyan-500 to-sky-600',
-    accent: 'cyan',
     image: '/screenshots/appointments.png',
     flip: true,
     prefix: 'featureCalendar' as const,
@@ -280,8 +262,6 @@ const featureMeta = [
   },
   {
     Icon: IconFeedback,
-    gradient: 'from-indigo-500 to-violet-600',
-    accent: 'indigo',
     image: '/screenshots/feedback.png',
     flip: false,
     prefix: 'featureFeedback' as const,
@@ -289,66 +269,36 @@ const featureMeta = [
   },
 ]
 
-const accentClasses: Record<string, { tag: string; check: string; blob: string }> = {
-  sky: { tag: 'bg-sky-50 text-sky-600', check: 'from-sky-500 to-blue-600', blob: 'bg-sky-400' },
-  violet: {
-    tag: 'bg-violet-50 text-violet-600',
-    check: 'from-violet-500 to-purple-600',
-    blob: 'bg-violet-400',
-  },
-  emerald: {
-    tag: 'bg-emerald-50 text-emerald-600',
-    check: 'from-emerald-500 to-green-600',
-    blob: 'bg-emerald-400',
-  },
-  orange: {
-    tag: 'bg-orange-50 text-orange-600',
-    check: 'from-orange-500 to-amber-600',
-    blob: 'bg-orange-400',
-  },
-  pink: {
-    tag: 'bg-pink-50 text-pink-600',
-    check: 'from-pink-500 to-rose-600',
-    blob: 'bg-pink-400',
-  },
-  cyan: { tag: 'bg-cyan-50 text-cyan-600', check: 'from-cyan-500 to-sky-600', blob: 'bg-cyan-400' },
-  indigo: {
-    tag: 'bg-indigo-50 text-indigo-600',
-    check: 'from-indigo-500 to-violet-600',
-    blob: 'bg-indigo-400',
-  },
-}
-
 /* ── Page ────────────────────────────────────────────────────────────────── */
 
 export function LandingPage() {
   const { t } = useTranslation()
 
-  const features = featureMeta.map(
-    ({ Icon, gradient, accent, image, flip, prefix, bulletCount }) => ({
-      Icon,
-      gradient,
-      accent,
-      image,
-      flip,
-      tag: t(`landing.${prefix}Tag`),
-      title: t(`landing.${prefix}Title`),
-      desc: t(`landing.${prefix}Desc`),
-      bullets: Array.from({ length: bulletCount }, (_, i) => t(`landing.${prefix}Bullet${i + 1}`)),
-      imageAlt: t(`landing.${prefix}ImageAlt`),
-    })
-  )
+  const features = featureMeta.map(({ Icon, image, flip, prefix, bulletCount }) => ({
+    Icon,
+    image,
+    flip,
+    tag: t(`landing.${prefix}Tag`),
+    title: t(`landing.${prefix}Title`),
+    desc: t(`landing.${prefix}Desc`),
+    bullets: Array.from({ length: bulletCount }, (_, i) => t(`landing.${prefix}Bullet${i + 1}`)),
+    imageAlt: t(`landing.${prefix}ImageAlt`),
+  }))
 
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans antialiased">
       {/* ── Navbar ───────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 right-0 left-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-md">
+      <nav className="fixed top-0 right-0 left-0 z-50 border-b border-gray-100 bg-white/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="text-xl font-bold tracking-tight text-[#0EA5E9]"
+          >
             {t('landing.title')}
-          </span>
+          </button>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher variant="light" />
+            <LanguageSwitcher />
             <Link to="/login">
               <Button variant="primary" size="sm">
                 {t('landing.login')}
@@ -360,149 +310,97 @@ export function LandingPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-slate-150 pt-16">
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(148,163,184,1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(148,163,184,1) 1px, transparent 1px)`,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        <div className="absolute top-0 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-sky-600/15 blur-[120px]" />
-
-        <div className="relative mx-auto max-w-5xl px-4 pt-24 pb-0 text-center sm:px-6 sm:pt-32 mb-32">
+        <div className="relative mx-auto max-w-5xl px-4 pt-24 pb-0 text-center sm:px-6 sm:pt-32 mb-16">
           <h1 className="mb-6 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-            <span className="text-sky-400">Flo</span>
-            {t('landing.heroWord1Rest')} <span className="text-sky-400">Tr</span>
+            <span className="text-[#0EA5E9]">Flo</span>
+            {t('landing.heroWord1Rest')} <span className="text-[#0EA5E9]">Tr</span>
             {t('landing.heroWord2Rest')}
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-lg text-slate-400 sm:text-xl">
             {t('landing.heroSubtitle')}
           </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/login">
-              <Button size="lg" variant="primary">
-                {t('landing.login')}
-              </Button>
-            </Link>
-            <a
-              href="#features"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-sky-400 px-6 text-base font-medium text-sky-400 transition-colors hover:border-slate-400 hover:bg-slate-800 hover:text-white"
-            >
-              {t('landing.features')}
-            </a>
+
+          <div className="relative mx-auto mt-16 max-w-4xl sm:mt-20">
+            <img src="/hero.png" alt={t('landing.heroImageAlt')} className="w-full rounded-2xl" />
           </div>
         </div>
       </section>
 
       {/* ── Feature sections ─────────────────────────────────────────── */}
       <section id="features">
-        {features.map(
-          ({ Icon, tag, title, desc, bullets, gradient, accent, image, imageAlt, flip }, i) => {
-            const ac = accentClasses[accent]
-            return (
-              <div
-                key={title}
-                className={`relative overflow-hidden border-b border-gray-100 py-20 sm:py-28 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}`}
-              >
-                {/* Colored blur blob — na straně textu */}
+        {features.map(({ Icon, tag, title, desc, bullets, image, imageAlt, flip }, i) => {
+          return (
+            <div
+              key={title}
+              className={`border-b border-gray-100 py-20 sm:py-28 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}`}
+            >
+              <div className="mx-auto max-w-6xl px-4 sm:px-6">
                 <div
-                  className={`pointer-events-none absolute top-1/2 -translate-y-1/2 h-[450px] w-[550px] rounded-full opacity-[0.12] blur-[100px] ${ac.blob} ${flip ? 'right-[-100px]' : 'left-[-100px]'}`}
-                />
-                <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-                  <div
-                    className={`flex flex-col items-center gap-12 lg:flex-row lg:gap-20 ${flip ? 'lg:flex-row-reverse' : ''}`}
-                  >
-                    {/* Text — mřížka pouze zde */}
-                    <div className="relative w-full overflow-hidden rounded-2xl p-8 lg:w-5/12 lg:flex-shrink-0">
-                      {/* Grid pattern jen za textem */}
-                      <div
-                        className="absolute inset-0 opacity-[0.08]"
-                        style={{
-                          backgroundImage: `linear-gradient(rgba(100,116,139,1) 1px, transparent 1px),
-                                          linear-gradient(90deg, rgba(100,116,139,1) 1px, transparent 1px)`,
-                          backgroundSize: '48px 48px',
-                        }}
-                      />
-                      <div className="relative">
-                        <span
-                          className={`mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${ac.tag}`}
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                          {tag}
-                        </span>
-                        <h2 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                          {title}
-                        </h2>
-                        <p className="mb-7 text-lg leading-relaxed text-gray-500">{desc}</p>
-                        <ul className="space-y-3">
-                          {bullets.map((b) => (
-                            <li key={b} className="flex items-start gap-3">
-                              <span
-                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${gradient}`}
+                  className={`flex flex-col items-center gap-12 lg:flex-row lg:gap-20 ${flip ? 'lg:flex-row-reverse' : ''}`}
+                >
+                  {/* Text */}
+                  <div className="w-full p-8 lg:w-5/12 lg:flex-shrink-0">
+                    <div>
+                      <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-[#0EA5E9]">
+                        <Icon className="h-3.5 w-3.5" />
+                        {tag}
+                      </span>
+                      <h2
+                        className="mb-4 text-3xl font-medium tracking-tight text-gray-900 sm:text-4xl"
+                        style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+                      >
+                        {title}
+                      </h2>
+                      <p className="mb-7 text-lg leading-relaxed text-gray-500">{desc}</p>
+                      <ul className="space-y-3">
+                        {bullets.map((b) => (
+                          <li key={b} className="flex items-start gap-3">
+                            <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#0EA5E9]">
+                              <svg
+                                className="h-3 w-3 text-white"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={3}
                               >
-                                <svg
-                                  className="h-3 w-3 text-white"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={3}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              </span>
-                              <span className="text-sm leading-relaxed text-gray-600">{b}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>{' '}
-                      {/* /relative content */}
-                    </div>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            </span>
+                            <span className="text-sm leading-relaxed text-gray-600">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>{' '}
+                    {/* /relative content */}
+                  </div>
 
-                    {/* Screenshot */}
-                    <div className="w-full lg:w-7/12">
-                      <AppScreenshot
-                        src={image}
-                        alt={imageAlt}
-                        gradient={gradient}
-                        fallbackIcon={<Icon className="h-12 w-12 text-white" />}
-                        className="min-h-[260px]"
-                      />
-                    </div>
+                  {/* Screenshot */}
+                  <div className="w-full lg:w-7/12">
+                    <AppScreenshot
+                      src={image}
+                      alt={imageAlt}
+                      fallbackIcon={<Icon className="h-12 w-12 text-white" />}
+                      className="min-h-[260px]"
+                    />
                   </div>
                 </div>
               </div>
-            )
-          }
-        )}
+            </div>
+          )
+        })}
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-slate-950 px-4 py-28 sm:px-6">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 30% 50%, rgba(14,165,233,0.3) 0%, transparent 55%),
-                              radial-gradient(circle at 70% 50%, rgba(99,102,241,0.2) 0%, transparent 55%)`,
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(148,163,184,1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(148,163,184,1) 1px, transparent 1px)`,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        <div className="relative mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+      <section className="border-t border-gray-100 bg-slate-50 px-4 py-28 sm:px-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
             {t('landing.ctaTitle')}
           </h2>
-          <p className="mb-10 text-lg text-slate-400">{t('landing.ctaSubtitle')}</p>
+          <p className="mb-10 text-lg text-gray-500">{t('landing.ctaSubtitle')}</p>
           <Link to="/login">
             <Button size="lg" variant="primary">
               {t('landing.login')}
@@ -512,9 +410,9 @@ export function LandingPage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 sm:px-6">
+      <footer className="border-t border-gray-100 bg-white px-4 py-8 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row">
-          <span className="font-semibold text-slate-400">{t('landing.title')}</span>
+          <span className="font-semibold text-slate-700">{t('landing.title')}</span>
           <span>
             © {t('landing.title')}. {t('landing.subtitle')}
           </span>
