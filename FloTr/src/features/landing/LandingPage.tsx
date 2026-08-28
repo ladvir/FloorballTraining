@@ -220,49 +220,49 @@ function AppScreenshot({
 const featureMeta = [
   {
     Icon: IconTraining,
-    image: '/screenshots/trainings.png',
+    image: 'screenshots/trainings.png',
     flip: false,
     prefix: 'featurePreparation' as const,
     bulletCount: 3,
   },
   {
     Icon: IconTactical,
-    image: '/screenshots/tactical.png',
+    image: 'screenshots/tactical.png',
     flip: true,
     prefix: 'featureTactical' as const,
     bulletCount: 2,
   },
   {
     Icon: IconStats,
-    image: '/screenshots/stats.png',
+    image: 'screenshots/stats.png',
     flip: false,
     prefix: 'featureStats' as const,
     bulletCount: 1,
   },
   {
     Icon: IconStopwatch,
-    image: '/screenshots/physical-tests.png',
+    image: 'screenshots/physical-tests.png',
     flip: true,
     prefix: 'featureTesting' as const,
     bulletCount: 3,
   },
   {
     Icon: IconMembers,
-    image: '/screenshots/members.png',
+    image: 'screenshots/members.png',
     flip: false,
     prefix: 'featureMembers' as const,
     bulletCount: 2,
   },
   {
     Icon: IconTrophy,
-    image: '/screenshots/appointments.png',
+    image: 'screenshots/appointments.png',
     flip: true,
     prefix: 'featureCalendar' as const,
     bulletCount: 2,
   },
   {
     Icon: IconFeedback,
-    image: '/screenshots/feedback.png',
+    image: 'screenshots/feedback.png',
     flip: false,
     prefix: 'featureFeedback' as const,
     bulletCount: 3,
@@ -321,7 +321,11 @@ export function LandingPage() {
           </p>
 
           <div className="relative mx-auto mt-16 max-w-4xl sm:mt-20">
-            <img src="/hero.png" alt={t('landing.heroImageAlt')} className="w-full rounded-2xl" />
+            <img
+              src={`${import.meta.env.BASE_URL}hero.png`}
+              alt={t('landing.heroImageAlt')}
+              className="w-full rounded-2xl"
+            />
           </div>
         </div>
       </section>
@@ -381,7 +385,7 @@ export function LandingPage() {
                   {/* Screenshot */}
                   <div className="w-full lg:w-7/12">
                     <AppScreenshot
-                      src={image}
+                      src={`${import.meta.env.BASE_URL}${image}`}
                       alt={imageAlt}
                       fallbackIcon={<Icon className="h-12 w-12 text-white" />}
                       className="min-h-[260px]"
