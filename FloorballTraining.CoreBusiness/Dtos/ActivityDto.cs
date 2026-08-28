@@ -2,6 +2,13 @@
 
 public class ActivityDto : ActivityBaseDto
 {
+    /// <summary>
+    /// Server-computed hint for the current caller: may they edit/delete this activity?
+    /// Set by read endpoints (Get / all); mirrors ActivitiesController.CanModifyActivityAsync.
+    /// Ignored on write.
+    /// </summary>
+    public bool CanEdit { get; set; }
+
     public List<ActivityTagDto> ActivityTags { get; set; } = new();
 
     public List<ActivityEquipmentDto> ActivityEquipments { get; set; } = new();

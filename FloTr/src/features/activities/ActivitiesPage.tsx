@@ -725,7 +725,8 @@ export function ActivitiesPage() {
     }
   }, [])
 
-  const canEdit = (a: ActivityDto) => isAdmin || (user && a.createdByUserId === user.id)
+  const canEdit = (a: ActivityDto) =>
+    a.canEdit ?? (isAdmin || (!!user && a.createdByUserId === user.id))
   const hasFilters =
     searchText ||
     selectedTagIds.length > 0 ||

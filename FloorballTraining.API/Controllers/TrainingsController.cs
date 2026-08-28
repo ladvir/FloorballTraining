@@ -130,6 +130,18 @@ public class TrainingsController(
         return new ActionResult<Pagination<TrainingDto>>(items);
     }
 
+    // System-wide training/activity defaults (from AppSettings / appsettings.json).
+    // The training form uses these as a fallback when the team has no value set.
+    [HttpGet("defaults")]
+    public IActionResult GetDefaults([FromServices] AppSettings appSettings) => Ok(new
+    {
+        maximalPersons = appSettings.MaximalPersons,
+        maxActivityDuration = appSettings.MaxActivityDuration,
+        maxTrainingPartDuration = appSettings.MaxTrainingPartDuration,
+        maxTrainingDuration = appSettings.MaxTrainingDuration,
+        minimalDurationTrainingGoalPercent = appSettings.MinimalDurationTrainingGoalPercent,
+    });
+
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<TrainingDto>>> GetTrainingsAll()
     {

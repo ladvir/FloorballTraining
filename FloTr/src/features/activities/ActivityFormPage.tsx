@@ -869,8 +869,14 @@ export function ActivityFormPage() {
 
   if (isEdit && loadingActivity) return <LoadingSpinner />
 
-  // Only admin or the author can edit
-  if (isEdit && existingActivity && !isAdmin && existingActivity.createdByUserId !== user?.id) {
+  // Admin, the author, or (per server) a coach of the author's team can edit
+  if (
+    isEdit &&
+    existingActivity &&
+    existingActivity.canEdit !== true &&
+    !isAdmin &&
+    existingActivity.createdByUserId !== user?.id
+  ) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">{t('activities.formPermissions')}</p>

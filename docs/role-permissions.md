@@ -67,12 +67,14 @@ Aplikace má **dva nezávislé systémy rolí**, které se kombinují do jedné 
 | Zobrazení seznamu aktivit | ano | ano | ano | ano |
 | Zobrazení detailu aktivity | ano | ano | ano | ano |
 | Vytvoření aktivity | ano | ano | ano | ano |
-| Úprava aktivity | **vlastní** | **vlastní** | **vlastní** | **vše** |
-| Smazání aktivity | **vlastní** | **vlastní** | **vlastní** | **vše** |
+| Úprava aktivity | **vlastní** | **vlastní + tým** | **klub** | **vše** |
+| Smazání aktivity | **vlastní** | **vlastní + tým** | **klub** | **vše** |
 | Stažení PDF aktivity | ano | ano | ano | ano |
 | Validace aktivity | ano | ano | ano | ano |
 | Přidání/úprava/smazání obrázku | ano | ano | ano | ano |
 | Nastavení náhledu (thumbnail) | ano | ano | ano | ano |
+
+> **vlastní + tým** = vlastní aktivity + aktivity, jejichž autor je členem týmu, který daný trenér vede (`TeamMember.IsCoach`). Aktivity bez autora (seed/sdílené) může upravovat každý trenér. **klub** = libovolná aktivita, jejíž autor patří do klubu hlavního trenéra.
 
 ### Tréninky (/trainings)
 
@@ -121,9 +123,11 @@ Aplikace má **dva nezávislé systémy rolí**, které se kombinují do jedné 
 | Zobrazení osobních událostí | **vlastní** | **vlastní** | **vlastní** | **vše** |
 | Vytvoření týmové události | ne | **ano** | **ano** | **ano** |
 | Vytvoření osobní události | ano | ano | ano | ano |
-| Úprava události | **vlastní** | **vlastní** | **vlastní** | **vše** |
-| Smazání události | **vlastní** | **vlastní** | **vlastní** | **vše** |
+| Úprava události | **vlastní** | **vlastní + tým** | **vlastní + klub** | **vše** |
+| Smazání události | **vlastní** | **vlastní + tým** | **vlastní + klub** | **vše** |
 | Filtr statusu (viditelnost) | ne | ne | ne | **ano** |
+
+> **vlastní** = událost, kterou uživatel vytvořil (`OwnerUserId`). **tým** = týmová událost, jejíž `TeamId` je mezi týmy, které trenér vede (`CoachRoleInfo.CoachTeamIds`). **klub** = libovolná týmová událost týmu spadajícího do klubu, kde má uživatel roli HeadCoach/ClubAdmin. Viz `CanModifyAppointmentAsync` a `canEditAppointment` (FE).
 
 ### Kluby (/clubs)
 

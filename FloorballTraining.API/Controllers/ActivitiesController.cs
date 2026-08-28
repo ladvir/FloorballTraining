@@ -54,9 +54,17 @@ public class ActivitiesController(
         if (roleInfo.EffectiveRole == "User") return false;
 
         var canEditAny = User.IsInRole("Admin") || roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only edit their own activities; null-author means pre-auth, treat as unclaimed.
+        // Coaches may edit their own activities, plus any activity whose author is a member of a
+        // team they coach. Null-author means pre-auth, treat as unclaimed (editable).
         if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return false;
+        {
+            if (roleInfo.CoachTeamIds.Count == 0) return false;
+            var authorInCoachTeam = await context.TeamMembers.AnyAsync(tm =>
+                tm.TeamId.HasValue
+                && roleInfo.CoachTeamIds.Contains(tm.TeamId.Value)
+                && tm.Member!.AppUserId == existing.CreatedByUserId);
+            if (!authorInCoachTeam) return false;
+        }
 
         // Club-scope guard: HeadCoach/ClubAdmin may only edit activities authored by members of
         // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
@@ -69,6 +77,47 @@ public class ActivitiesController(
         }
 
         return true;
+    }
+
+    // Batch equivalent of CanModifyActivityAsync for read endpoints — same rule, one query per
+    // scope instead of one per activity. Keep in sync with CanModifyActivityAsync.
+    private async Task PopulateCanEdit(IReadOnlyCollection<ActivityDto> dtos, string userId)
+    {
+        if (dtos.Count == 0) return;
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return; // CanEdit stays false
+
+        if (User.IsInRole("Admin"))
+        {
+            foreach (var d in dtos) d.CanEdit = true;
+            return;
+        }
+
+        var authorIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Cast<string>().Distinct().ToList();
+
+        if (roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin")
+        {
+            HashSet<string> clubAuthors = [];
+            if (roleInfo.ClubId.HasValue && authorIds.Count > 0)
+                clubAuthors = (await context.Members
+                    .Where(m => m.ClubId == roleInfo.ClubId.Value && m.AppUserId != null && authorIds.Contains(m.AppUserId))
+                    .Select(m => m.AppUserId!).ToListAsync()).ToHashSet();
+            foreach (var d in dtos)
+                d.CanEdit = d.CreatedByUserId != null && clubAuthors.Contains(d.CreatedByUserId);
+            return;
+        }
+
+        // Coach: own or unclaimed activities, plus authors on a team they coach.
+        HashSet<string> teamAuthors = [];
+        if (roleInfo.CoachTeamIds.Count > 0 && authorIds.Count > 0)
+            teamAuthors = (await context.TeamMembers
+                .Where(tm => tm.TeamId.HasValue && roleInfo.CoachTeamIds.Contains(tm.TeamId.Value)
+                    && tm.Member!.AppUserId != null && authorIds.Contains(tm.Member.AppUserId))
+                .Select(tm => tm.Member!.AppUserId!).Distinct().ToListAsync()).ToHashSet();
+        foreach (var d in dtos)
+            d.CanEdit = d.CreatedByUserId == null || d.CreatedByUserId == userId
+                || teamAuthors.Contains(d.CreatedByUserId);
     }
 
     private async Task PopulateUserNames(IEnumerable<ActivityDto> dtos)
@@ -102,6 +151,7 @@ public class ActivitiesController(
         if (!items.Any()) return NotFound(new ApiResponse(404));
 
         await PopulateUserNames(items);
+        await PopulateCanEdit(items, GetCurrentUserId()!);
         return new ActionResult<IReadOnlyList<ActivityDto>>(items);
     }
 
@@ -109,7 +159,11 @@ public class ActivitiesController(
     public async Task<ActivityDto?> Get(int id)
     {
         var dto = await viewActivityByIdUseCase.ExecuteAsync(id);
-        if (dto != null) await PopulateUserNames(new[] { dto });
+        if (dto != null)
+        {
+            await PopulateUserNames(new[] { dto });
+            await PopulateCanEdit(new[] { dto }, GetCurrentUserId()!);
+        }
         return dto;
     }
 

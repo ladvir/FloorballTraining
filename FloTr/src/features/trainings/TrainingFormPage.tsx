@@ -929,6 +929,11 @@ export function TrainingFormPage() {
     queryKey: ['activities'],
     queryFn: activitiesApi.getAll,
   })
+  const { data: sysDefaults } = useQuery({
+    queryKey: ['trainingDefaults'],
+    queryFn: trainingsApi.getDefaults,
+    staleTime: Infinity,
+  })
 
   const { data: defaultTeam } = useQuery({
     queryKey: ['team', user?.defaultTeamId],
@@ -950,10 +955,11 @@ export function TrainingFormPage() {
   const maxDuration = defaultTeam?.maxTrainingDuration ?? 120
   const maxPartDuration = defaultTeam?.maxTrainingPartDuration ?? 40
 
-  // Defaults applied to activities created inline from this form
+  // Defaults applied to activities created inline from this form.
+  // Resolution: team value → system default (API AppSettings) → hard fallback.
   const newActivityDefaults = {
-    personsMax: defaultTeam?.personsMax,
-    durationMax: defaultTeam?.maxTrainingPartDuration,
+    personsMax: defaultTeam?.personsMax || sysDefaults?.maximalPersons || 30,
+    durationMax: defaultTeam?.maxTrainingPartDuration || sysDefaults?.maxActivityDuration || 15,
   }
   const resolverRef = useRef(zodResolver(makeSchema(maxDuration, maxPartDuration)))
   useEffect(() => {

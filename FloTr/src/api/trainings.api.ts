@@ -6,8 +6,19 @@ import type {
   SimilarityTier,
 } from '../types/domain.types'
 
+/** System-wide training/activity defaults from the API config (AppSettings). */
+export interface TrainingDefaultsDto {
+  maximalPersons: number
+  maxActivityDuration: number
+  maxTrainingPartDuration: number
+  maxTrainingDuration: number
+  minimalDurationTrainingGoalPercent: number
+}
+
 export const trainingsApi = {
   getAll: () => apiClient.get<TrainingDto[]>('/trainings/all').then((r) => r.data),
+
+  getDefaults: () => apiClient.get<TrainingDefaultsDto>('/trainings/defaults').then((r) => r.data),
 
   getIndividual: () =>
     apiClient

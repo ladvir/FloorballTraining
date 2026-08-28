@@ -247,6 +247,8 @@ export interface ActivityDto {
   validationErrors?: string[]
   createdByUserId?: string
   createdByUserName?: string
+  /** Server-computed: may the current user edit/delete this activity? (Get / all endpoints) */
+  canEdit?: boolean
   activityTags?: ActivityTagDto[]
   activityAgeGroups?: ActivityAgeGroupDto[]
   activityEquipments?: ActivityEquipmentDto[]

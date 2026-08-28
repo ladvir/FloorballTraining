@@ -101,7 +101,7 @@ export function ActivityDetailModal({
       ?.map((ag) => ag.ageGroup?.name ?? ag.ageGroup?.description)
       .filter(Boolean) ?? []
 
-  const canEdit = isAdmin || activity.createdByUserId === user?.id
+  const canEdit = activity.canEdit ?? (isAdmin || activity.createdByUserId === user?.id)
 
   const envLabels: Record<string, string> = {
     Indoor: t('appointments.env.indoor'),
