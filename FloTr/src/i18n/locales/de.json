@@ -2640,6 +2640,7 @@
   },
   "pdf": {
     "title": "PDF-Einstellungen",
+    "previewOnly": "Nur Vorschau",
     "training": "Training",
     "parts": "Trainingsteile",
     "activities": "Aktivitäten",

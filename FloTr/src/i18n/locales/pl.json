@@ -2642,6 +2642,7 @@
   },
   "pdf": {
     "title": "Ustawienia PDF",
+    "previewOnly": "Tylko podgląd",
     "training": "Trening",
     "parts": "Części treningu",
     "activities": "Aktywności",

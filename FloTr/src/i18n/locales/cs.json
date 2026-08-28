@@ -2642,6 +2642,7 @@
   },
   "pdf": {
     "title": "Nastavení PDF",
+    "previewOnly": "Pouze náhled",
     "training": "Trénink",
     "parts": "Části tréninku",
     "activities": "Aktivity",

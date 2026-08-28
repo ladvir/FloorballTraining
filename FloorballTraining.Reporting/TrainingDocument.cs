@@ -1,4 +1,5 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
@@ -42,7 +43,7 @@ public class TrainingDocument : IDocument
 
         Settings.CheckIfAllTextGlyphsAreAvailable = false;
 
-        if (_options.IncludeImages)
+        if (_options.IncludeImages && !_options.Compact)
             PreloadImages();
     }
 
@@ -116,7 +117,7 @@ public class TrainingDocument : IDocument
                 page.Margin(8, Unit.Millimetre);
 
                 page.Header().Element(ComposeHeader);
-                page.Content().Element(ComposeContent);
+                page.Content().Element(_options.Compact ? ComposeCompactContent : ComposeContent);
 
                 page.Footer().Element(ComposeFooter);
             });
@@ -257,6 +258,212 @@ public class TrainingDocument : IDocument
             });
 
         });
+    }
+
+    // ── Compact "preview" layout — mirrors the FloTr training preview modal ──────
+    void ComposeCompactContent(IContainer container)
+    {
+        container.PaddingTop(4).Column(column =>
+        {
+            column.Spacing(8);
+
+            // Status + author
+            column.Item().Row(row =>
+            {
+                row.AutoItem().Text(text =>
+                {
+                    text.Span("● ").FontColor(Model.IsDraft ? Colors.Yellow.Darken2 : Colors.Green.Darken1);
+                    text.Span(Model.IsDraft ? "Rozpracovaný" : "Kompletní").FontColor(Colors.Grey.Darken2);
+                });
+                if (!string.IsNullOrEmpty(Model.CreatedByUserName))
+                    row.RelativeItem().AlignRight().Text(Model.CreatedByUserName!).FontSize(9).FontColor(Colors.Grey.Darken1);
+            });
+
+            // Description
+            if (!string.IsNullOrEmpty(Model.Description))
+            {
+                column.Item().Element(e => CompactLabel(e, "Popis"));
+                column.Item().Text(Model.Description!);
+            }
+
+            // Parameters
+            var pairs = new List<(string Label, string Value)>();
+            if (Model.Duration > 0) pairs.Add(("Trvání", $"{Model.Duration} min"));
+            if (Model.GoaliesMin > 0) pairs.Add(("Brankáři", $"{Model.GoaliesMin}{(Model.GoaliesMax > 0 ? "–" + Model.GoaliesMax : "+")}"));
+            if (Model.Difficulty > 0 && Model.Difficulty < Difficulties.Descriptions.Length)
+                pairs.Add(("Obtížnost", Difficulties.Descriptions[Model.Difficulty]));
+            if (Model.Intensity > 0 && Model.Intensity < Intensities.Descriptions.Length)
+                pairs.Add(("Intenzita", Intensities.Descriptions[Model.Intensity]));
+            pairs.Add(("Prostředí", Model.Environment.GetDescription()));
+
+            column.Item().Column(grid =>
+            {
+                grid.Spacing(6);
+                for (var i = 0; i < pairs.Count; i += 3)
+                {
+                    var chunk = pairs.Skip(i).Take(3).ToList();
+                    grid.Item().Row(row =>
+                    {
+                        row.Spacing(8);
+                        foreach (var (label, value) in chunk)
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text(label).FontSize(8).FontColor(Colors.Grey.Darken1);
+                                c.Item().Text(value).SemiBold();
+                            });
+                        for (var pad = chunk.Count; pad < 3; pad++) row.RelativeItem();
+                    });
+                }
+            });
+
+            // Skills — derived from activities, goal skills first (like the modal)
+            var derived = Model.TrainingParts
+                .SelectMany(p => p.TrainingGroups ?? new List<TrainingGroupDto>())
+                .Where(g => g.Activity != null)
+                .SelectMany(g => g.Activity!.ActivitySkills)
+                .Where(s => s.SkillId != null && !string.IsNullOrEmpty(s.SkillName))
+                .GroupBy(s => s.SkillId!.Value)
+                .Select(g => g.First())
+                .ToList();
+            if (derived.Count > 0)
+            {
+                var goalIds = new HashSet<int>(new[]
+                    {
+                        Model.TrainingGoalSkill1?.Id, Model.TrainingGoalSkill2?.Id, Model.TrainingGoalSkill3?.Id
+                    }
+                    .Where(id => id is > 0).Select(id => id!.Value));
+                var ordered = derived.Where(s => goalIds.Contains(s.SkillId!.Value))
+                    .Concat(derived.Where(s => !goalIds.Contains(s.SkillId!.Value)))
+                    .ToList();
+
+                column.Item().Element(e => CompactLabel(e, "Zaměření tréninku"));
+                column.Item().Inlined(inlined =>
+                {
+                    inlined.Spacing(4);
+                    inlined.VerticalSpacing(4);
+                    foreach (var s in ordered)
+                        inlined.Item()
+                            .Background(CategoryColorHex(s.SkillCategoryId ?? 0))
+                            .PaddingHorizontal(6).PaddingVertical(2)
+                            .Text(s.SkillName!).FontSize(8).FontColor(Colors.White);
+                });
+            }
+
+            // Supplementary tags
+            var tags = Model.GetTrainingGoals().Select(g => g.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+            if (tags.Count > 0)
+            {
+                column.Item().Element(e => CompactLabel(e, "Doplňující štítky"));
+                column.Item().Element(e => ChipRow(e, tags!));
+            }
+
+            // Age groups
+            var ages = Model.TrainingAgeGroups.Select(ag => ag.Name).Where(n => !string.IsNullOrEmpty(n)).OrderBy(n => n).ToList();
+            if (ages.Count > 0)
+            {
+                column.Item().Element(e => CompactLabel(e, "Věkové kategorie"));
+                column.Item().Element(e => ChipRow(e, ages!));
+            }
+
+            // Comments
+            if (_options.IncludeComments && !string.IsNullOrEmpty(Model.CommentBefore))
+            {
+                column.Item().Element(e => CompactLabel(e, "Poznámka před tréninkem"));
+                column.Item().Text(Model.CommentBefore!);
+            }
+            if (_options.IncludeComments && !string.IsNullOrEmpty(Model.CommentAfter))
+            {
+                column.Item().Element(e => CompactLabel(e, "Poznámka po tréninku"));
+                column.Item().Text(Model.CommentAfter!);
+            }
+
+            // Parts
+            if (Model.TrainingParts.Count > 0)
+            {
+                column.Item().Element(e => CompactLabel(e, "Části tréninku"));
+                column.Item().Column(pc =>
+                {
+                    pc.Spacing(6);
+                    var idx = 0;
+                    foreach (var part in Model.TrainingParts)
+                    {
+                        var i = ++idx;
+                        pc.Item().Element(e => CompactPart(e, part, i));
+                    }
+                });
+            }
+        });
+    }
+
+    private void CompactLabel(IContainer container, string text) =>
+        container.PaddingTop(2).Text(text.ToUpperInvariant())
+            .FontSize(8).SemiBold().FontColor(Colors.Grey.Darken1);
+
+    private static void ChipRow(IContainer container, IEnumerable<string> items) =>
+        container.Inlined(inlined =>
+        {
+            inlined.Spacing(4);
+            inlined.VerticalSpacing(4);
+            foreach (var item in items)
+                inlined.Item()
+                    .Background(Colors.Grey.Lighten3)
+                    .PaddingHorizontal(6).PaddingVertical(2)
+                    .Text(item).FontSize(8).FontColor(Colors.Grey.Darken3);
+        });
+
+    private void CompactPart(IContainer container, TrainingPartDto part, int index)
+    {
+        container.Layers(layers =>
+        {
+            layers.Layer().SkiaSharpCanvas((canvas, size) =>
+            {
+                DrawRoundedRectangle(canvas, size, Colors.White, false);
+                DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
+            });
+
+            layers.PrimaryLayer().PaddingHorizontal(6).PaddingVertical(5).Column(c =>
+            {
+                c.Spacing(3);
+                c.Item().Row(row =>
+                {
+                    row.RelativeItem().Text(string.IsNullOrEmpty(part.Name) ? $"Část {index}" : part.Name!).SemiBold();
+                    row.AutoItem().Text($"{part.Duration} min").FontSize(9).FontColor(Colors.Grey.Darken1);
+                });
+
+                if (_options.IncludePartDescriptions && !string.IsNullOrEmpty(part.Description))
+                    c.Item().Text(part.Description!).FontSize(9).FontColor(Colors.Grey.Darken1);
+
+                foreach (var group in (part.TrainingGroups ?? new List<TrainingGroupDto>()).Where(g => g.Activity != null))
+                {
+                    c.Item().Text(text =>
+                    {
+                        text.Span("•  ").FontColor(Colors.Grey.Medium);
+                        text.Span(group.Activity!.Name);
+                    });
+                }
+            });
+        });
+    }
+
+    private static string CategoryColorHex(int categoryId)
+    {
+        var hue = categoryId * 137.508 % 360;
+        return HslToHex(hue, 0.55, 0.42);
+    }
+
+    private static string HslToHex(double h, double s, double l)
+    {
+        var c = (1 - Math.Abs(2 * l - 1)) * s;
+        var x = c * (1 - Math.Abs(h / 60.0 % 2 - 1));
+        var m = l - c / 2;
+        double r = 0, g = 0, b = 0;
+        if (h < 60) { r = c; g = x; }
+        else if (h < 120) { r = x; g = c; }
+        else if (h < 180) { g = c; b = x; }
+        else if (h < 240) { g = x; b = c; }
+        else if (h < 300) { r = x; b = c; }
+        else { r = c; b = x; }
+        return $"#{(int)Math.Round((r + m) * 255):X2}{(int)Math.Round((g + m) * 255):X2}{(int)Math.Round((b + m) * 255):X2}";
     }
 
     private void AddTrainingPart(IContainer container, TrainingPartDto trainingPart)

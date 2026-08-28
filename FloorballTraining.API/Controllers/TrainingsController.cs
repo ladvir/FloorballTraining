@@ -361,7 +361,8 @@ public class TrainingsController(
         [FromQuery] bool includeComments = true,
         [FromQuery] bool includePartDescriptions = true,
         [FromQuery] bool includeActivityDescriptions = true,
-        [FromQuery] bool includeImages = true)
+        [FromQuery] bool includeImages = true,
+        [FromQuery] bool compact = false)
     {
         var options = new Reporting.PdfOptions
         {
@@ -371,7 +372,8 @@ public class TrainingsController(
             IncludeComments = includeComments,
             IncludePartDescriptions = includePartDescriptions,
             IncludeActivityDescriptions = includeActivityDescriptions,
-            IncludeImages = includeImages
+            IncludeImages = includeImages,
+            Compact = compact
         };
         var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!, options);
         if (bytes == null) return NotFound();

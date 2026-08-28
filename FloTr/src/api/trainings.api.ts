@@ -84,7 +84,8 @@ export const trainingsApi = {
         | 'includeComments'
         | 'includePartDescriptions'
         | 'includeActivityDescriptions'
-        | 'includeImages',
+        | 'includeImages'
+        | 'compact',
         boolean
       >
     >
@@ -92,7 +93,8 @@ export const trainingsApi = {
     const params = new URLSearchParams()
     if (options) {
       for (const [key, value] of Object.entries(options)) {
-        if (value === false) params.set(key, 'false')
+        // `compact` opts in (default false); the include* flags opt out (default true)
+        if (key === 'compact' ? value === true : value === false) params.set(key, String(value))
       }
     }
     const query = params.toString()

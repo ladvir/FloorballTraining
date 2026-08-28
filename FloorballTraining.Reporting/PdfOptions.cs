@@ -22,4 +22,8 @@ public class PdfOptions
 
     /// <summary>Obrázky aktivit</summary>
     public bool IncludeImages { get; set; } = true;
+
+    /// <summary>Kompaktní "náhledové" rozvržení – shrnutí tréninku tak, jak vypadá
+    /// v náhledovém modálním okně (bez obrázků a popisů aktivit).</summary>
+    public bool Compact { get; set; }
 }

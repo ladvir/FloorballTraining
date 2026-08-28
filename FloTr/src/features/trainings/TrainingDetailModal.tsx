@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { User, Dumbbell, Copy } from 'lucide-react'
+import { User, Dumbbell, Copy, FileDown } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
@@ -19,6 +20,7 @@ interface Props {
 
 export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Props) {
   const { t } = useTranslation()
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -102,15 +104,6 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             <div>
               <p className="text-xs text-gray-400">{t('trainings.detailDuration')}</p>
               <p className="text-sm font-medium">{training.duration} min</p>
-            </div>
-          )}
-          {training.personsMin != null && training.personsMin > 0 && (
-            <div>
-              <p className="text-xs text-gray-400">{t('trainings.colPlayers')}</p>
-              <p className="text-sm font-medium">
-                {training.personsMin}
-                {training.personsMax ? `–${training.personsMax}` : '+'}
-              </p>
             </div>
           )}
           {training.goaliesMin != null && training.goaliesMin > 0 && (
@@ -255,12 +248,6 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
                         <div key={gi} className="flex items-center gap-2 text-xs text-gray-600">
                           <Dumbbell className="h-3 w-3 text-gray-400" />
                           <span>{group.activity?.name || '(bez aktivity)'}</span>
-                          {group.personsMin != null && group.personsMin > 0 && (
-                            <span className="text-gray-400">
-                              ({group.personsMin}
-                              {group.personsMax ? `–${group.personsMax}` : '+'} hráčů)
-                            </span>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -288,6 +275,22 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
       </div>
 
       <div className="mt-4 flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          loading={downloadingPdf}
+          onClick={async () => {
+            setDownloadingPdf(true)
+            try {
+              await trainingsApi.downloadPdf(training.id, training.name, { compact: true })
+            } finally {
+              setDownloadingPdf(false)
+            }
+          }}
+        >
+          <FileDown className="h-3.5 w-3.5" />
+          PDF
+        </Button>
         {onCopy && (
           <Button
             size="sm"

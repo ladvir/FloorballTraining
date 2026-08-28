@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\FloorballTraining.UseCases\FloorballTraining.UseCases.csproj" />
     <ProjectReference Include="..\..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
+    <ProjectReference Include="..\..\FloorballTraining.Reporting\FloorballTraining.Reporting.csproj" />
   </ItemGroup>
 
 </Project>

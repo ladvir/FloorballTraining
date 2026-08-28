@@ -2641,6 +2641,7 @@
   },
   "pdf": {
     "title": "Nastavenia PDF",
+    "previewOnly": "Iba náhľad",
     "training": "Tréning",
     "parts": "Časti tréningu",
     "activities": "Aktivity",
