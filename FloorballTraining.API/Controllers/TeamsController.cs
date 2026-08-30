@@ -176,8 +176,6 @@ public class TeamsController(
         if (request.CopyPlan)
         {
             var sourceMesocycles = await context.Mesocycles
-                .Include(m => m.GoalTags)
-                .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalTags)
                 .Include(m => m.Microcycles).ThenInclude(mc => mc.RecommendedTrainings)
                 .Where(m => m.TeamId == id)
                 .ToListAsync();
@@ -208,9 +206,9 @@ public class TeamsController(
                         StartDate = meso.StartDate + delta,
                         EndDate = meso.EndDate + delta,
                         Goal = meso.Goal,
-                        GoalTags = meso.GoalTags
-                            .Select(gt => new MesocycleTag { TagId = gt.TagId })
-                            .ToList(),
+                        GoalSkill1Id = meso.GoalSkill1Id,
+                        GoalSkill2Id = meso.GoalSkill2Id,
+                        GoalSkill3Id = meso.GoalSkill3Id,
                         Microcycles = meso.Microcycles.Select(mc => new Microcycle
                         {
                             Name = mc.Name,
@@ -218,9 +216,9 @@ public class TeamsController(
                             StartDate = mc.StartDate + delta,
                             EndDate = mc.EndDate + delta,
                             Goal = mc.Goal,
-                            GoalTags = mc.GoalTags
-                                .Select(gt => new MicrocycleTag { TagId = gt.TagId })
-                                .ToList(),
+                            GoalSkill1Id = mc.GoalSkill1Id,
+                            GoalSkill2Id = mc.GoalSkill2Id,
+                            GoalSkill3Id = mc.GoalSkill3Id,
                             RecommendedTrainings = mc.RecommendedTrainings
                                 .Select(rt => new MicrocycleTraining
                                 {

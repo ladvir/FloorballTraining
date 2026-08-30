@@ -17,7 +17,14 @@ public class Microcycle : BaseEntity, IAuditable
     public DateTime EndDate { get; set; }
     public string? Goal { get; set; }
 
-    public List<MicrocycleTag> GoalTags { get; set; } = [];
+    // Cílové dovednosti cyklu (max 3) — nahrazuje dřívější MicrocycleTag, sjednoceno s Training (#163).
+    public Skill? GoalSkill1 { get; set; }
+    public int? GoalSkill1Id { get; set; }
+    public Skill? GoalSkill2 { get; set; }
+    public int? GoalSkill2Id { get; set; }
+    public Skill? GoalSkill3 { get; set; }
+    public int? GoalSkill3Id { get; set; }
+
     public List<MicrocycleTraining> RecommendedTrainings { get; set; } = [];
 
     public DateTime CreatedAt { get; set; }

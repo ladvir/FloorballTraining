@@ -16,6 +16,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
 import { formatFullName } from '../../utils/name'
 import { AppointmentLineupSection } from './AppointmentLineupSection'
+import { refreshAppointments } from './refreshAppointments'
 
 const TESTING_TYPE = 8
 
@@ -353,9 +354,7 @@ export function AppointmentFormModal({
     mutationFn: ({ data, updateWholeChain }: { data: FormData; updateWholeChain: boolean }) =>
       doSave(data, updateWholeChain),
     onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      if (isEdit) queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void refreshAppointments(queryClient)
       if (!isEdit) {
         const newId = (response as { data?: { id?: number } })?.data?.id
         if (newId) onCreated?.(newId, Number(variables.data.appointmentType))
@@ -396,9 +395,7 @@ export function AppointmentFormModal({
         params: alsoFuture ? { alsoFutureAppointments: true } : undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void refreshAppointments(queryClient)
       onSaved?.()
       onClose()
     },

@@ -12,7 +12,7 @@ import { planningApi } from '../../api/planning.api'
 import { toast } from '../../utils/toast'
 import type { MesocycleDto } from '../../types/domain.types'
 import { findOverlap, isOutsideRange, suggestNextStart } from './planningUtils'
-import { GoalTagPicker } from './GoalTagPicker'
+import { GoalSkillPicker } from './GoalSkillPicker'
 
 const PHASES = [0, 1, 2, 3, 4]
 
@@ -37,7 +37,7 @@ export function MesocycleModal({
 }: MesocycleModalProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const [goalTagIds, setGoalTagIds] = useState<number[]>([])
+  const [goalSkillIds, setGoalSkillIds] = useState<number[]>([])
   const [saveError, setSaveError] = useState<string | null>(null)
   const [shiftFollowing, setShiftFollowing] = useState(false)
 
@@ -79,11 +79,11 @@ export function MesocycleModal({
         endDate: existing.endDate.slice(0, 10),
         goal: existing.goal ?? '',
       })
-      setGoalTagIds(existing.goalTagIds)
+      setGoalSkillIds(existing.goalSkillIds)
     } else {
       const start = suggestNextStart(siblings, seasonStart ?? new Date().toISOString())
       reset({ name: '', phase: 0, startDate: start, endDate: '', goal: '' })
-      setGoalTagIds([])
+      setGoalSkillIds([])
     }
   }, [isOpen, existing, siblings, seasonStart, reset])
 
@@ -111,7 +111,7 @@ export function MesocycleModal({
         startDate: data.startDate,
         endDate: data.endDate,
         goal: data.goal || null,
-        goalTagIds,
+        goalSkillIds,
       }
       return existing
         ? planningApi.updateMesocycle(dto, { shiftFollowing })
@@ -225,7 +225,7 @@ export function MesocycleModal({
           />
         </div>
 
-        <GoalTagPicker selectedIds={goalTagIds} onChange={setGoalTagIds} />
+        <GoalSkillPicker selectedIds={goalSkillIds} onChange={setGoalSkillIds} />
 
         {saveError && (
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

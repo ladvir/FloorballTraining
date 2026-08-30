@@ -16,11 +16,12 @@ import { useConfirm } from '../../store/confirmStore'
 import { toast } from '../../utils/toast'
 import { dfLocale } from '../../utils/dateLocale'
 import { cn } from '../../utils/cn'
+import { skillPalette } from '../../utils/skillColors'
 import type {
   MesocycleDto,
   MicrocycleDto,
   SeasonDto,
-  TagDto,
+  SkillDto,
   TrainingDto,
 } from '../../types/domain.types'
 import { PlanTimeline } from './PlanTimeline'
@@ -57,17 +58,17 @@ function fmtRange(startDate: string, endDate: string): string {
   )}`
 }
 
-function TagChips({ tags }: { tags: TagDto[] }) {
-  if (!tags.length) return null
+function SkillChips({ skills }: { skills: SkillDto[] }) {
+  if (!skills.length) return null
   return (
     <div className="flex flex-wrap gap-1">
-      {tags.map((tag) => (
+      {skills.map((skill) => (
         <span
-          key={tag.id}
+          key={skill.id}
           className="rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-          style={{ backgroundColor: tag.color || '#0284c7' }}
+          style={{ backgroundColor: skillPalette(skill.skillCategoryId).activeBg }}
         >
-          {tag.name}
+          {skill.name}
         </span>
       ))}
     </div>
@@ -456,7 +457,7 @@ export function SeasonPlanPage() {
                       {selectedMeso.goal && (
                         <p className="text-sm text-gray-700">{selectedMeso.goal}</p>
                       )}
-                      <TagChips tags={selectedMeso.goalTags} />
+                      <SkillChips skills={selectedMeso.goalSkills} />
 
                       {/* Microcycles list */}
                       <div className="border-t border-gray-100 pt-3">
@@ -572,7 +573,7 @@ export function SeasonPlanPage() {
                       {selectedMicro.goal && (
                         <p className="text-sm text-gray-700">{selectedMicro.goal}</p>
                       )}
-                      <TagChips tags={selectedMicro.goalTags} />
+                      <SkillChips skills={selectedMicro.goalSkills} />
 
                       {/* Recommended trainings */}
                       <div className="border-t border-gray-100 pt-3">

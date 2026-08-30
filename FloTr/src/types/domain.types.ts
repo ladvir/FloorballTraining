@@ -530,8 +530,8 @@ export interface MicrocycleDto {
   startDate: string
   endDate: string
   goal?: string | null
-  goalTagIds: number[]
-  goalTags: TagDto[]
+  goalSkillIds: number[]
+  goalSkills: SkillDto[]
   recommendedTrainings: MicrocycleTrainingDto[]
 }
 
@@ -543,8 +543,8 @@ export interface MesocycleDto {
   startDate: string
   endDate: string
   goal?: string | null
-  goalTagIds: number[]
-  goalTags: TagDto[]
+  goalSkillIds: number[]
+  goalSkills: SkillDto[]
   microcycles: MicrocycleDto[]
 }
 
@@ -567,12 +567,14 @@ export interface CycleCalendarDto {
   type: number
   startDate: string
   endDate: string
+  mesocycleGoalSkills: SkillDto[]
+  microcycleGoalSkills: SkillDto[]
 }
 
-export interface TagCoverageDto {
-  tagId: number
-  tagName: string
-  color: string
+export interface SkillCoverageDto {
+  skillId: number
+  skillName: string
+  categoryId: number
   matchedMinutes: number
   trainingsCount: number
 }
@@ -587,7 +589,7 @@ export interface CycleEvaluationBlockDto {
   totalTrainingMinutes: number
   goalMatchedMinutes: number
   goalCoveragePercent: number
-  perTag: TagCoverageDto[]
+  perSkill: SkillCoverageDto[]
   presentCount: number
   absentCount: number
   excusedCount: number

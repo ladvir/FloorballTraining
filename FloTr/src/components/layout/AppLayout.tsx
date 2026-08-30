@@ -8,6 +8,7 @@ import { ConflictToast } from '../shared/ConflictToast'
 import { useNotificationsHub } from '../../hooks/useNotificationsHub'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { InstallPromptBanner } from '../shared/InstallPromptBanner'
+import { LiveTrainingPanel } from '../../features/trainings/live/LiveTrainingPanel'
 
 export function AppLayout() {
   const { t } = useTranslation()
@@ -28,6 +29,7 @@ export function AppLayout() {
       </a>
       <ConflictToast />
       <InstallPromptBanner />
+      <LiveTrainingPanel />
       {!isOnline && (
         <div
           data-testid="offline-banner"

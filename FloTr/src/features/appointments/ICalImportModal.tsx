@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { appointmentsApi, teamsApi } from '../../api/index'
 import type { ICalImportResult } from '../../api/index'
+import { refreshAppointments } from './refreshAppointments'
 
 interface Props {
   isOpen: boolean
@@ -27,7 +28,7 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
     onSuccess: (data) => {
       setImportResult(data)
       setImportError(null)
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      void refreshAppointments(queryClient)
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data

@@ -30,6 +30,7 @@ import {
   Star,
   HelpCircle,
   UserCheck,
+  Target,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -42,10 +43,12 @@ import { appointmentsApi, teamsApi, seasonsApi, placesApi, ratingsApi } from '..
 import { planningApi } from '../../api/planning.api'
 import {
   buildDayCycleMap,
+  cycleForDay,
   typeTintClass,
   typeSwatchClass,
   phaseBorderClass,
   phaseBlockClass,
+  type CalendarCycle,
   type DayCycleInfo,
 } from '../planning/planningUtils'
 import { AppointmentFormModal } from './AppointmentFormModal'
@@ -53,6 +56,7 @@ import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
 import { ICalImportModal } from './ICalImportModal'
 import { AppointmentsHelpModal } from './AppointmentsHelpModal'
+import { refreshAppointments } from './refreshAppointments'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
 import { getEventScope, scopeDateBg, type EventScope } from './appointmentUtils'
@@ -190,7 +194,7 @@ export function AppointmentsPage() {
   const deleteAllMutation = useMutation({
     mutationFn: () => appointmentsApi.deleteAll(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      void refreshAppointments(queryClient)
       setDeleteConfirmOpen(false)
     },
   })
@@ -217,7 +221,7 @@ export function AppointmentsPage() {
         testDefinitionIds: apt.testDefinitionIds ?? [],
       })
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
+    onSuccess: () => void refreshAppointments(queryClient),
   })
 
   // When currentSeasonId is null (nothing stored), auto-select the season whose dates contain today.
@@ -357,16 +361,29 @@ export function AppointmentsPage() {
     return map
   }, [calendarAppointments])
 
-  // Season-plan overlay: one small fetch per visible month; skipped when off or no team
+  // Season-plan cycles: the visible month for the calendar overlay, the whole visible list span
+  // for the list view (so every row can show its meso/microcycle + target skills).
+  const planRange = useMemo(() => {
+    if (viewMode === 'calendar') {
+      return {
+        from: format(calendarStart, 'yyyy-MM-dd'),
+        to: format(calendarEnd, 'yyyy-MM-dd'),
+      }
+    }
+    if (!listAppointments.length) return null
+    let min = listAppointments[0].start
+    let max = listAppointments[0].end
+    for (const a of listAppointments) {
+      if (a.start < min) min = a.start
+      if (a.end > max) max = a.end
+    }
+    return { from: format(parseISO(min), 'yyyy-MM-dd'), to: format(parseISO(max), 'yyyy-MM-dd') }
+  }, [viewMode, calendarStart, calendarEnd, listAppointments])
+
   const { data: planCycles } = useQuery({
-    queryKey: ['planCalendar', currentTeamId, format(calendarStart, 'yyyy-MM-dd')],
-    queryFn: () =>
-      planningApi.getCalendarCycles(
-        currentTeamId,
-        format(calendarStart, 'yyyy-MM-dd'),
-        format(calendarEnd, 'yyyy-MM-dd')
-      ),
-    enabled: viewMode === 'calendar' && currentTeamId > 0 && showPlanOverlay,
+    queryKey: ['planCalendar', currentTeamId, planRange?.from, planRange?.to],
+    queryFn: () => planningApi.getCalendarCycles(currentTeamId, planRange!.from, planRange!.to),
+    enabled: currentTeamId > 0 && planRange != null && (viewMode === 'list' || showPlanOverlay),
   })
 
   const dayCycleMap = useMemo(
@@ -593,6 +610,7 @@ export function AppointmentsPage() {
           ratingAverages={ratingAverages}
           isCoach={isCoach}
           typeLabels={typeLabels}
+          planCycles={planCycles ?? []}
         />
       ) : (
         <CalendarView
@@ -719,6 +737,38 @@ function SortButton({
   )
 }
 
+/** meso • micro + target-skill chips — shown on calendar cells and list rows. */
+function CycleTag({
+  mesocycleName,
+  microcycleName,
+  goalSkills,
+  className = '',
+}: {
+  mesocycleName: string
+  microcycleName: string
+  goalSkills: { id: number; name: string }[]
+  className?: string
+}) {
+  const { t } = useTranslation()
+  return (
+    <span className={`flex flex-wrap items-center gap-1 text-xs text-violet-700 ${className}`}>
+      <Target className="h-3.5 w-3.5 shrink-0 text-violet-400" />
+      <span className="font-medium">
+        {mesocycleName} • {microcycleName}
+      </span>
+      {goalSkills.map((s) => (
+        <span
+          key={s.id}
+          className="rounded-full bg-violet-50 px-1.5 py-px text-[10px] font-medium text-violet-700"
+          title={t('appointments.planGoalsTitle')}
+        >
+          {s.name}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 function ListView({
   appointments,
   showPast,
@@ -730,6 +780,7 @@ function ListView({
   ratingAverages,
   isCoach,
   typeLabels,
+  planCycles,
 }: {
   appointments: AppointmentDto[]
   showPast: boolean
@@ -741,6 +792,7 @@ function ListView({
   ratingAverages?: Record<number, number>
   isCoach: boolean
   typeLabels: Record<number, string>
+  planCycles: CalendarCycle[]
 }) {
   const { t } = useTranslation()
   const [ratingFilter, setRatingFilter] = useState<'all' | 'rated' | 'unrated'>('all')
@@ -810,6 +862,7 @@ function ListView({
             const isPast = isAfter(new Date(), end)
             const isVirtual = isRecurringOccurrence(apt)
             const scope = getEventScope(apt, isCoach)
+            const cyc = cycleForDay(planCycles, format(start, 'yyyy-MM-dd'))
             return (
               <Card
                 key={apt.id}
@@ -900,6 +953,14 @@ function ListView({
                         </span>
                       )}
                     </div>
+                    {cyc && (
+                      <CycleTag
+                        mesocycleName={cyc.mesocycleName}
+                        microcycleName={cyc.microcycleName}
+                        goalSkills={cyc.goalSkills}
+                        className="mt-1"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1046,7 +1107,11 @@ function CalendarView({
                 }`}
                 title={
                   cycleInfo
-                    ? `${cycleInfo.mesocycleName} • ${cycleInfo.microcycleName} • ${t(`planning.type${cycleInfo.type}`)}`
+                    ? `${cycleInfo.mesocycleName} • ${cycleInfo.microcycleName} • ${t(`planning.type${cycleInfo.type}`)}${
+                        cycleInfo.goalSkills.length
+                          ? ` • ${cycleInfo.goalSkills.map((s) => s.name).join(', ')}`
+                          : ''
+                      }`
                     : undefined
                 }
                 onClick={() => onDayClick(day)}
@@ -1087,6 +1152,21 @@ function CalendarView({
                   {format(day, 'd')}
                 </div>
                 <div className="clear-both space-y-0.5">
+                  {cycleInfo?.isMicroStart && (
+                    <div className="mb-0.5 flex flex-wrap items-center gap-0.5 leading-tight">
+                      <span className="max-w-full truncate text-[9px] font-semibold text-violet-700">
+                        {cycleInfo.microcycleName}
+                      </span>
+                      {cycleInfo.goalSkills.slice(0, 3).map((s) => (
+                        <span
+                          key={s.id}
+                          className="rounded bg-violet-100 px-1 text-[9px] text-violet-700"
+                        >
+                          {s.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {dayAppointments.slice(0, 3).map((apt, j) => {
                     const isVirtual = isRecurringOccurrence(apt)
                     const hasRating = ratingAverages?.[apt.id] != null

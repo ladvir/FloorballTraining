@@ -6,6 +6,7 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases;
+using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.AspNetCore.Http;

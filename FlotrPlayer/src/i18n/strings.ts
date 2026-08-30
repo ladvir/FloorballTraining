@@ -190,6 +190,29 @@ export type StringKey =
   | 'events.typeMatch'
   | 'events.typeOther'
   | 'events.toRate'
+  | 'liveTraining.launch'
+  | 'liveTraining.allParts'
+  | 'liveTraining.endEarly'
+  | 'liveTraining.open'
+  | 'liveTraining.inProgress'
+  | 'liveTraining.close'
+  | 'liveTraining.nowLabel'
+  | 'liveTraining.nextLabel'
+  | 'liveTraining.lastPart'
+  | 'liveTraining.partFallback'
+  | 'liveTraining.onSchedule'
+  | 'liveTraining.behindBy'
+  | 'liveTraining.aheadBy'
+  | 'liveTraining.inTime'
+  | 'liveTraining.overdueBy'
+  | 'liveTraining.nextPart'
+  | 'liveTraining.finish'
+  | 'liveTraining.finishConfirmTitle'
+  | 'liveTraining.finishConfirmRate'
+  | 'liveTraining.finished'
+  | 'liveTraining.ratePrompt'
+  | 'liveTraining.done'
+  | 'liveTraining.emptyParts'
   | 'ratings.pickGrade'
   | 'ratings.commentPlaceholder'
   | 'ratings.save'
@@ -451,6 +474,29 @@ const cs: Record<StringKey, string> = {
   'events.typeMatch': 'Zápas',
   'events.typeOther': 'Událost',
   'events.toRate': 'K ohodnocení',
+  'liveTraining.launch': 'Spustit živě',
+  'liveTraining.allParts': 'Všechny části',
+  'liveTraining.endEarly': 'Ukončit',
+  'liveTraining.open': 'Otevřít',
+  'liveTraining.inProgress': 'Probíhá živý trénink',
+  'liveTraining.close': 'Zavřít',
+  'liveTraining.nowLabel': 'Část {i}/{total}',
+  'liveTraining.nextLabel': 'Následuje',
+  'liveTraining.lastPart': 'Toto je poslední část.',
+  'liveTraining.partFallback': 'Část {n}',
+  'liveTraining.onSchedule': 'Podle plánu',
+  'liveTraining.behindBy': 'Ve skluzu o {time}',
+  'liveTraining.aheadBy': 'V předstihu o {time}',
+  'liveTraining.inTime': 'za {time}',
+  'liveTraining.overdueBy': 'zpoždění {time}',
+  'liveTraining.nextPart': 'Další část',
+  'liveTraining.finish': 'Ukončit trénink',
+  'liveTraining.finishConfirmTitle': 'Ukončit trénink?',
+  'liveTraining.finishConfirmRate': 'Ukončit trénink a ohodnotit událost?',
+  'liveTraining.finished': 'Trénink dokončen',
+  'liveTraining.ratePrompt': 'Chceš událost ohodnotit?',
+  'liveTraining.done': 'Hotovo',
+  'liveTraining.emptyParts': 'Trénink nemá žádné části.',
   'ratings.pickGrade': 'Zvolit známku',
   'ratings.commentPlaceholder': 'Komentář (volitelný)...',
   'ratings.save': 'Uložit hodnocení',

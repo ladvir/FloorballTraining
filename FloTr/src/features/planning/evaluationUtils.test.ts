@@ -12,7 +12,7 @@ const block = (over: Partial<CycleEvaluationBlockDto>): CycleEvaluationBlockDto 
   totalTrainingMinutes: 0,
   goalMatchedMinutes: 0,
   goalCoveragePercent: 0,
-  perTag: [],
+  perSkill: [],
   presentCount: 0,
   absentCount: 0,
   excusedCount: 0,

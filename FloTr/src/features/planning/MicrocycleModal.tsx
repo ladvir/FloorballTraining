@@ -13,7 +13,7 @@ import { planningApi } from '../../api/planning.api'
 import { toast } from '../../utils/toast'
 import type { MesocycleDto, MicrocycleDto } from '../../types/domain.types'
 import { findOverlap, suggestNextStart } from './planningUtils'
-import { GoalTagPicker } from './GoalTagPicker'
+import { GoalSkillPicker } from './GoalSkillPicker'
 
 const TYPES = [0, 1, 2, 3, 4]
 
@@ -27,7 +27,7 @@ interface MicrocycleModalProps {
 export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: MicrocycleModalProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const [goalTagIds, setGoalTagIds] = useState<number[]>([])
+  const [goalSkillIds, setGoalSkillIds] = useState<number[]>([])
   const [saveError, setSaveError] = useState<string | null>(null)
   const [shiftFollowing, setShiftFollowing] = useState(false)
 
@@ -80,7 +80,7 @@ export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: Microc
         endDate: existing.endDate.slice(0, 10),
         goal: existing.goal ?? '',
       })
-      setGoalTagIds(existing.goalTagIds)
+      setGoalSkillIds(existing.goalSkillIds)
     } else {
       // Suggest the next free week inside the mesocycle
       const start = suggestNextStart(mesocycle.microcycles, mesoStart)
@@ -93,7 +93,7 @@ export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: Microc
         endDate: end,
         goal: '',
       })
-      setGoalTagIds([])
+      setGoalSkillIds([])
     }
   }, [isOpen, existing, mesocycle, mesoStart, mesoEnd, reset, t])
 
@@ -122,7 +122,7 @@ export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: Microc
         startDate: data.startDate,
         endDate: data.endDate,
         goal: data.goal || null,
-        goalTagIds,
+        goalSkillIds,
       }
       return existing
         ? planningApi.updateMicrocycle(dto, shiftFollowing)
@@ -237,7 +237,7 @@ export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: Microc
           />
         </div>
 
-        <GoalTagPicker selectedIds={goalTagIds} onChange={setGoalTagIds} />
+        <GoalSkillPicker selectedIds={goalSkillIds} onChange={setGoalSkillIds} />
 
         {saveError && (
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

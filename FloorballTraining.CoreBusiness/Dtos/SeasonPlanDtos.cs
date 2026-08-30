@@ -23,10 +23,10 @@ public class MesocycleDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? Goal { get; set; }
-    /// <summary>Write side: tag ids to set (max 3, IsTrainingGoal tags).</summary>
-    public List<int> GoalTagIds { get; set; } = [];
-    /// <summary>Read side: resolved tags with name + color.</summary>
-    public List<TagDto> GoalTags { get; set; } = [];
+    /// <summary>Write side: skill ids to set as cycle goals (max 3).</summary>
+    public List<int> GoalSkillIds { get; set; } = [];
+    /// <summary>Read side: resolved goal skills.</summary>
+    public List<SkillDto> GoalSkills { get; set; } = [];
     public List<MicrocycleDto> Microcycles { get; set; } = [];
 }
 
@@ -39,8 +39,8 @@ public class MicrocycleDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? Goal { get; set; }
-    public List<int> GoalTagIds { get; set; } = [];
-    public List<TagDto> GoalTags { get; set; } = [];
+    public List<int> GoalSkillIds { get; set; } = [];
+    public List<SkillDto> GoalSkills { get; set; } = [];
     public List<MicrocycleTrainingDto> RecommendedTrainings { get; set; } = [];
 }
 
@@ -67,6 +67,10 @@ public class CycleCalendarDto
     public MicrocycleType Type { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    /// <summary>Target skills of the parent mesocycle (max 3).</summary>
+    public List<SkillDto> MesocycleGoalSkills { get; set; } = [];
+    /// <summary>Target skills of this microcycle (max 3).</summary>
+    public List<SkillDto> MicrocycleGoalSkills { get; set; } = [];
 }
 
 /// <summary>Request for splitting a mesocycle into Monday-aligned week microcycles.</summary>
@@ -116,10 +120,10 @@ public class CycleEvaluationBlockDto
     public int WithLinkedTrainingCount { get; set; }
     /// <summary>Σ activity minutes (training parts) of held linked trainings.</summary>
     public int TotalTrainingMinutes { get; set; }
-    /// <summary>Σ minutes of training parts targeting the cycle's goal tags.</summary>
+    /// <summary>Σ minutes of training parts targeting the cycle's goal skills.</summary>
     public int GoalMatchedMinutes { get; set; }
     public double GoalCoveragePercent { get; set; }
-    public List<TagCoverageDto> PerTag { get; set; } = [];
+    public List<SkillCoverageDto> PerSkill { get; set; } = [];
 
     // Attendance — over all appointments of the team in range
     public int PresentCount { get; set; }
@@ -135,11 +139,11 @@ public class CycleEvaluationBlockDto
     public double? PlayerAverageGrade { get; set; }
 }
 
-public class TagCoverageDto
+public class SkillCoverageDto
 {
-    public int TagId { get; set; }
-    public string TagName { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
+    public int SkillId { get; set; }
+    public string SkillName { get; set; } = string.Empty;
+    public int CategoryId { get; set; }
     public int MatchedMinutes { get; set; }
     public int TrainingsCount { get; set; }
 }

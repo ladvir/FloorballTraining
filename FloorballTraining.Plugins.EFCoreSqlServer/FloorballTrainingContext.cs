@@ -132,8 +132,6 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<Mesocycle> Mesocycles { get; set; } = null!;
         public DbSet<Microcycle> Microcycles { get; set; } = null!;
-        public DbSet<MesocycleTag> MesocycleTags { get; set; } = null!;
-        public DbSet<MicrocycleTag> MicrocycleTags { get; set; } = null!;
         public DbSet<MicrocycleTraining> MicrocycleTrainings { get; set; } = null!;
 
         public DbSet<ReportScoreWeight> ReportScoreWeights { get; set; } = null!;

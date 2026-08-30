@@ -418,3 +418,25 @@ export interface RateAppointmentRequest {
   grade: number
   comment?: string | null
 }
+
+// ── Training detail (GET /trainings/{id}) — only the fields the live runner needs. ────────────
+export interface TrainingGroupDto {
+  id: number
+  activity?: { id: number; name?: string } | null
+}
+
+export interface TrainingPartDto {
+  id: number
+  name?: string | null
+  description?: string | null
+  order: number
+  /** Planned length in whole minutes. */
+  duration: number
+  trainingGroups?: TrainingGroupDto[] | null
+}
+
+export interface TrainingDto {
+  id: number
+  name: string
+  trainingParts?: TrainingPartDto[] | null
+}

@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   LogIn,
   RefreshCw,
+  PlayCircle,
 } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -33,6 +34,8 @@ import { toast } from '../../utils/toast'
 import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
+import { useLiveTrainingStore } from '../../store/liveTrainingStore'
+import { primeAudio } from '../../utils/sound'
 import { XpCareerCard } from '../members/XpCareerCard'
 import { ChallengesCard } from '../members/ChallengesCard'
 import { PendingRewardsCard } from '../members/RewardsCard'
@@ -589,6 +592,7 @@ function AppointmentCard({
   onClick: () => void
 }) {
   const { t } = useTranslation()
+  const startLive = useLiveTrainingStore((s) => s.start)
   const typeLabels: Record<number, string> = {
     0: t('appointments.typeTraining'),
     1: t('appointments.typeMatch'),
@@ -667,6 +671,27 @@ function AppointmentCard({
                 <Dumbbell className="h-3 w-3" />
                 {apt.trainingName || t('appointments.trainingFallback', { id: apt.trainingId })}
               </Link>
+            )}
+            {isCoach && isTraining && !isPast && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  primeAudio()
+                  startLive({
+                    trainingId: apt.trainingId!,
+                    trainingName:
+                      apt.trainingName ||
+                      t('appointments.trainingFallback', { id: apt.trainingId }),
+                    appointmentId: apt.id,
+                    appointmentName: apt.name || apt.trainingName,
+                  })
+                }}
+                className="flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-green-700"
+              >
+                <PlayCircle className="h-3 w-3" />
+                {t('liveTraining.start')}
+              </button>
             )}
             {!isTraining && apt.trainingName && (
               <span className="text-xs text-sky-600">{apt.trainingName}</span>

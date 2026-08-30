@@ -98,6 +98,11 @@ export function MainTabs() {
           component={RosterScreen}
           options={{ title: t('nav.roster'), tabBarIcon: tabIcon('people-outline') }}
         />
+        <Tab.Screen
+          name="Events"
+          component={EventsScreen}
+          options={{ title: t('nav.events'), tabBarIcon: tabIcon('calendar-outline') }}
+        />
         {hasChildren && (
           <Tab.Screen
             name="Children"

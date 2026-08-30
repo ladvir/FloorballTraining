@@ -44,6 +44,7 @@ import {
   Copy,
   HelpCircle,
   Sparkles,
+  PlayCircle,
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
@@ -62,6 +63,8 @@ import { tagsApi, teamsApi, ageGroupsApi, aiApi, playerSkillsApi } from '../../a
 import { useAuthStore } from '../../store/authStore'
 import { useAiDraftStore } from '../../store/aiDraftStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
+import { useLiveTrainingStore } from '../../store/liveTrainingStore'
+import { primeAudio } from '../../utils/sound'
 import { AiGroupActivityModal } from './AiGroupActivityModal'
 import DrawingComponent, {
   type DrawingSaveData,
@@ -859,6 +862,7 @@ export function TrainingFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const { user, isAdmin, isCoach } = useAuthStore()
+  const startLive = useLiveTrainingStore((s) => s.start)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [showImages, setShowImages] = useState(true)
@@ -1162,6 +1166,11 @@ export function TrainingFormPage() {
       // explicitly to ensure the training is excluded from its own match list.
       const savedId = (saved as TrainingDto | undefined)?.id ?? (isEdit ? Number(id) : undefined)
       runSimilarityCheck(savedId)
+      // After a *create*, move into the edit route for the new training so a page refresh
+      // (or shared URL) lands on the saved training, not a blank "new training" form.
+      if (!isEdit && savedId != null) {
+        navigate(`/trainings/${savedId}/edit`, { replace: true })
+      }
     },
     onError: (err: unknown) => {
       const msg =
@@ -1884,6 +1893,23 @@ export function TrainingFormPage() {
                 >
                   <Copy className="h-3.5 w-3.5" />
                   {t('common.copy')}
+                </Button>
+              )}
+              {isCoach && (existingTraining?.trainingParts?.length ?? 0) > 0 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    primeAudio()
+                    startLive({
+                      trainingId: Number(id),
+                      trainingName: existingTraining?.name ?? getValues('name'),
+                    })
+                  }}
+                  className="whitespace-nowrap"
+                >
+                  <PlayCircle className="h-3.5 w-3.5" />
+                  {t('liveTraining.start')}
                 </Button>
               )}
               {isAdmin && (

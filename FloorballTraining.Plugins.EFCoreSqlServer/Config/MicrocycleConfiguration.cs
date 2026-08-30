@@ -20,6 +20,10 @@ public class MicrocycleConfiguration : IEntityTypeConfiguration<Microcycle>
             .HasForeignKey(e => e.MesocycleId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(e => e.GoalSkill1).WithMany().HasForeignKey(e => e.GoalSkill1Id);
+        builder.HasOne(e => e.GoalSkill2).WithMany().HasForeignKey(e => e.GoalSkill2Id);
+        builder.HasOne(e => e.GoalSkill3).WithMany().HasForeignKey(e => e.GoalSkill3Id);
+
         builder.HasIndex(e => new { e.MesocycleId, e.StartDate });
     }
 }

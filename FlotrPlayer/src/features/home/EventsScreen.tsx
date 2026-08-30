@@ -12,8 +12,13 @@ import { ErrorState, LoadingState } from '../../components/StatusView'
 import { VideoPlayer } from '../../components/VideoPlayer'
 import { appointmentsApi, playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
+import { useAuthStore } from '../../store/authStore'
+import { useLiveTrainingStore } from '../../store/liveTrainingStore'
 import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
 import type { AppointmentDto } from '../../types/domain.types'
+
+// Admin / club admin / head coach / coach — the roles allowed to run a training live.
+const LIVE_ROLES = ['Admin', 'ClubAdmin', 'HeadCoach', 'Coach']
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const formatWhen = (iso: string) => {
@@ -47,11 +52,12 @@ export function EventsScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}>
         <Text style={styles.title}>{t('events.title')}</Text>
 
-        <Button
-          title={t('homeTraining.log')}
-          disabled={memberId == null}
-          onPress={() => (navigation as any).navigate('HomeTraining', { memberId })}
-        />
+        {memberId != null && (
+          <Button
+            title={t('homeTraining.log')}
+            onPress={() => (navigation as any).navigate('HomeTraining', { memberId })}
+          />
+        )}
 
         <Text style={styles.sectionTitle}>{t('events.upcoming')}</Text>
 
@@ -110,11 +116,36 @@ function EventRow({
   /** Renders the player's own rate/view/edit/delete widget below the row (recently-ended events only). */
   showRating?: boolean
 }) {
+  const navigation = useNavigation()
+  const effectiveRole = useAuthStore((s) => s.user?.effectiveRole)
+  const startLive = useLiveTrainingStore((s) => s.start)
+  const liveSession = useLiveTrainingStore((s) => s.session)
+
   const videosQuery = useQuery({
     queryKey: ['appointments', appointment.id, 'videos'],
     queryFn: () => appointmentsApi.getVideos(appointment.id),
     enabled: expanded,
   })
+
+  const canRunLive =
+    LIVE_ROLES.includes(effectiveRole ?? '') &&
+    appointment.appointmentType === 0 &&
+    appointment.trainingId != null
+  const liveActiveForThis =
+    liveSession?.appointmentId === appointment.id && !liveSession.finished
+
+  const launchLive = () => {
+    if (!appointment.trainingId) return
+    if (!liveActiveForThis) {
+      startLive({
+        trainingId: appointment.trainingId,
+        trainingName: appointment.trainingName || appointment.name || t('events.typeTraining'),
+        appointmentId: appointment.id,
+        appointmentName: appointment.name || appointment.trainingName || undefined,
+      })
+    }
+    ;(navigation as any).navigate('LiveTraining')
+  }
 
   return (
     <GlassCard>
@@ -135,6 +166,15 @@ function EventRow({
         <Text style={styles.rowType}>{typeLabel(appointment)}</Text>
         <Icon name={expanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={16} color={colors.textMuted} />
       </Pressable>
+
+      {canRunLive && (
+        <Pressable style={styles.liveButton} onPress={launchLive}>
+          <Icon name="play" size={14} color={colors.textPrimary} />
+          <Text style={styles.liveButtonText}>
+            {liveActiveForThis ? t('liveTraining.open') : t('liveTraining.launch')}
+          </Text>
+        </Pressable>
+      )}
 
       {showRating && <RatingWidget appointmentId={appointment.id} />}
 
@@ -191,4 +231,16 @@ const styles = StyleSheet.create({
   rowMeta: { color: colors.textMuted, fontSize: typography.caption.fontSize, marginTop: 2 },
   rowType: { color: colors.textSecondary, fontSize: typography.caption.fontSize },
   videos: { gap: spacing.md, padding: spacing.md, paddingTop: 0 },
+  liveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+  },
+  liveButtonText: { color: colors.textPrimary, fontSize: typography.caption.fontSize, fontWeight: '700' },
 })

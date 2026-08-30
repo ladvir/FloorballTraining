@@ -20,7 +20,10 @@ public class SeasonPlanController(
     FloorballTrainingContext context,
     IClubRoleService clubRoleService) : BaseApiController
 {
-    private const int MaxGoalTags = 3;
+    private const int MaxGoalSkills = 3;
+
+    /// <summary>i-th element of a (max-3) goal-skill id list, or null when it isn't set.</summary>
+    private static int? GoalSkillAt(List<int> ids, int i) => i < ids.Count ? ids[i] : null;
 
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     private bool IsAdmin() => User.IsInRole("Admin");
@@ -93,14 +96,19 @@ public class SeasonPlanController(
 
     // ── Mapping ──────────────────────────────────────────────────────────────
 
-    private static TagDto ToTagDto(Tag t) => new()
+    private static SkillDto ToSkillDto(Skill s) => new()
     {
-        Id = t.Id,
-        Name = t.Name,
-        Color = t.Color,
-        ParentTagId = t.ParentTagId,
-        IsTrainingGoal = t.IsTrainingGoal
+        Id = s.Id,
+        Name = s.Name,
+        SkillCategoryId = s.SkillCategoryId,
+        SkillCategoryName = s.SkillCategory?.Name
     };
+
+    private static List<int> GoalSkillIds(int? id1, int? id2, int? id3) =>
+        new[] { id1, id2, id3 }.Where(x => x.HasValue).Select(x => x!.Value).ToList();
+
+    private static List<SkillDto> GoalSkillDtos(params Skill?[] skills) =>
+        skills.Where(s => s != null).Select(s => ToSkillDto(s!)).ToList();
 
     private static MicrocycleDto ToDto(Microcycle m, Dictionary<int, int>? scheduledCounts = null) => new()
     {
@@ -111,8 +119,8 @@ public class SeasonPlanController(
         StartDate = m.StartDate,
         EndDate = m.EndDate,
         Goal = m.Goal,
-        GoalTagIds = m.GoalTags.Select(gt => gt.TagId).ToList(),
-        GoalTags = m.GoalTags.Where(gt => gt.Tag != null).Select(gt => ToTagDto(gt.Tag!)).ToList(),
+        GoalSkillIds = GoalSkillIds(m.GoalSkill1Id, m.GoalSkill2Id, m.GoalSkill3Id),
+        GoalSkills = GoalSkillDtos(m.GoalSkill1, m.GoalSkill2, m.GoalSkill3),
         RecommendedTrainings = m.RecommendedTrainings
             .OrderBy(rt => rt.SortOrder)
             .Select(rt => new MicrocycleTrainingDto
@@ -136,8 +144,8 @@ public class SeasonPlanController(
         StartDate = m.StartDate,
         EndDate = m.EndDate,
         Goal = m.Goal,
-        GoalTagIds = m.GoalTags.Select(gt => gt.TagId).ToList(),
-        GoalTags = m.GoalTags.Where(gt => gt.Tag != null).Select(gt => ToTagDto(gt.Tag!)).ToList(),
+        GoalSkillIds = GoalSkillIds(m.GoalSkill1Id, m.GoalSkill2Id, m.GoalSkill3Id),
+        GoalSkills = GoalSkillDtos(m.GoalSkill1, m.GoalSkill2, m.GoalSkill3),
         Microcycles = m.Microcycles
             .OrderBy(mc => mc.StartDate)
             .Select(mc => ToDto(mc, scheduledCounts))
@@ -145,8 +153,10 @@ public class SeasonPlanController(
     };
 
     private IQueryable<Mesocycle> MesocyclesWithDetails() => context.Mesocycles
-        .Include(m => m.GoalTags).ThenInclude(gt => gt.Tag)
-        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalTags).ThenInclude(gt => gt.Tag)
+        .Include(m => m.GoalSkill1).Include(m => m.GoalSkill2).Include(m => m.GoalSkill3)
+        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill1)
+        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill2)
+        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill3)
         .Include(m => m.Microcycles).ThenInclude(mc => mc.RecommendedTrainings).ThenInclude(rt => rt.Training);
 
     /// <summary>
@@ -188,19 +198,18 @@ public class SeasonPlanController(
     private static bool RangesOverlap(DateTime startA, DateTime endA, DateTime startB, DateTime endB)
         => startA <= endB && startB <= endA;
 
-    private async Task<string?> ValidateGoalTagsAsync(List<int> tagIds)
+    private async Task<string?> ValidateGoalSkillsAsync(List<int> skillIds)
     {
-        if (tagIds.Distinct().Count() != tagIds.Count)
+        if (skillIds.Distinct().Count() != skillIds.Count)
             return "Cíle se nesmí opakovat.";
-        if (tagIds.Count > MaxGoalTags)
-            return $"Cyklus může mít nejvýše {MaxGoalTags} cíle.";
-        if (tagIds.Count == 0) return null;
+        if (skillIds.Count > MaxGoalSkills)
+            return $"Cyklus může mít nejvýše {MaxGoalSkills} cíle.";
+        if (skillIds.Count == 0) return null;
 
-        var validCount = await context.Tags
-            .CountAsync(t => tagIds.Contains(t.Id) && t.IsTrainingGoal);
-        return validCount == tagIds.Count
+        var validCount = await context.Skills.CountAsync(s => skillIds.Contains(s.Id));
+        return validCount == skillIds.Count
             ? null
-            : "Cíle cyklu musí být existující tréninkové cíle.";
+            : "Cíle cyklu musí být existující dovednosti.";
     }
 
     // ── Read endpoints ───────────────────────────────────────────────────────
@@ -248,22 +257,29 @@ public class SeasonPlanController(
         var fromDate = from.Date;
         var toDate = to.Date;
 
-        var cycles = await context.Microcycles
+        var microcycles = await context.Microcycles
             .Where(mc => mc.Mesocycle!.TeamId == teamId
                          && mc.StartDate <= toDate && mc.EndDate >= fromDate)
+            .Include(mc => mc.GoalSkill1).Include(mc => mc.GoalSkill2).Include(mc => mc.GoalSkill3)
+            .Include(mc => mc.Mesocycle!).ThenInclude(m => m.GoalSkill1)
+            .Include(mc => mc.Mesocycle!).ThenInclude(m => m.GoalSkill2)
+            .Include(mc => mc.Mesocycle!).ThenInclude(m => m.GoalSkill3)
             .OrderBy(mc => mc.StartDate)
-            .Select(mc => new CycleCalendarDto
-            {
-                MicrocycleId = mc.Id,
-                MesocycleId = mc.MesocycleId,
-                MesocycleName = mc.Mesocycle!.Name,
-                Phase = mc.Mesocycle.Phase,
-                MicrocycleName = mc.Name,
-                Type = mc.Type,
-                StartDate = mc.StartDate,
-                EndDate = mc.EndDate
-            })
             .ToListAsync();
+
+        var cycles = microcycles.Select(mc => new CycleCalendarDto
+        {
+            MicrocycleId = mc.Id,
+            MesocycleId = mc.MesocycleId,
+            MesocycleName = mc.Mesocycle!.Name,
+            Phase = mc.Mesocycle.Phase,
+            MicrocycleName = mc.Name,
+            Type = mc.Type,
+            StartDate = mc.StartDate,
+            EndDate = mc.EndDate,
+            MesocycleGoalSkills = GoalSkillDtos(mc.Mesocycle.GoalSkill1, mc.Mesocycle.GoalSkill2, mc.Mesocycle.GoalSkill3),
+            MicrocycleGoalSkills = GoalSkillDtos(mc.GoalSkill1, mc.GoalSkill2, mc.GoalSkill3)
+        }).ToList();
 
         return Ok(cycles);
     }
@@ -279,6 +295,7 @@ public class SeasonPlanController(
         var error = await ValidateMesocycleAsync(dto, excludeId: null);
         if (error != null) return BadRequest(new { message = error });
 
+        var skillIds = dto.GoalSkillIds.Distinct().Take(MaxGoalSkills).ToList();
         var mesocycle = new Mesocycle
         {
             TeamId = dto.TeamId,
@@ -287,7 +304,9 @@ public class SeasonPlanController(
             StartDate = dto.StartDate.Date,
             EndDate = dto.EndDate.Date,
             Goal = dto.Goal,
-            GoalTags = dto.GoalTagIds.Distinct().Select(id => new MesocycleTag { TagId = id }).ToList()
+            GoalSkill1Id = GoalSkillAt(skillIds, 0),
+            GoalSkill2Id = GoalSkillAt(skillIds, 1),
+            GoalSkill3Id = GoalSkillAt(skillIds, 2)
         };
 
         context.Mesocycles.Add(mesocycle);
@@ -309,7 +328,6 @@ public class SeasonPlanController(
         [FromQuery] bool shiftChildren = false)
     {
         var mesocycle = await context.Mesocycles
-            .Include(m => m.GoalTags)
             .Include(m => m.Microcycles)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (mesocycle == null) return NotFound();
@@ -347,13 +365,15 @@ public class SeasonPlanController(
         if (outOfRange)
             return BadRequest(new { message = "Mikrocykly by se nevešly do nového rozsahu mezocyklu. Nejprve je upravte." });
 
+        var skillIds = dto.GoalSkillIds.Distinct().Take(MaxGoalSkills).ToList();
         mesocycle.Name = dto.Name.Trim();
         mesocycle.Phase = dto.Phase;
         mesocycle.StartDate = newStart;
         mesocycle.EndDate = newEnd;
         mesocycle.Goal = dto.Goal;
-        SyncTags(mesocycle.GoalTags, dto.GoalTagIds,
-            tagId => new MesocycleTag { MesocycleId = id, TagId = tagId });
+        mesocycle.GoalSkill1Id = GoalSkillAt(skillIds, 0);
+        mesocycle.GoalSkill2Id = GoalSkillAt(skillIds, 1);
+        mesocycle.GoalSkill3Id = GoalSkillAt(skillIds, 2);
 
         var delta = newEnd - oldEnd;
         if (shiftFollowing && delta != TimeSpan.Zero)
@@ -447,7 +467,7 @@ public class SeasonPlanController(
         if (overlaps)
             return "Mezocyklus se překrývá s jiným mezocyklem týmu.";
 
-        return await ValidateGoalTagsAsync(dto.GoalTagIds);
+        return await ValidateGoalSkillsAsync(dto.GoalSkillIds);
     }
 
     private async Task<MesocycleDto> LoadMesocycleDtoAsync(int id)
@@ -472,6 +492,7 @@ public class SeasonPlanController(
         var error = await ValidateMicrocycleAsync(dto, mesocycle, excludeId: null);
         if (error != null) return BadRequest(new { message = error });
 
+        var skillIds = dto.GoalSkillIds.Distinct().Take(MaxGoalSkills).ToList();
         var microcycle = new Microcycle
         {
             MesocycleId = dto.MesocycleId,
@@ -480,7 +501,9 @@ public class SeasonPlanController(
             StartDate = dto.StartDate.Date,
             EndDate = dto.EndDate.Date,
             Goal = dto.Goal,
-            GoalTags = dto.GoalTagIds.Distinct().Select(id => new MicrocycleTag { TagId = id }).ToList()
+            GoalSkill1Id = GoalSkillAt(skillIds, 0),
+            GoalSkill2Id = GoalSkillAt(skillIds, 1),
+            GoalSkill3Id = GoalSkillAt(skillIds, 2)
         };
 
         context.Microcycles.Add(microcycle);
@@ -499,7 +522,6 @@ public class SeasonPlanController(
         int id, [FromBody] MicrocycleDto dto, [FromQuery] bool shiftFollowing = false)
     {
         var microcycle = await context.Microcycles
-            .Include(mc => mc.GoalTags)
             .Include(mc => mc.Mesocycle)
             .FirstOrDefaultAsync(mc => mc.Id == id);
         if (microcycle == null) return NotFound();
@@ -527,13 +549,15 @@ public class SeasonPlanController(
                 return BadRequest(new { message = "Posunuté mikrocykly by opustily rozsah mezocyklu." });
         }
 
+        var skillIds = dto.GoalSkillIds.Distinct().Take(MaxGoalSkills).ToList();
         microcycle.Name = dto.Name.Trim();
         microcycle.Type = dto.Type;
         microcycle.StartDate = dto.StartDate.Date;
         microcycle.EndDate = dto.EndDate.Date;
         microcycle.Goal = dto.Goal;
-        SyncTags(microcycle.GoalTags, dto.GoalTagIds,
-            tagId => new MicrocycleTag { MicrocycleId = id, TagId = tagId });
+        microcycle.GoalSkill1Id = GoalSkillAt(skillIds, 0);
+        microcycle.GoalSkill2Id = GoalSkillAt(skillIds, 1);
+        microcycle.GoalSkill3Id = GoalSkillAt(skillIds, 2);
 
         foreach (var later in following)
         {
@@ -584,13 +608,13 @@ public class SeasonPlanController(
         if (overlaps)
             return "Mikrocyklus se překrývá s jiným mikrocyklem mezocyklu.";
 
-        return await ValidateGoalTagsAsync(dto.GoalTagIds);
+        return await ValidateGoalSkillsAsync(dto.GoalSkillIds);
     }
 
     private async Task<MicrocycleDto> LoadMicrocycleDtoAsync(int id, int teamId)
     {
         var microcycle = await context.Microcycles
-            .Include(mc => mc.GoalTags).ThenInclude(gt => gt.Tag)
+            .Include(mc => mc.GoalSkill1).Include(mc => mc.GoalSkill2).Include(mc => mc.GoalSkill3)
             .Include(mc => mc.RecommendedTrainings).ThenInclude(rt => rt.Training)
             .FirstAsync(mc => mc.Id == id);
         var scheduledCounts = await GetScheduledCountsAsync(teamId, [microcycle]);
@@ -647,8 +671,10 @@ public class SeasonPlanController(
     public async Task<IActionResult> GetEvaluation(int id)
     {
         var mesocycle = await context.Mesocycles
-            .Include(m => m.GoalTags).ThenInclude(gt => gt.Tag)
-            .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalTags).ThenInclude(gt => gt.Tag)
+            .Include(m => m.GoalSkill1).Include(m => m.GoalSkill2).Include(m => m.GoalSkill3)
+            .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill1)
+            .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill2)
+            .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill3)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (mesocycle == null) return NotFound();
 
@@ -658,7 +684,7 @@ public class SeasonPlanController(
         var rangeFrom = mesocycle.StartDate;
         var rangeToExclusive = mesocycle.EndDate.AddDays(1);
 
-        // One load of the team's appointments in range; trainings deep for tag-coverage math
+        // One load of the team's appointments in range; trainings deep for skill-coverage math
         var appointments = await context.Appointments
             .Include(a => a.Attendances)
             .Include(a => a.Ratings)
@@ -666,26 +692,26 @@ public class SeasonPlanController(
                 .ThenInclude(tr => tr.TrainingParts)!
                 .ThenInclude(tp => tp.TrainingGroups)!
                 .ThenInclude(tg => tg.Activity)!
-                .ThenInclude(act => act!.ActivityTags)
+                .ThenInclude(act => act!.ActivitySkills)
             .Where(a => a.TeamId == mesocycle.TeamId
                         && a.Start >= rangeFrom && a.Start < rangeToExclusive)
             .ToListAsync();
 
-        var mesoGoalTags = mesocycle.GoalTags.Where(gt => gt.Tag != null).ToList();
+        var mesoGoalSkills = GoalSkillList(mesocycle.GoalSkill1, mesocycle.GoalSkill2, mesocycle.GoalSkill3);
 
         var result = new MesocycleEvaluationDto
         {
             Total = BuildEvaluationBlock(
                 mesocycle.Id, mesocycle.Name, mesocycle.StartDate, mesocycle.EndDate,
-                mesoGoalTags.Select(gt => gt.Tag!).ToList(), appointments),
+                mesoGoalSkills, appointments),
             Microcycles = mesocycle.Microcycles
                 .OrderBy(mc => mc.StartDate)
                 .Select(mc =>
                 {
-                    // Effective goals: the microcycle's own tags, falling back to the mesocycle's
-                    var tags = mc.GoalTags.Where(gt => gt.Tag != null).Select(gt => gt.Tag!).ToList();
-                    if (tags.Count == 0) tags = mesoGoalTags.Select(gt => gt.Tag!).ToList();
-                    return BuildEvaluationBlock(mc.Id, mc.Name, mc.StartDate, mc.EndDate, tags, appointments);
+                    // Effective goals: the microcycle's own skills, falling back to the mesocycle's
+                    var skills = GoalSkillList(mc.GoalSkill1, mc.GoalSkill2, mc.GoalSkill3);
+                    if (skills.Count == 0) skills = mesoGoalSkills;
+                    return BuildEvaluationBlock(mc.Id, mc.Name, mc.StartDate, mc.EndDate, skills, appointments);
                 })
                 .ToList()
         };
@@ -695,9 +721,12 @@ public class SeasonPlanController(
         return Ok(result);
     }
 
+    private static List<Skill> GoalSkillList(params Skill?[] skills) =>
+        skills.Where(s => s != null).Select(s => s!).ToList();
+
     private static CycleEvaluationBlockDto BuildEvaluationBlock(
         int cycleId, string name, DateTime start, DateTime endInclusive,
-        List<Tag> goalTags, List<Appointment> teamAppointments)
+        List<Skill> goalSkills, List<Appointment> teamAppointments)
     {
         var endExclusive = endInclusive.AddDays(1);
         var inRange = teamAppointments
@@ -710,9 +739,9 @@ public class SeasonPlanController(
             .ToList();
         var withTraining = heldTrainingEvents.Where(a => a.Training != null).ToList();
 
-        var tagIds = goalTags.Select(t => t.Id).ToList();
+        var skillIds = goalSkills.Select(s => s.Id).ToList();
         var totalMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDuration());
-        var matchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForTags(tagIds));
+        var matchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForSkills(skillIds));
 
         var attendances = inRange.SelectMany(a => a.Attendances).ToList();
         var present = attendances.Count(at => at.Status == 1);
@@ -737,13 +766,13 @@ public class SeasonPlanController(
             GoalCoveragePercent = totalMinutes > 0
                 ? Math.Round(100.0 * matchedMinutes / totalMinutes, 1)
                 : 0,
-            PerTag = goalTags.Select(tag => new TagCoverageDto
+            PerSkill = goalSkills.Select(skill => new SkillCoverageDto
             {
-                TagId = tag.Id,
-                TagName = tag.Name,
-                Color = tag.Color,
-                MatchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForTags([tag.Id])),
-                TrainingsCount = withTraining.Count(a => a.Training!.GetActivitiesDurationForTags([tag.Id]) > 0)
+                SkillId = skill.Id,
+                SkillName = skill.Name,
+                CategoryId = skill.SkillCategoryId,
+                MatchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForSkills([skill.Id])),
+                TrainingsCount = withTraining.Count(a => a.Training!.GetActivitiesDurationForSkills([skill.Id]) > 0)
             }).ToList(),
             PresentCount = present,
             AbsentCount = absent,
@@ -847,35 +876,4 @@ public class SeasonPlanController(
         }
     }
 
-    // ── Shared helpers ───────────────────────────────────────────────────────
-
-    /// <summary>Syncs cycle goal-tag links to the requested tag id set (add missing, remove extra).</summary>
-    private void SyncTags<TLink>(List<TLink> current, List<int> requestedTagIds, Func<int, TLink> create)
-        where TLink : class
-    {
-        var requested = requestedTagIds.Distinct().ToHashSet();
-        var currentByTagId = current.ToDictionary(GetTagId);
-
-        foreach (var (tagId, link) in currentByTagId)
-        {
-            if (!requested.Contains(tagId))
-            {
-                current.Remove(link);
-                context.Remove(link);
-            }
-        }
-
-        foreach (var tagId in requested)
-        {
-            if (!currentByTagId.ContainsKey(tagId))
-                current.Add(create(tagId));
-        }
-
-        static int GetTagId(TLink link) => link switch
-        {
-            MesocycleTag mt => mt.TagId,
-            MicrocycleTag mt => mt.TagId,
-            _ => throw new InvalidOperationException("Unsupported tag link type.")
-        };
-    }
 }

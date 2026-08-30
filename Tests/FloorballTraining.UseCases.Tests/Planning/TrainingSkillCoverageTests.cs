@@ -2,11 +2,11 @@ using FloorballTraining.CoreBusiness;
 
 namespace FloorballTraining.UseCases.Tests.Planning;
 
-public class TrainingTagCoverageTests
+public class TrainingSkillCoverageTests
 {
-    private static Activity ActivityWithTags(params int[] tagIds) => new()
+    private static Activity ActivityWithSkills(params int[] skillIds) => new()
     {
-        ActivityTags = tagIds.Select(id => new ActivityTag { TagId = id }).ToList()
+        ActivitySkills = skillIds.Select(id => new ActivitySkill { SkillId = id }).ToList()
     };
 
     private static TrainingPart Part(int duration, params Activity[] activities) => new()
@@ -19,24 +19,24 @@ public class TrainingTagCoverageTests
     public void No_parts_returns_zero()
     {
         var training = new Training { TrainingParts = [] };
-        training.GetActivitiesDurationForTags([1, 2]).Should().Be(0);
+        training.GetActivitiesDurationForSkills([1, 2]).Should().Be(0);
     }
 
     [Fact]
-    public void Empty_tag_set_returns_zero()
+    public void Empty_skill_set_returns_zero()
     {
-        var training = new Training { TrainingParts = [Part(20, ActivityWithTags(1))] };
-        training.GetActivitiesDurationForTags([]).Should().Be(0);
+        var training = new Training { TrainingParts = [Part(20, ActivityWithSkills(1))] };
+        training.GetActivitiesDurationForSkills([]).Should().Be(0);
     }
 
     [Fact]
-    public void No_matching_tags_returns_zero()
+    public void No_matching_skills_returns_zero()
     {
         var training = new Training
         {
-            TrainingParts = [Part(20, ActivityWithTags(5)), Part(15, ActivityWithTags(6))]
+            TrainingParts = [Part(20, ActivityWithSkills(5)), Part(15, ActivityWithSkills(6))]
         };
-        training.GetActivitiesDurationForTags([1, 2]).Should().Be(0);
+        training.GetActivitiesDurationForSkills([1, 2]).Should().Be(0);
     }
 
     [Fact]
@@ -46,12 +46,12 @@ public class TrainingTagCoverageTests
         {
             TrainingParts =
             [
-                Part(20, ActivityWithTags(1)),       // matches
-                Part(15, ActivityWithTags(9)),       // no match
-                Part(10, ActivityWithTags(8), ActivityWithTags(2)) // second activity matches
+                Part(20, ActivityWithSkills(1)),       // matches
+                Part(15, ActivityWithSkills(9)),       // no match
+                Part(10, ActivityWithSkills(8), ActivityWithSkills(2)) // second activity matches
             ]
         };
-        training.GetActivitiesDurationForTags([1, 2]).Should().Be(30);
+        training.GetActivitiesDurationForSkills([1, 2]).Should().Be(30);
     }
 
     [Fact]
@@ -59,9 +59,9 @@ public class TrainingTagCoverageTests
     {
         var training = new Training
         {
-            TrainingParts = [Part(25, ActivityWithTags(1), ActivityWithTags(1, 2))]
+            TrainingParts = [Part(25, ActivityWithSkills(1), ActivityWithSkills(1, 2))]
         };
-        training.GetActivitiesDurationForTags([1, 2]).Should().Be(25);
+        training.GetActivitiesDurationForSkills([1, 2]).Should().Be(25);
     }
 
     [Fact]
@@ -73,6 +73,6 @@ public class TrainingTagCoverageTests
             TrainingGroups = [new TrainingGroup { Activity = null }]
         };
         var training = new Training { TrainingParts = [part] };
-        training.GetActivitiesDurationForTags([1]).Should().Be(0);
+        training.GetActivitiesDurationForSkills([1]).Should().Be(0);
     }
 }

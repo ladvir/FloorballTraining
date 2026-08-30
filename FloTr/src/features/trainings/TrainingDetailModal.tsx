@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { User, Dumbbell, Copy, FileDown } from 'lucide-react'
+import { User, Dumbbell, Copy, FileDown, PlayCircle } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { trainingsApi } from '../../api/trainings.api'
+import { useLiveTrainingStore } from '../../store/liveTrainingStore'
+import { primeAudio } from '../../utils/sound'
 import { skillPalette } from '../../utils/skillColors'
 import type { TrainingDto } from '../../types/domain.types'
 
@@ -21,6 +23,7 @@ interface Props {
 export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Props) {
   const { t } = useTranslation()
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const startLive = useLiveTrainingStore((s) => s.start)
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -274,7 +277,21 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         )}
       </div>
 
-      <div className="mt-4 flex justify-end gap-2">
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        {parts.length > 0 && (
+          <Button
+            size="sm"
+            className="mr-auto"
+            onClick={() => {
+              primeAudio()
+              startLive({ trainingId: training.id, trainingName: training.name })
+              onClose()
+            }}
+          >
+            <PlayCircle className="h-3.5 w-3.5" />
+            {t('liveTraining.start')}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"

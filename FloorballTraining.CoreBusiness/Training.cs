@@ -209,17 +209,17 @@ namespace FloorballTraining.CoreBusiness
 
         /// <summary>
         /// Same shape as <see cref="GetGoalSkillActivitiesDuration"/> but measured against an
-        /// external tag set (season-plan cycle goals): minutes of training parts whose activities
-        /// carry any of the given tags. Requires TrainingParts→TrainingGroups→Activity→ActivityTags loaded.
+        /// external skill set (season-plan cycle goals): minutes of training parts whose activities
+        /// carry any of the given skills. Requires TrainingParts→TrainingGroups→Activity→ActivitySkills loaded.
         /// </summary>
-        public int GetActivitiesDurationForTags(IReadOnlyCollection<int> tagIds)
+        public int GetActivitiesDurationForSkills(IReadOnlyCollection<int> skillIds)
         {
-            if (tagIds.Count == 0 || TrainingParts == null) return 0;
+            if (skillIds.Count == 0 || TrainingParts == null) return 0;
 
             return TrainingParts
                 .Where(tp => tp.TrainingGroups != null && tp.TrainingGroups.Any(tg =>
-                    tg.Activity != null && tg.Activity.ActivityTags.Any(at =>
-                        at.TagId.HasValue && tagIds.Contains(at.TagId.Value))))
+                    tg.Activity != null && tg.Activity.ActivitySkills.Any(s =>
+                        s.SkillId.HasValue && skillIds.Contains(s.SkillId.Value))))
                 .Sum(tp => tp.Duration);
         }
 

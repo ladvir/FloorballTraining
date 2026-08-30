@@ -12,7 +12,7 @@ namespace FloorballTraining.API.IntegrationTests;
 
 /// <summary>
 /// Season planning (periodization) API: mesocycle/microcycle CRUD, validation rules
-/// (overlaps, containment, goal-tag limits), role-based access and cascade deletes.
+/// (overlaps, containment, goal-skill limits), role-based access and cascade deletes.
 /// </summary>
 [Collection("Api")]
 public class SeasonPlanTests : IAsyncLifetime
@@ -27,10 +27,11 @@ public class SeasonPlanTests : IAsyncLifetime
     private int _clubId;
     private int _otherClubId;
     private int _teamId;
-    private List<int> _goalTagIds = [];
-    private int _goalTagId1;
-    private int _goalTagId2;
-    private int _nonGoalTagId;
+    // Seeded skill catalog ids (see SeedPlayerSkills) used as cycle goals; no setup/teardown needed.
+    private readonly List<int> _goalSkillIds = [101, 102, 103, 104];
+    private int _goalSkillId1 => _goalSkillIds[0];
+    private int _goalSkillId2 => _goalSkillIds[1];
+    private const int MissingSkillId = 2_000_000_000;
 
     public SeasonPlanTests(CustomWebApplicationFactory factory) => _factory = factory;
 
@@ -52,18 +53,6 @@ public class SeasonPlanTests : IAsyncLifetime
         db.Teams.Add(team);
         await db.SaveChangesAsync();
         _teamId = team.Id;
-
-        var goalTags = Enumerable.Range(1, 4)
-            .Select(i => new Tag { Name = $"PlanGoal{i}-{Guid.NewGuid():N}", IsTrainingGoal = true })
-            .ToList();
-        var nonGoalTag = new Tag { Name = $"PlanNonGoal-{Guid.NewGuid():N}", IsTrainingGoal = false };
-        db.Tags.AddRange(goalTags);
-        db.Tags.Add(nonGoalTag);
-        await db.SaveChangesAsync();
-        _goalTagIds = goalTags.Select(t => t.Id).ToList();
-        _goalTagId1 = _goalTagIds[0];
-        _goalTagId2 = _goalTagIds[1];
-        _nonGoalTagId = nonGoalTag.Id;
 
         // Coach of _teamId in club
         var coach = new AppUser
@@ -160,11 +149,6 @@ public class SeasonPlanTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         db.Clubs.RemoveRange(db.Clubs.Where(c => c.Id == _clubId || c.Id == _otherClubId));
-        var tagIds = _goalTagIds.Append(_nonGoalTagId).ToList();
-        // Activities created by the evaluation test still link to these tags
-        db.ActivityTags.RemoveRange(
-            db.ActivityTags.Where(at => at.TagId != null && tagIds.Contains(at.TagId.Value)));
-        db.Tags.RemoveRange(db.Tags.Where(t => tagIds.Contains(t.Id)));
         await db.SaveChangesAsync();
 
         foreach (var email in new[] { _coachEmail, _otherCoachEmail, _playerEmail })
@@ -205,15 +189,15 @@ public class SeasonPlanTests : IAsyncLifetime
     {
         var client = await CreateClientAsync(_coachEmail);
 
-        // Create mesocycle with goal tags
+        // Create mesocycle with goal skills
         var mesoDto = NewMesocycle(_teamId, "Přípravný blok", new DateTime(2026, 7, 1), new DateTime(2026, 7, 28));
         mesoDto.Goal = "Vybudovat kondiční základ";
-        mesoDto.GoalTagIds = [_goalTagId1, _goalTagId2];
+        mesoDto.GoalSkillIds = [_goalSkillId1, _goalSkillId2];
         var meso = await CreateMesocycleAsync(client, mesoDto);
 
         meso.Id.Should().BePositive();
-        meso.GoalTagIds.Should().BeEquivalentTo([_goalTagId1, _goalTagId2]);
-        meso.GoalTags.Should().HaveCount(2).And.OnlyContain(t => t.IsTrainingGoal);
+        meso.GoalSkillIds.Should().BeEquivalentTo([_goalSkillId1, _goalSkillId2]);
+        meso.GoalSkills.Should().HaveCount(2);
 
         // Create microcycle inside
         var microResponse = await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
@@ -223,11 +207,11 @@ public class SeasonPlanTests : IAsyncLifetime
             Type = CoreBusiness.Enums.MicrocycleType.Development,
             StartDate = new DateTime(2026, 7, 6),
             EndDate = new DateTime(2026, 7, 12),
-            GoalTagIds = [_goalTagId1]
+            GoalSkillIds = [_goalSkillId1]
         });
         microResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var micro = (await microResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!;
-        micro.GoalTagIds.Should().BeEquivalentTo([_goalTagId1]);
+        micro.GoalSkillIds.Should().BeEquivalentTo([_goalSkillId1]);
 
         // Edit microcycle (rename + retype)
         micro.Name = "Týden 1 — regenerace";
@@ -259,7 +243,7 @@ public class SeasonPlanTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Cascade_delete_removes_microcycles_and_links()
+    public async Task Cascade_delete_removes_microcycles()
     {
         var client = await CreateClientAsync(_coachEmail);
 
@@ -271,7 +255,7 @@ public class SeasonPlanTests : IAsyncLifetime
             Name = "Týden",
             StartDate = new DateTime(2027, 1, 5),
             EndDate = new DateTime(2027, 1, 11),
-            GoalTagIds = [_goalTagId1]
+            GoalSkillIds = [_goalSkillId1]
         });
         var microId = (await microResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!.Id;
 
@@ -282,7 +266,6 @@ public class SeasonPlanTests : IAsyncLifetime
         var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
         await using var db = await dbFactory.CreateDbContextAsync();
         (await db.Microcycles.AnyAsync(mc => mc.Id == microId)).Should().BeFalse();
-        (await db.MicrocycleTags.AnyAsync(t => t.MicrocycleId == microId)).Should().BeFalse();
     }
 
     // ── Validation ───────────────────────────────────────────────────────────
@@ -323,38 +306,38 @@ public class SeasonPlanTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Goal_tags_must_be_training_goals_and_max_three()
+    public async Task Goal_skills_must_exist_and_max_three()
     {
         var client = await CreateClientAsync(_coachEmail);
 
-        var nonGoalTag = NewMesocycle(_teamId, "Blok D", new DateTime(2029, 1, 1), new DateTime(2029, 1, 31));
-        nonGoalTag.GoalTagIds = [_nonGoalTagId];
-        (await client.PostAsJsonAsync("/SeasonPlan/mesocycles", nonGoalTag))
+        var missingSkill = NewMesocycle(_teamId, "Blok D", new DateTime(2029, 1, 1), new DateTime(2029, 1, 31));
+        missingSkill.GoalSkillIds = [MissingSkillId];
+        (await client.PostAsJsonAsync("/SeasonPlan/mesocycles", missingSkill))
             .StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var tooMany = NewMesocycle(_teamId, "Blok E", new DateTime(2029, 3, 1), new DateTime(2029, 3, 31));
-        tooMany.GoalTagIds = _goalTagIds; // 4 tags > max 3
+        tooMany.GoalSkillIds = _goalSkillIds; // 4 skills > max 3
         (await client.PostAsJsonAsync("/SeasonPlan/mesocycles", tooMany))
             .StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task Tag_sync_on_edit_replaces_the_set()
+    public async Task Goal_skills_replace_on_edit()
     {
         var client = await CreateClientAsync(_coachEmail);
 
         var dto = NewMesocycle(_teamId, "Blok F", new DateTime(2030, 1, 1), new DateTime(2030, 1, 31));
-        dto.GoalTagIds = [_goalTagId1];
+        dto.GoalSkillIds = [_goalSkillId1];
         var meso = await CreateMesocycleAsync(client, dto);
 
-        // Replace tag1 with tag2; repeat the PUT to prove idempotence
-        meso.GoalTagIds = [_goalTagId2];
+        // Replace skill1 with skill2; repeat the PUT to prove idempotence
+        meso.GoalSkillIds = [_goalSkillId2];
         for (var i = 0; i < 2; i++)
         {
             var response = await client.PutAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}", meso);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var updated = (await response.Content.ReadFromJsonAsync<MesocycleDto>())!;
-            updated.GoalTagIds.Should().BeEquivalentTo([_goalTagId2]);
+            updated.GoalSkillIds.Should().BeEquivalentTo([_goalSkillId2]);
         }
 
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
@@ -573,7 +556,7 @@ public class SeasonPlanTests : IAsyncLifetime
 
         // Past dates so the training event counts as held (End <= now)
         var meso = NewMesocycle(_teamId, "Vyhodnocovaný blok", new DateTime(2020, 7, 6), new DateTime(2020, 8, 2));
-        meso.GoalTagIds = [_goalTagId1];
+        meso.GoalSkillIds = [_goalSkillId1];
         var created = await CreateMesocycleAsync(client, meso);
 
         (await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
@@ -598,16 +581,16 @@ public class SeasonPlanTests : IAsyncLifetime
             memberId1 = members[0];
             memberId2 = members[1];
 
-            // Training: 30 min part hitting the goal tag + 30 min part with an unrelated tag
+            // Training: 30 min part hitting the goal skill + 30 min part with an unrelated skill
             var matchingActivity = new Activity
             {
                 Name = $"EvalActivity-{Guid.NewGuid():N}",
-                ActivityTags = [new ActivityTag { TagId = _goalTagId1 }]
+                ActivitySkills = [new ActivitySkill { SkillId = _goalSkillId1 }]
             };
             var otherActivity = new Activity
             {
                 Name = $"EvalOther-{Guid.NewGuid():N}",
-                ActivityTags = [new ActivityTag { TagId = _goalTagId2 }]
+                ActivitySkills = [new ActivitySkill { SkillId = _goalSkillId2 }]
             };
             var training = new Training
             {
@@ -710,13 +693,13 @@ public class SeasonPlanTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var evaluation = (await response.Content.ReadFromJsonAsync<MesocycleEvaluationDto>())!;
 
-        // Goal coverage: 30 of 60 activity minutes hit the goal tag
+        // Goal coverage: 30 of 60 activity minutes hit the goal skill
         evaluation.Total.TrainingAppointmentsCount.Should().Be(1);
         evaluation.Total.WithLinkedTrainingCount.Should().Be(1);
         evaluation.Total.TotalTrainingMinutes.Should().Be(60);
         evaluation.Total.GoalMatchedMinutes.Should().Be(30);
         evaluation.Total.GoalCoveragePercent.Should().Be(50);
-        evaluation.Total.PerTag.Should().ContainSingle(pt => pt.TagId == _goalTagId1)
+        evaluation.Total.PerSkill.Should().ContainSingle(pt => pt.SkillId == _goalSkillId1)
             .Which.MatchedMinutes.Should().Be(30);
 
         // Attendance: 2 present, 1 absent → 66.7 %
@@ -817,7 +800,7 @@ public class SeasonPlanTests : IAsyncLifetime
         }
 
         var meso = NewMesocycle(_teamId, "Přípravný blok", new DateTime(2041, 8, 4), new DateTime(2041, 8, 31));
-        meso.GoalTagIds = [_goalTagId1];
+        meso.GoalSkillIds = [_goalSkillId1];
         var created = await CreateMesocycleAsync(client, meso);
         (await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
         {
@@ -843,7 +826,7 @@ public class SeasonPlanTests : IAsyncLifetime
         copiedMeso.Name.Should().Be("Přípravný blok");
         copiedMeso.StartDate.Should().Be(new DateTime(2042, 8, 4)); // +365 days
         copiedMeso.EndDate.Should().Be(new DateTime(2042, 8, 31));
-        copiedMeso.GoalTagIds.Should().BeEquivalentTo([_goalTagId1]);
+        copiedMeso.GoalSkillIds.Should().BeEquivalentTo([_goalSkillId1]);
         var copiedMicro = copiedMeso.Microcycles.Should().ContainSingle().Subject;
         copiedMicro.StartDate.Should().Be(new DateTime(2042, 8, 4));
         copiedMicro.Type.Should().Be(CoreBusiness.Enums.MicrocycleType.Development);

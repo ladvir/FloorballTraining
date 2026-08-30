@@ -8,6 +8,7 @@ import { planningApi } from '../../api/planning.api'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { dfLocale } from '../../utils/dateLocale'
 import { cn } from '../../utils/cn'
+import { skillPalette } from '../../utils/skillColors'
 import type { MesocycleDto } from '../../types/domain.types'
 import { buildCoverageRows, deltaImproves, gradeColorClass } from './evaluationUtils'
 
@@ -137,17 +138,17 @@ export function EvaluationPanel({ mesocycle }: EvaluationPanelProps) {
                 </div>
               )}
 
-              {/* Per-tag coverage */}
-              {evaluation.total.perTag.length > 0 && (
+              {/* Per-skill coverage */}
+              {evaluation.total.perSkill.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {evaluation.total.perTag.map((tag) => (
+                  {evaluation.total.perSkill.map((skill) => (
                     <span
-                      key={tag.tagId}
+                      key={skill.skillId}
                       className="rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-                      style={{ backgroundColor: tag.color || '#0284c7' }}
-                      title={t('planning.evalTagTrainings', { count: tag.trainingsCount })}
+                      style={{ backgroundColor: skillPalette(skill.categoryId).activeBg }}
+                      title={t('planning.evalTagTrainings', { count: skill.trainingsCount })}
                     >
-                      {tag.tagName}: {tag.matchedMinutes} min
+                      {skill.skillName}: {skill.matchedMinutes} min
                     </span>
                   ))}
                 </div>

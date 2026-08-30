@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Circle,
   UserCheck,
+  PlayCircle,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '../../components/ui/Badge'
@@ -32,10 +33,14 @@ import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { useCanEditAppointment } from './useCanEditAppointment'
+import { refreshAppointments } from './refreshAppointments'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 import { useConfirm } from '../../store/confirmStore'
 import { AttendanceModal } from '../attendance/AttendanceModal'
 import { AttendanceSummaryBadge } from '../attendance/AttendanceSummaryBadge'
+import { RatingForm } from './RatingForm'
+import { useLiveTrainingStore } from '../../store/liveTrainingStore'
+import { primeAudio } from '../../utils/sound'
 import type { AppointmentDto } from '../../types/domain.types'
 
 const typeBadgeVariant: Record<
@@ -203,14 +208,25 @@ function TrainingBox({
   trainingId,
   trainingName,
   trainingTargets,
+  appointmentId,
+  appointmentName,
+  canStartLive,
+  onLiveStarted,
 }: {
   trainingId: number
   trainingName?: string
   trainingTargets?: string
+  appointmentId: number
+  appointmentName?: string
+  canStartLive: boolean
+  /** Fired right after the live runner starts, so the opener can close the appointment modal. */
+  onLiveStarted: () => void
 }) {
   const { t } = useTranslation()
   const { isAdmin, user } = useAuthStore()
   const [detailOpen, setDetailOpen] = useState(false)
+  const startLive = useLiveTrainingStore((s) => s.start)
+  const liveSession = useLiveTrainingStore((s) => s.session)
 
   const { data: training } = useQuery({
     queryKey: ['training', trainingId],
@@ -218,6 +234,7 @@ function TrainingBox({
   })
 
   const canEditTraining = isAdmin || (user && training?.createdByUserId === user.id)
+  const liveActive = liveSession?.appointmentId === appointmentId && !liveSession.finished
 
   return (
     <>
@@ -258,6 +275,28 @@ function TrainingBox({
             {training.createdByUserName}
           </p>
         )}
+        {canStartLive && (training?.trainingParts?.length ?? 0) > 0 && (
+          <Button
+            size="sm"
+            className="mt-3"
+            onClick={() => {
+              // "Pokračovat" must never restart a running session — just hand focus back to the panel.
+              if (!liveActive) {
+                primeAudio()
+                startLive({
+                  trainingId,
+                  trainingName: training!.name,
+                  appointmentId,
+                  appointmentName,
+                })
+              }
+              onLiveStarted()
+            }}
+          >
+            <PlayCircle className="h-4 w-4" />
+            {liveActive ? t('liveTraining.resume') : t('liveTraining.start')}
+          </Button>
+        )}
       </div>
       <TrainingDetailModal
         trainingId={detailOpen ? trainingId : null}
@@ -282,31 +321,11 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const [newGrade, setNewGrade] = useState(1)
-  const [newComment, setNewComment] = useState('')
   const [showForm, setShowForm] = useState(false)
-
-  const gradeLabels = [
-    t('appointments.gradeExcellent'),
-    t('appointments.gradeGood'),
-    t('appointments.gradeOk'),
-    t('appointments.gradeSufficient'),
-    t('appointments.gradeFailed'),
-  ]
 
   const { data: ratings } = useQuery({
     queryKey: ['ratings', 'appointment', appointmentId],
     queryFn: () => ratingsApi.getAll(appointmentId),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: ratingsApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ratings'] })
-      setShowForm(false)
-      setNewGrade(1)
-      setNewComment('')
-    },
   })
 
   const deleteMutation = useMutation({
@@ -329,12 +348,9 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
           <Star className="h-4 w-4 text-amber-500" />
           <h3 className="text-sm font-medium text-gray-700">
             {avgGrade
-              ? t('appointments.ratingAvg', { avg: avgGrade })
+              ? t('appointments.ratingAvg', { count: ratings?.length ?? 0, avg: avgGrade })
               : t('appointments.ratingTitle')}
           </h3>
-          {ratings && ratings.length > 0 && avgGrade && (
-            <span className="text-xs text-gray-400">({ratings.length}x)</span>
-          )}
         </div>
         {!myRating && !showForm && (
           <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
@@ -346,54 +362,12 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
 
       {/* Add rating form */}
       {showForm && !myRating && (
-        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">{t('appointments.ratingGrade')}</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setNewGrade(g)}
-                  className={`h-8 w-8 rounded-full text-sm font-bold text-white ${gradeColors[g - 1]} ${newGrade === g ? 'ring-2 ring-offset-1 ring-gray-400' : 'opacity-40 hover:opacity-70'}`}
-                  title={gradeLabels[g - 1]}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-            <span className="text-xs text-gray-500">{gradeLabels[newGrade - 1]}</span>
-          </div>
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t('appointments.ratingComment')}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-            rows={2}
+        <div className="mb-3">
+          <RatingForm
+            appointmentId={appointmentId}
+            onSaved={() => setShowForm(false)}
+            onCancel={() => setShowForm(false)}
           />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              loading={createMutation.isPending}
-              onClick={() =>
-                createMutation.mutate({
-                  appointmentId,
-                  grade: newGrade,
-                  comment: newComment || undefined,
-                })
-              }
-            >
-              {t('appointments.ratingSave')}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>
-              {t('common.cancel')}
-            </Button>
-          </div>
-          {createMutation.isError && (
-            <p className="text-xs text-red-500">
-              {(createMutation.error as { response?: { data?: { message?: string } } })?.response
-                ?.data?.message || t('appointments.ratingError')}
-            </p>
-          )}
         </div>
       )}
 
@@ -573,8 +547,7 @@ export function AppointmentDetailModal({
   const deleteMutation = useMutation({
     mutationFn: (alsoFuture: boolean) => appointmentsApi.delete(appointmentId!, alsoFuture),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void refreshAppointments(queryClient)
       onChanged?.()
       onClose()
     },
@@ -692,6 +665,10 @@ export function AppointmentDetailModal({
               trainingId={apt.trainingId}
               trainingName={apt.trainingName}
               trainingTargets={apt.trainingTargets}
+              appointmentId={apt.id}
+              appointmentName={apt.name || apt.trainingName}
+              canStartLive={canEdit && !apt.isPast}
+              onLiveStarted={onClose}
             />
           )}
 

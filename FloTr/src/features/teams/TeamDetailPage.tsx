@@ -29,6 +29,7 @@ import { teamsApi, xpApi, appointmentsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
 import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
+import { refreshAppointments } from '../appointments/refreshAppointments'
 import { RewardsPage } from '../rewards/RewardsPage'
 import { LineupsListPage } from '../lineups/LineupsListPage'
 import { AddTeamMemberModal } from './AddTeamMemberModal'
@@ -126,7 +127,7 @@ export function TeamDetailPage() {
   const deleteApptMutation = useMutation({
     mutationFn: (appointmentId: number) => appointmentsApi.delete(appointmentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      void refreshAppointments(queryClient)
       setDeleteApptConfirm(null)
     },
   })

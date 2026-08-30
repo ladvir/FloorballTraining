@@ -1,4 +1,5 @@
 import { differenceInCalendarDays, parseISO, addDays, format } from 'date-fns'
+import type { SkillDto } from '../../types/domain.types'
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 // Mesocycle phase: 0=Preparation 1=PreCompetition 2=Competition 3=Transition 4=Regeneration
@@ -190,6 +191,8 @@ export interface CalendarCycle extends DateRange {
   phase: number
   microcycleName: string
   type: number
+  mesocycleGoalSkills?: SkillDto[]
+  microcycleGoalSkills?: SkillDto[]
 }
 
 export interface DayCycleInfo {
@@ -197,9 +200,14 @@ export interface DayCycleInfo {
   phase: number
   mesocycleId: number
   mesocycleName: string
+  microcycleId: number
   microcycleName: string
   /** First visible day of a different mesocycle than the previous day belongs to */
   isMesoStart: boolean
+  /** First visible day of a different microcycle than the previous day belongs to */
+  isMicroStart: boolean
+  /** Meso + micro target skills, deduped by id (meso first). */
+  goalSkills: SkillDto[]
 }
 
 /**
@@ -227,16 +235,45 @@ export function buildDayCycleMap(
 
     const prevKey = format(addDays(day, -1), 'yyyy-MM-dd')
     const prevCycle = coveringCycle(prevKey)
+    // Meso skills first, then any micro skill not already listed.
+    const byId = new Map<number, SkillDto>()
+    for (const s of [...(cycle.mesocycleGoalSkills ?? []), ...(cycle.microcycleGoalSkills ?? [])]) {
+      if (!byId.has(s.id)) byId.set(s.id, s)
+    }
     map.set(key, {
       type: cycle.type,
       phase: cycle.phase,
       mesocycleId: cycle.mesocycleId,
       mesocycleName: cycle.mesocycleName,
+      microcycleId: cycle.microcycleId,
       microcycleName: cycle.microcycleName,
       isMesoStart: prevCycle?.mesocycleId !== cycle.mesocycleId,
+      isMicroStart: prevCycle?.microcycleId !== cycle.microcycleId,
+      goalSkills: [...byId.values()],
     })
   }
   return map
+}
+
+/** The cycle covering a single 'yyyy-MM-dd' day, with meso+micro target skills deduped. */
+export function cycleForDay(
+  cycles: CalendarCycle[],
+  dayIso: string
+): Pick<DayCycleInfo, 'type' | 'mesocycleName' | 'microcycleName' | 'goalSkills'> | undefined {
+  const c = cycles.find(
+    (x) => x.startDate.slice(0, 10) <= dayIso && dayIso <= x.endDate.slice(0, 10)
+  )
+  if (!c) return undefined
+  const byId = new Map<number, SkillDto>()
+  for (const s of [...(c.mesocycleGoalSkills ?? []), ...(c.microcycleGoalSkills ?? [])]) {
+    if (!byId.has(s.id)) byId.set(s.id, s)
+  }
+  return {
+    type: c.type,
+    mesocycleName: c.mesocycleName,
+    microcycleName: c.microcycleName,
+    goalSkills: [...byId.values()],
+  }
 }
 
 /** Month segments (for the timeline header) across a day range */
