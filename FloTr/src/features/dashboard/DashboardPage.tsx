@@ -40,6 +40,7 @@ import { XpCareerCard } from '../members/XpCareerCard'
 import { ChallengesCard } from '../members/ChallengesCard'
 import { PendingRewardsCard } from '../members/RewardsCard'
 import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
+import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
@@ -233,6 +234,9 @@ export function DashboardPage() {
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Home-training counter-sign queue (guardian/coach) */}
         <HomeTrainingConfirmations />
+
+        {/* Season goals of the coach's default team — self-hides without a team / season / goals */}
+        {isCoach && !!defaultTeamId && <SeasonGoalsCard teamId={defaultTeamId} compact />}
 
         {/* My challenges — self-hides when there are none active (#108) */}
         {myMemberId && <ChallengesCard memberId={myMemberId} isOwner />}

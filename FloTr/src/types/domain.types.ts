@@ -512,16 +512,6 @@ export interface TagDto {
 // Season planning (periodization): mesocycles + microcycles per team.
 // phase: 0=Preparation 1=PreCompetition 2=Competition 3=Transition 4=Regeneration
 // type:  0=Development 1=Stabilization 2=Tapering 3=Regeneration 4=Competition
-export interface MicrocycleTrainingDto {
-  id: number
-  trainingId: number
-  trainingName: string
-  duration: number
-  note?: string | null
-  sortOrder: number
-  scheduledCount: number
-}
-
 export interface MicrocycleDto {
   id: number
   mesocycleId: number
@@ -532,7 +522,6 @@ export interface MicrocycleDto {
   goal?: string | null
   goalSkillIds: number[]
   goalSkills: SkillDto[]
-  recommendedTrainings: MicrocycleTrainingDto[]
 }
 
 export interface MesocycleDto {
@@ -556,6 +545,67 @@ export interface SeasonPlanDto {
   seasonStart?: string | null
   seasonEnd?: string | null
   mesocycles: MesocycleDto[]
+}
+
+// Season goals — quantified team targets; progress + verdict computed server-side.
+// metric: 0 Wins 1 Losses 2 Draws 3 Points 4 WinRate% 5 GoalsFor 6 GoalsAgainst 7 GoalDiff
+//         20 TestTeamAvg 21 TestAvgImprovement 22 TestImprovedShare%
+//         40 AttendanceRate% 41 TrainingsCompleted  60 ManualDone 61 ManualProgress
+export type SeasonGoalMetric = number
+export type SeasonGoalDirection = 0 | 1 // 0 = AtLeast, 1 = AtMost
+export type SeasonVerdict = 0 | 1 | 2 | 3 // 0 Pending 1 Successful 2 Partial 3 Unsuccessful
+
+export interface SeasonGoalDto {
+  id: number
+  seasonId: number
+  teamId: number
+  metric: SeasonGoalMetric
+  testDefinitionId?: number | null
+  testName?: string | null
+  testUnit?: string | null
+  direction: SeasonGoalDirection
+  target: number
+  manualValue?: number | null
+  note?: string | null
+  currentValue?: number | null
+  achieved: boolean
+  progressPercent: number
+}
+
+export interface SeasonGoalInputDto {
+  seasonId: number
+  teamId: number
+  metric: SeasonGoalMetric
+  testDefinitionId?: number | null
+  direction: SeasonGoalDirection
+  target: number
+  manualValue?: number | null
+  note?: string | null
+}
+
+export interface TeamSeasonGoalsDto {
+  teamId: number
+  teamName: string
+  seasonId?: number | null
+  seasonName?: string | null
+  seasonStart?: string | null
+  seasonEnd?: string | null
+  canManage: boolean
+  goals: SeasonGoalDto[]
+  achievedCount: number
+  totalCount: number
+  verdict: SeasonVerdict
+  verdictOverridden: boolean
+  overrideNote?: string | null
+}
+
+export interface ClubSeasonGoalRowDto {
+  teamId: number
+  teamName: string
+  achievedCount: number
+  totalCount: number
+  verdict: SeasonVerdict
+  verdictOverridden: boolean
 }
 
 export interface CycleCalendarDto {

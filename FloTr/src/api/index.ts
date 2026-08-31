@@ -387,6 +387,7 @@ export { memberReportApi } from './memberReport.api'
 export { playerSkillsApi } from './playerskills.api'
 export { xpApi } from './xp.api'
 export { rewardsApi } from './rewards.api'
+export { seasonGoalsApi } from './seasonGoals.api'
 
 export const kpiApi = {
   getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),

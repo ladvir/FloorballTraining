@@ -165,6 +165,11 @@ const StatTrackerLivePage = lazy(() =>
 const SeasonPlanPage = lazy(() =>
   import('../features/planning/SeasonPlanPage').then((m) => ({ default: m.SeasonPlanPage }))
 )
+const ClubSeasonGoalsPage = lazy(() =>
+  import('../features/planning/ClubSeasonGoalsPage').then((m) => ({
+    default: m.ClubSeasonGoalsPage,
+  }))
+)
 const AiSettingsPage = lazy(() =>
   import('../features/ai/AiSettingsPage').then((m) => ({ default: m.AiSettingsPage }))
 )
@@ -389,6 +394,8 @@ export const router = createBrowserRouter(
                     { path: '/members', element: <MembersPage /> },
                     { path: '/members/:id/report', element: <MemberReportPage /> },
                     { path: '/ai/usage', element: <AiUsagePage /> },
+                    // Club-wide season-goal rollup — one row per team of the season.
+                    { path: '/clubs/:clubId/season-goals', element: <ClubSeasonGoalsPage /> },
                   ],
                 },
                 // Admin-only routes

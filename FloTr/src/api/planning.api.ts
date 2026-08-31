@@ -61,12 +61,7 @@ export const planningApi = {
       .get<MesocycleEvaluationDto>(`/seasonplan/mesocycles/${mesocycleId}/evaluation`)
       .then((r) => r.data),
 
-  // Replace-set of a microcycle's recommended trainings
-  setMicrocycleTrainings: (
-    id: number,
-    items: { trainingId: number; note?: string | null; sortOrder: number }[]
-  ) =>
-    apiClient
-      .put<MicrocycleDto>(`/seasonplan/microcycles/${id}/trainings`, { items })
-      .then((r) => r.data),
+  // Attach (or detach with null) a training on a team event, from the plan's week view
+  setAppointmentTraining: (appointmentId: number, trainingId: number | null) =>
+    apiClient.put(`/seasonplan/appointments/${appointmentId}/training`, { trainingId }),
 }

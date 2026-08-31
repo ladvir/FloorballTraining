@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, ExternalLink, Gift } from 'lucide-react'
+import { Plus, Pencil, Trash2, ExternalLink, Gift, Target } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -128,6 +128,13 @@ export function ClubsPage() {
                         title={t('rewards.title')}
                       >
                         <Gift className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/clubs/${club.id}/season-goals`)}
+                        className="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+                        title={t('seasonGoals.clubTitle')}
+                      >
+                        <Target className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => openEdit(club)}

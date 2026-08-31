@@ -14,6 +14,15 @@ import { cn } from '../../utils/cn'
 import type { MesocycleDto, MicrocycleDto } from '../../types/domain.types'
 import { daySpan, dayIndex, phaseBlockClass, typeBlockClass, monthSegments } from './planningUtils'
 
+/** A team event placed on the timeline by its date (yyyy-mm-dd). */
+export interface TimelineEvent {
+  id: number
+  date: string
+  appointmentType?: number
+  name: string
+  hasTraining: boolean
+}
+
 interface PlanTimelineProps {
   rangeStart: Date
   rangeEnd: Date
@@ -30,7 +39,18 @@ interface PlanTimelineProps {
   onResizeMesocycle?: (meso: MesocycleDto, dayDelta: number) => void
   onMoveMicrocycle?: (micro: MicrocycleDto, dayDelta: number) => void
   onResizeMicrocycle?: (micro: MicrocycleDto, dayDelta: number) => void
+  /** Team events to show as a marker band under the microcycles. */
+  events?: TimelineEvent[]
 }
+
+const eventDotClass = (type?: number) =>
+  type === 0
+    ? 'bg-emerald-400'
+    : type === 3
+      ? 'bg-sky-400'
+      : type === 8
+        ? 'bg-violet-400'
+        : 'bg-gray-300'
 
 type DragKind = 'meso' | 'micro'
 type DragMode = 'move' | 'resize'
@@ -142,6 +162,7 @@ export function PlanTimeline({
   onResizeMesocycle,
   onMoveMicrocycle,
   onResizeMicrocycle,
+  events,
 }: PlanTimelineProps) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -295,10 +316,35 @@ export function PlanTimeline({
           </div>
         </DndContext>
 
+        {/* Events band */}
+        {events && events.length > 0 && (
+          <div className="mt-1 grid h-4" style={gridStyle}>
+            {events.map((ev) => {
+              const cols = columnsFor(ev.date, ev.date)
+              if (!cols) return null
+              return (
+                <span
+                  key={ev.id}
+                  title={`${ev.name || format(parseISO(ev.date), 'd.M.yyyy', { locale: dfLocale() })}${
+                    ev.hasTraining ? ' ✓' : ''
+                  }`}
+                  className={cn(
+                    'm-auto h-2.5 w-2.5 rounded-sm',
+                    eventDotClass(ev.appointmentType),
+                    ev.hasTraining && 'ring-2 ring-emerald-500/60'
+                  )}
+                  style={cols}
+                />
+              )
+            })}
+          </div>
+        )}
+
         {/* Band labels */}
         <div className="mt-1 flex gap-4 text-[10px] uppercase tracking-wide text-gray-400">
           <span>{t('planning.mesocycles')}</span>
           <span>{t('planning.microcycles')}</span>
+          {events && events.length > 0 && <span>{t('planning.eventsBand')}</span>}
           {editable && (
             <span className="normal-case tracking-normal">{t('planning.dragHint')}</span>
           )}

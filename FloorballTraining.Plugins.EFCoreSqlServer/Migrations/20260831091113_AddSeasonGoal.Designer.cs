@@ -4,6 +4,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    partial class FloorballTrainingContextModelSnapshot : ModelSnapshot
+    [Migration("20260831091113_AddSeasonGoal")]
+    partial class AddSeasonGoal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2431,6 +2434,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("MesocycleId", "StartDate");
 
                     b.ToTable("Microcycles");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTraining", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MicrocycleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrainingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingId");
+
+                    b.HasIndex("MicrocycleId", "TrainingId")
+                        .IsUnique();
+
+                    b.ToTable("MicrocycleTrainings");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
@@ -6317,6 +6351,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Mesocycle");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTraining", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Microcycle", "Microcycle")
+                        .WithMany("RecommendedTrainings")
+                        .HasForeignKey("MicrocycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Training", "Training")
+                        .WithMany()
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Microcycle");
+
+                    b.Navigation("Training");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.PlayerSkillRating", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
@@ -7066,6 +7119,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
                 {
                     b.Navigation("Microcycles");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Microcycle", b =>
+                {
+                    b.Navigation("RecommendedTrainings");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>

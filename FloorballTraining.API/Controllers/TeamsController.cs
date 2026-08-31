@@ -176,7 +176,7 @@ public class TeamsController(
         if (request.CopyPlan)
         {
             var sourceMesocycles = await context.Mesocycles
-                .Include(m => m.Microcycles).ThenInclude(mc => mc.RecommendedTrainings)
+                .Include(m => m.Microcycles)
                 .Where(m => m.TeamId == id)
                 .ToListAsync();
 
@@ -219,14 +219,6 @@ public class TeamsController(
                             GoalSkill1Id = mc.GoalSkill1Id,
                             GoalSkill2Id = mc.GoalSkill2Id,
                             GoalSkill3Id = mc.GoalSkill3Id,
-                            RecommendedTrainings = mc.RecommendedTrainings
-                                .Select(rt => new MicrocycleTraining
-                                {
-                                    TrainingId = rt.TrainingId,
-                                    Note = rt.Note,
-                                    SortOrder = rt.SortOrder
-                                })
-                                .ToList()
                         }).ToList()
                     });
                 }

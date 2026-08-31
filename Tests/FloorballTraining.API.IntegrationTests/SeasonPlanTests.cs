@@ -475,76 +475,67 @@ public class SeasonPlanTests : IAsyncLifetime
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
     }
 
-    // ── Recommended trainings ────────────────────────────────────────────────
+    // ── Team event → training ────────────────────────────────────────────────
 
     [Fact]
-    public async Task Recommended_trainings_replace_set_works()
+    public async Task Coach_can_attach_and_detach_a_training_on_a_team_event()
     {
         var client = await CreateClientAsync(_coachEmail);
 
-        int trainingId;
+        int trainingId, appointmentId;
         await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
             await using var db = await dbFactory.CreateDbContextAsync();
-            var training = new Training { Name = $"PlanTraining-{Guid.NewGuid():N}", Duration = 60 };
+            var training = new Training { Name = $"EventTraining-{Guid.NewGuid():N}", Duration = 60 };
             db.Trainings.Add(training);
             await db.SaveChangesAsync();
             trainingId = training.Id;
+
+            var placeId = await db.Places.Select(p => p.Id).FirstAsync();
+            var appointment = new Appointment
+            {
+                Name = "Týdenní trénink",
+                AppointmentType = CoreBusiness.Enums.AppointmentType.Training,
+                Start = new DateTime(2036, 3, 3, 18, 0, 0),
+                End = new DateTime(2036, 3, 3, 19, 0, 0),
+                LocationId = placeId,
+                TeamId = _teamId
+            };
+            db.Appointments.Add(appointment);
+            await db.SaveChangesAsync();
+            appointmentId = appointment.Id;
         }
 
-        var meso = await CreateMesocycleAsync(client,
-            NewMesocycle(_teamId, "Blok H", new DateTime(2032, 1, 1), new DateTime(2032, 1, 31)));
-        var microResponse = await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
-        {
-            MesocycleId = meso.Id,
-            Name = "Týden s tréninky",
-            StartDate = new DateTime(2032, 1, 5),
-            EndDate = new DateTime(2032, 1, 11)
-        });
-        var micro = (await microResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!;
+        (await client.PutAsJsonAsync($"/SeasonPlan/appointments/{appointmentId}/training",
+                new { trainingId })).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        var setResponse = await client.PutAsJsonAsync($"/SeasonPlan/microcycles/{micro.Id}/trainings",
-            new MicrocycleTrainingsUpdateDto
-            {
-                Items = [new MicrocycleTrainingItemDto { TrainingId = trainingId, Note = "Zaměřit na střelbu", SortOrder = 1 }]
-            });
-        setResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var withTrainings = (await setResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!;
-        withTrainings.RecommendedTrainings.Should().ContainSingle(rt => rt.TrainingId == trainingId)
-            .Which.Note.Should().Be("Zaměřit na střelbu");
-        withTrainings.RecommendedTrainings.Single().ScheduledCount.Should().Be(0);
-
-        // Scheduling the training inside the microcycle range bumps ScheduledCount
         await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
             await using var db = await dbFactory.CreateDbContextAsync();
-            var placeId = await db.Places.Select(p => p.Id).FirstAsync();
-            db.Appointments.Add(new Appointment
-            {
-                Name = "Naplánovaný trénink",
-                Start = new DateTime(2032, 1, 7, 18, 0, 0),
-                End = new DateTime(2032, 1, 7, 19, 0, 0),
-                LocationId = placeId,
-                TeamId = _teamId,
-                TrainingId = trainingId
-            });
-            await db.SaveChangesAsync();
+            (await db.Appointments.FirstAsync(a => a.Id == appointmentId)).TrainingId.Should().Be(trainingId);
         }
 
-        var planAfter = await client.GetFromJsonAsync<SeasonPlanDto>($"/SeasonPlan/team/{_teamId}");
-        planAfter!.Mesocycles.Single(m => m.Id == meso.Id)
-            .Microcycles.Single(mc => mc.Id == micro.Id)
-            .RecommendedTrainings.Single().ScheduledCount.Should().Be(1);
+        // Unknown training → 400
+        (await client.PutAsJsonAsync($"/SeasonPlan/appointments/{appointmentId}/training",
+                new { trainingId = MissingSkillId })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        // Replace with empty set
-        var clearResponse = await client.PutAsJsonAsync($"/SeasonPlan/microcycles/{micro.Id}/trainings",
-            new MicrocycleTrainingsUpdateDto());
-        (await clearResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!
-            .RecommendedTrainings.Should().BeEmpty();
+        // Detach
+        (await client.PutAsJsonAsync($"/SeasonPlan/appointments/{appointmentId}/training",
+                new { trainingId = (int?)null })).StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            (await db.Appointments.FirstAsync(a => a.Id == appointmentId)).TrainingId.Should().BeNull();
+        }
+
+        // Coach of another club cannot touch it
+        var otherClient = await CreateClientAsync(_otherCoachEmail);
+        (await otherClient.PutAsJsonAsync($"/SeasonPlan/appointments/{appointmentId}/training",
+                new { trainingId })).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     // ── Evaluation ───────────────────────────────────────────────────────────

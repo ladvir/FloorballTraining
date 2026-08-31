@@ -25,8 +25,6 @@ public class Microcycle : BaseEntity, IAuditable
     public Skill? GoalSkill3 { get; set; }
     public int? GoalSkill3Id { get; set; }
 
-    public List<MicrocycleTraining> RecommendedTrainings { get; set; } = [];
-
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? CreatedByUserId { get; set; }

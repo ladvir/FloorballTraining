@@ -41,19 +41,6 @@ public class MicrocycleDto
     public string? Goal { get; set; }
     public List<int> GoalSkillIds { get; set; } = [];
     public List<SkillDto> GoalSkills { get; set; } = [];
-    public List<MicrocycleTrainingDto> RecommendedTrainings { get; set; } = [];
-}
-
-public class MicrocycleTrainingDto
-{
-    public int Id { get; set; }
-    public int TrainingId { get; set; }
-    public string TrainingName { get; set; } = string.Empty;
-    public int Duration { get; set; }
-    public string? Note { get; set; }
-    public int SortOrder { get; set; }
-    /// <summary>How many appointments with this training + team fall inside the microcycle range.</summary>
-    public int ScheduledCount { get; set; }
 }
 
 /// <summary>Flat cycle row for tinting the calendar month grid.</summary>
@@ -81,19 +68,6 @@ public class GenerateWeeksRequestDto
     public string NamePrefix { get; set; } = "Week";
     /// <summary>When false and microcycles already exist, the request is rejected with 409.</summary>
     public bool Overwrite { get; set; }
-}
-
-/// <summary>Replace-set payload for a microcycle's recommended trainings.</summary>
-public class MicrocycleTrainingsUpdateDto
-{
-    public List<MicrocycleTrainingItemDto> Items { get; set; } = [];
-}
-
-public class MicrocycleTrainingItemDto
-{
-    public int TrainingId { get; set; }
-    public string? Note { get; set; }
-    public int SortOrder { get; set; }
 }
 
 // ── Evaluation ────────────────────────────────────────────────────────────────

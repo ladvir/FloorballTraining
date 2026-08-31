@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   addDays,
@@ -13,6 +13,7 @@ import {
 } from 'date-fns'
 import {
   CalendarDays,
+  CalendarPlus,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -31,7 +32,8 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
-import { seasonsApi, teamsApi } from '../../api/index'
+import { seasonsApi, teamsApi, appointmentsApi } from '../../api/index'
+import { trainingsApi } from '../../api/trainings.api'
 import { planningApi } from '../../api/planning.api'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
@@ -40,19 +42,20 @@ import { dfLocale } from '../../utils/dateLocale'
 import { cn } from '../../utils/cn'
 import { skillPalette } from '../../utils/skillColors'
 import type {
+  AppointmentDto,
   MesocycleDto,
   MicrocycleDto,
   SeasonDto,
   SkillDto,
-  TrainingDto,
 } from '../../types/domain.types'
+import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
+import { refreshAppointments } from '../appointments/refreshAppointments'
 import { PlanTimeline } from './PlanTimeline'
 import { MesocycleModal } from './MesocycleModal'
 import { MicrocycleModal } from './MicrocycleModal'
 import { GenerateWeeksModal } from './GenerateWeeksModal'
-import { AssignTrainingsModal } from './AssignTrainingsModal'
 import { EvaluationPanel } from './EvaluationPanel'
-import { ScheduleTrainingModal } from '../trainings/ScheduleTrainingModal'
+import { SeasonGoalsCard } from './SeasonGoalsCard'
 import { TrainingDetailModal } from '../trainings/TrainingDetailModal'
 import { daySpan, phaseBlockClass, typeBlockClass, isOutsideRange } from './planningUtils'
 import { refreshPlan } from './refreshPlan'
@@ -66,6 +69,22 @@ type PlanView = 'season' | 'month' | 'week' | 'custom'
 
 // Timeline density (px per day) presets; null = stretch to container width
 const ZOOM_STEPS = [3, 4, 6, 9, 14, 20, 30, 45]
+
+// Appointment type → i18n key (same mapping as TeamDetailPage)
+const APPT_TYPE_KEY: Record<number, string> = {
+  0: 'appointments.typeTraining',
+  1: 'appointments.typeCamp',
+  2: 'appointments.typePromotion',
+  3: 'appointments.typeMatch',
+  4: 'appointments.typeOther',
+  5: 'appointments.typeWorkshop',
+  6: 'appointments.typeOrganizing',
+  7: 'appointments.typePreperation',
+  8: 'appointments.typeTesting',
+}
+const apptTypeKey = (type?: number) => APPT_TYPE_KEY[type ?? 4] ?? 'appointments.typeOther'
+const apptTypeVariant = (type?: number): 'success' | 'info' | 'warning' | 'default' =>
+  type === 0 ? 'success' : type === 3 ? 'info' : type === 8 ? 'warning' : 'default'
 
 function loadFromStorage(key: string): number {
   try {
@@ -106,6 +125,31 @@ function SkillChips({ skills }: { skills: SkillDto[] }) {
   )
 }
 
+function PlanTabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        '-mb-px whitespace-nowrap border-b-2 px-1 pb-2 text-sm font-medium',
+        active
+          ? 'border-sky-500 text-sky-600'
+          : 'border-transparent text-gray-500 hover:text-gray-700'
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 export function SeasonPlanPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -117,6 +161,7 @@ export function SeasonPlanPage() {
     return stored || null
   })
   const [currentTeamId, setCurrentTeamId] = useState<number>(loadFromStorage(TEAM_KEY))
+  const [activeTab, setActiveTab] = useState<'cycles' | 'goals'>('cycles')
   const [selectedMesoId, setSelectedMesoId] = useState<number | null>(null)
   const [selectedMicroId, setSelectedMicroId] = useState<number | null>(null)
   const [mesoModalOpen, setMesoModalOpen] = useState(false)
@@ -125,8 +170,7 @@ export function SeasonPlanPage() {
   const [editingMicro, setEditingMicro] = useState<MicrocycleDto | null>(null)
   const [microParent, setMicroParent] = useState<MesocycleDto | null>(null)
   const [generateWeeksFor, setGenerateWeeksFor] = useState<MesocycleDto | null>(null)
-  const [assignTrainingsFor, setAssignTrainingsFor] = useState<MicrocycleDto | null>(null)
-  const [scheduling, setScheduling] = useState<{ training: TrainingDto; date: string } | null>(null)
+  const [eventModal, setEventModal] = useState<{ appointment: AppointmentDto | null } | null>(null)
   const [previewTrainingId, setPreviewTrainingId] = useState<number | null>(null)
 
   // Timeline view window + zoom
@@ -193,6 +237,32 @@ export function SeasonPlanPage() {
   const planForbidden =
     (planError as { response?: { status?: number } } | null)?.response?.status === 403
 
+  // Team events + training library — for the "events per week" section and the timeline band
+  const { data: appointments } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => appointmentsApi.getAll(),
+    enabled: effectiveTeamId > 0,
+  })
+  const { data: allTrainings } = useQuery({
+    queryKey: ['trainings'],
+    queryFn: () => trainingsApi.getAll(),
+    enabled: effectiveTeamId > 0,
+  })
+
+  const setEventTrainingMutation = useMutation({
+    mutationFn: ({ id, trainingId }: { id: number; trainingId: number | null }) =>
+      planningApi.setAppointmentTraining(id, trainingId),
+    onSuccess: () => {
+      void refreshAppointments(queryClient)
+      refreshPlan(queryClient) // scheduledCount is derived from appointments
+      toast.success(t('planning.saved'))
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg ?? t('planning.saveFailed'))
+    },
+  })
+
   const handleSeasonChange = (seasonId: number) => {
     setCurrentSeasonId(seasonId)
     if (seasonId) localStorage.setItem(SEASON_KEY, String(seasonId))
@@ -215,6 +285,57 @@ export function SeasonPlanPage() {
   const selectedMicroMeso = selectedMicro
     ? (mesocycles.find((m) => m.id === selectedMicro.mesocycleId) ?? null)
     : null
+
+  const teamAppointments = useMemo(
+    () => (appointments ?? []).filter((a) => a.teamId === effectiveTeamId),
+    [appointments, effectiveTeamId]
+  )
+
+  // Events (date-only) inside the selected week, oldest first
+  const weekEvents = useMemo(() => {
+    if (!selectedMicro) return []
+    const from = selectedMicro.startDate.slice(0, 10)
+    const to = selectedMicro.endDate.slice(0, 10)
+    return teamAppointments
+      .filter((a) => a.start.slice(0, 10) >= from && a.start.slice(0, 10) <= to)
+      .sort((a, b) => (a.start < b.start ? -1 : 1))
+  }, [selectedMicro, teamAppointments])
+
+  // Compact markers for the timeline events band
+  const timelineEvents = useMemo(
+    () =>
+      teamAppointments.map((a) => ({
+        id: a.id,
+        date: a.start.slice(0, 10),
+        appointmentType: a.appointmentType,
+        name: a.name || '',
+        hasTraining: !!a.trainingId,
+      })),
+    [teamAppointments]
+  )
+
+  // Training dropdown for the week's events — limited to trainings whose goal skills match the
+  // week's target skills (its own, else the parent mesocycle's); no skills set → whole library.
+  const weekSkillIds = useMemo(() => {
+    const skills = selectedMicro?.goalSkills.length
+      ? selectedMicro.goalSkills
+      : (selectedMicroMeso?.goalSkills ?? [])
+    return new Set(skills.map((s) => s.id))
+  }, [selectedMicro, selectedMicroMeso])
+
+  const weekTrainingOptions = useMemo(
+    () =>
+      (allTrainings ?? [])
+        .filter((tr) => {
+          if (weekSkillIds.size === 0) return true
+          return [tr.trainingGoalSkill1, tr.trainingGoalSkill2, tr.trainingGoalSkill3].some(
+            (s) => s && weekSkillIds.has(s.id)
+          )
+        })
+        .map((tr) => ({ id: tr.id, name: tr.name }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
+    [allTrainings, weekSkillIds]
+  )
 
   // Timeline range: union of season dates and all cycle dates
   const timelineRange = useMemo(() => {
@@ -400,18 +521,7 @@ export function SeasonPlanPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t('planning.title')}
-        description={t('planning.subtitle')}
-        action={
-          isCoach && effectiveTeamId > 0 ? (
-            <Button onClick={openNewMeso}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              {t('planning.addMesocycle')}
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageHeader title={t('planning.title')} description={t('planning.subtitle')} />
 
       {/* Season + team selectors */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -460,6 +570,16 @@ export function SeasonPlanPage() {
         <LoadingSpinner />
       ) : (
         <div className="space-y-4">
+          {/* Tabs: cycles (mezo/microcycle plan) + season goals */}
+          <div className="flex gap-6 border-b border-gray-200">
+            <PlanTabButton active={activeTab === 'cycles'} onClick={() => setActiveTab('cycles')}>
+              {t('planning.tabCycles')}
+            </PlanTabButton>
+            <PlanTabButton active={activeTab === 'goals'} onClick={() => setActiveTab('goals')}>
+              {t('planning.tabGoals')}
+            </PlanTabButton>
+          </div>
+
           {teamWithoutSeason && (
             <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
               <Info className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -467,7 +587,9 @@ export function SeasonPlanPage() {
             </div>
           )}
 
-          {!mesocycles.length ? (
+          {activeTab === 'goals' ? (
+            <SeasonGoalsCard teamId={effectiveTeamId} />
+          ) : !mesocycles.length ? (
             <EmptyState
               title={t('planning.empty')}
               description={isCoach ? t('planning.emptyHint') : t('planning.emptyReadOnly')}
@@ -482,6 +604,14 @@ export function SeasonPlanPage() {
             />
           ) : (
             <>
+              {isCoach && (
+                <div className="flex justify-end">
+                  <Button onClick={openNewMeso}>
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    {t('planning.addMesocycle')}
+                  </Button>
+                </div>
+              )}
               {/* Timeline */}
               {displayRange && (
                 <Card>
@@ -584,6 +714,7 @@ export function SeasonPlanPage() {
                       onResizeMesocycle={resizeMesocycle}
                       onMoveMicrocycle={moveMicrocycle}
                       onResizeMicrocycle={resizeMicrocycle}
+                      events={timelineEvents}
                     />
                   </CardContent>
                 </Card>
@@ -758,80 +889,117 @@ export function SeasonPlanPage() {
                       )}
                       <SkillChips skills={selectedMicro.goalSkills} />
 
-                      {/* Recommended trainings */}
+                      {/* Team events inside this week — assign a training right here */}
                       <div className="border-t border-gray-100 pt-3">
                         <div className="mb-2 flex items-center justify-between">
                           <p className="text-sm font-medium text-gray-700">
-                            {t('planning.recommendedTrainings')}
+                            {t('planning.weekEvents')}
                           </p>
                           {isCoach && (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setAssignTrainingsFor(selectedMicro)}
+                              onClick={() => setEventModal({ appointment: null })}
                             >
-                              <Pencil className="mr-1 h-3.5 w-3.5" />
-                              {t('planning.assignTrainings')}
+                              <CalendarPlus className="mr-1 h-3.5 w-3.5" />
+                              {t('appointments.newEvent')}
                             </Button>
                           )}
                         </div>
-                        {!selectedMicro.recommendedTrainings.length ? (
-                          <p className="text-sm text-gray-400">
-                            {t('planning.noTrainingsAssigned')}
-                          </p>
+                        {isCoach &&
+                          weekSkillIds.size > 0 &&
+                          weekEvents.some((e) => e.appointmentType === 0) && (
+                            <p className="mb-1.5 text-xs text-gray-400">
+                              {weekTrainingOptions.length > 0
+                                ? t('planning.trainingsFilteredBySkills')
+                                : t('planning.noMatchingTrainings')}
+                            </p>
+                          )}
+                        {!weekEvents.length ? (
+                          <p className="text-sm text-gray-400">{t('planning.noWeekEvents')}</p>
                         ) : (
                           <ul className="space-y-1.5">
-                            {selectedMicro.recommendedTrainings.map((rt) => (
-                              <li
-                                key={rt.id}
-                                className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium text-gray-800">
-                                    {rt.trainingName}
-                                    <span className="ml-2 text-xs font-normal text-gray-400">
-                                      {rt.duration} min
-                                    </span>
-                                  </p>
-                                  {rt.note && (
-                                    <p className="truncate text-xs text-gray-500">{rt.note}</p>
-                                  )}
-                                </div>
-                                <Badge
-                                  size="sm"
-                                  variant={rt.scheduledCount > 0 ? 'success' : 'default'}
+                            {weekEvents.map((ev) => {
+                              const opts =
+                                ev.trainingId &&
+                                !weekTrainingOptions.some((o) => o.id === ev.trainingId)
+                                  ? [
+                                      {
+                                        id: ev.trainingId,
+                                        name: ev.trainingName ?? `#${ev.trainingId}`,
+                                      },
+                                      ...weekTrainingOptions,
+                                    ]
+                                  : weekTrainingOptions
+                              return (
+                                <li
+                                  key={ev.id}
+                                  className="rounded-lg border border-gray-100 px-2 py-1.5"
                                 >
-                                  {t('planning.scheduledCount', { count: rt.scheduledCount })}
-                                </Badge>
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewTrainingId(rt.trainingId)}
-                                  title={t('planning.preview')}
-                                  aria-label={t('planning.preview')}
-                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                                {isCoach && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      setScheduling({
-                                        training: {
-                                          id: rt.trainingId,
-                                          name: rt.trainingName,
-                                          duration: rt.duration,
-                                        } as TrainingDto,
-                                        date: selectedMicro.startDate.slice(0, 10),
-                                      })
-                                    }
-                                  >
-                                    {t('planning.scheduleTraining')}
-                                  </Button>
-                                )}
-                              </li>
-                            ))}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setEventModal({ appointment: ev })}
+                                      className="min-w-0 flex-1 text-left"
+                                    >
+                                      <p className="truncate text-sm font-medium text-gray-800">
+                                        {ev.name || t(apptTypeKey(ev.appointmentType))}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {format(parseISO(ev.start), 'EEE d.M. HH:mm', {
+                                          locale: dfLocale(),
+                                        })}
+                                      </p>
+                                    </button>
+                                    <Badge size="sm" variant={apptTypeVariant(ev.appointmentType)}>
+                                      {t(apptTypeKey(ev.appointmentType))}
+                                    </Badge>
+                                  </div>
+                                  {/* Training pick + preview — only for events of type Training */}
+                                  {ev.appointmentType === 0 &&
+                                    (isCoach ? (
+                                      <div className="mt-1.5 flex items-center gap-1.5">
+                                        <select
+                                          value={ev.trainingId ?? ''}
+                                          onChange={(e) =>
+                                            setEventTrainingMutation.mutate({
+                                              id: ev.id,
+                                              trainingId: e.target.value
+                                                ? Number(e.target.value)
+                                                : null,
+                                            })
+                                          }
+                                          className="h-8 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
+                                        >
+                                          <option value="">{t('planning.noTrainingOption')}</option>
+                                          {opts.map((o) => (
+                                            <option key={o.id} value={o.id}>
+                                              {o.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        {ev.trainingId && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setPreviewTrainingId(ev.trainingId!)}
+                                            title={t('planning.preview')}
+                                            aria-label={t('planning.preview')}
+                                            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      ev.trainingName && (
+                                        <p className="mt-1 text-xs text-sky-600">
+                                          {ev.trainingName}
+                                        </p>
+                                      )
+                                    ))}
+                                </li>
+                              )
+                            })}
                           </ul>
                         )}
                       </div>
@@ -877,24 +1045,23 @@ export function SeasonPlanPage() {
           mesocycle={generateWeeksFor}
         />
       )}
-      {assignTrainingsFor && (
-        <AssignTrainingsModal
-          isOpen={!!assignTrainingsFor}
-          onClose={() => setAssignTrainingsFor(null)}
-          microcycle={
-            mesocycles
-              .flatMap((m) => m.microcycles)
-              .find((mc) => mc.id === assignTrainingsFor.id) ?? assignTrainingsFor
-          }
-        />
-      )}
-      {scheduling && (
-        <ScheduleTrainingModal
-          isOpen={!!scheduling}
-          onClose={() => setScheduling(null)}
-          training={scheduling.training}
-          defaultDate={scheduling.date}
+      {eventModal && (
+        <AppointmentFormModal
+          isOpen
+          onClose={() => setEventModal(null)}
+          appointment={eventModal.appointment}
           defaultTeamId={effectiveTeamId}
+          defaultDate={
+            eventModal.appointment
+              ? null
+              : selectedMicro
+                ? parseISO(selectedMicro.startDate.slice(0, 10))
+                : null
+          }
+          onSaved={() => {
+            void refreshAppointments(queryClient)
+            refreshPlan(queryClient)
+          }}
         />
       )}
       <TrainingDetailModal

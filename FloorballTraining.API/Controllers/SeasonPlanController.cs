@@ -110,7 +110,7 @@ public class SeasonPlanController(
     private static List<SkillDto> GoalSkillDtos(params Skill?[] skills) =>
         skills.Where(s => s != null).Select(s => ToSkillDto(s!)).ToList();
 
-    private static MicrocycleDto ToDto(Microcycle m, Dictionary<int, int>? scheduledCounts = null) => new()
+    private static MicrocycleDto ToDto(Microcycle m) => new()
     {
         Id = m.Id,
         MesocycleId = m.MesocycleId,
@@ -121,21 +121,9 @@ public class SeasonPlanController(
         Goal = m.Goal,
         GoalSkillIds = GoalSkillIds(m.GoalSkill1Id, m.GoalSkill2Id, m.GoalSkill3Id),
         GoalSkills = GoalSkillDtos(m.GoalSkill1, m.GoalSkill2, m.GoalSkill3),
-        RecommendedTrainings = m.RecommendedTrainings
-            .OrderBy(rt => rt.SortOrder)
-            .Select(rt => new MicrocycleTrainingDto
-            {
-                Id = rt.Id,
-                TrainingId = rt.TrainingId,
-                TrainingName = rt.Training?.Name ?? string.Empty,
-                Duration = rt.Training?.Duration ?? 0,
-                Note = rt.Note,
-                SortOrder = rt.SortOrder,
-                ScheduledCount = scheduledCounts?.GetValueOrDefault(rt.Id) ?? 0
-            }).ToList()
     };
 
-    private static MesocycleDto ToDto(Mesocycle m, Dictionary<int, int>? scheduledCounts = null) => new()
+    private static MesocycleDto ToDto(Mesocycle m) => new()
     {
         Id = m.Id,
         TeamId = m.TeamId,
@@ -148,7 +136,7 @@ public class SeasonPlanController(
         GoalSkills = GoalSkillDtos(m.GoalSkill1, m.GoalSkill2, m.GoalSkill3),
         Microcycles = m.Microcycles
             .OrderBy(mc => mc.StartDate)
-            .Select(mc => ToDto(mc, scheduledCounts))
+            .Select(ToDto)
             .ToList()
     };
 
@@ -156,42 +144,7 @@ public class SeasonPlanController(
         .Include(m => m.GoalSkill1).Include(m => m.GoalSkill2).Include(m => m.GoalSkill3)
         .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill1)
         .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill2)
-        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill3)
-        .Include(m => m.Microcycles).ThenInclude(mc => mc.RecommendedTrainings).ThenInclude(rt => rt.Training);
-
-    /// <summary>
-    /// Counts appointments using each recommended training (same team, start inside the
-    /// microcycle range), keyed by MicrocycleTraining.Id.
-    /// </summary>
-    private async Task<Dictionary<int, int>> GetScheduledCountsAsync(int teamId, IEnumerable<Microcycle> microcycles)
-    {
-        var result = new Dictionary<int, int>();
-        var items = microcycles
-            .SelectMany(mc => mc.RecommendedTrainings.Select(rt => (rt.Id, rt.TrainingId, mc.StartDate, mc.EndDate)))
-            .ToList();
-        if (items.Count == 0) return result;
-
-        var trainingIds = items.Select(i => i.TrainingId).Distinct().ToList();
-        var minStart = items.Min(i => i.StartDate);
-        var maxEnd = items.Max(i => i.EndDate).AddDays(1);
-
-        var appointments = await context.Appointments
-            .Where(a => a.TeamId == teamId
-                        && a.TrainingId != null && trainingIds.Contains(a.TrainingId.Value)
-                        && a.Start >= minStart && a.Start < maxEnd)
-            .Select(a => new { TrainingId = a.TrainingId!.Value, a.Start })
-            .ToListAsync();
-
-        foreach (var item in items)
-        {
-            result[item.Id] = appointments.Count(a =>
-                a.TrainingId == item.TrainingId
-                && a.Start >= item.StartDate
-                && a.Start < item.EndDate.AddDays(1));
-        }
-
-        return result;
-    }
+        .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalSkill3);
 
     // ── Validation helpers ───────────────────────────────────────────────────
 
@@ -231,9 +184,6 @@ public class SeasonPlanController(
             .OrderBy(m => m.StartDate)
             .ToListAsync();
 
-        var scheduledCounts = await GetScheduledCountsAsync(
-            teamId, mesocycles.SelectMany(m => m.Microcycles));
-
         return Ok(new SeasonPlanDto
         {
             TeamId = team.Id,
@@ -242,7 +192,7 @@ public class SeasonPlanController(
             SeasonName = team.Season?.Name,
             SeasonStart = team.Season?.StartDate,
             SeasonEnd = team.Season?.EndDate,
-            Mesocycles = mesocycles.Select(m => ToDto(m, scheduledCounts)).ToList()
+            Mesocycles = mesocycles.Select(ToDto).ToList()
         });
     }
 
@@ -473,8 +423,7 @@ public class SeasonPlanController(
     private async Task<MesocycleDto> LoadMesocycleDtoAsync(int id)
     {
         var mesocycle = await MesocyclesWithDetails().FirstAsync(m => m.Id == id);
-        var scheduledCounts = await GetScheduledCountsAsync(mesocycle.TeamId, mesocycle.Microcycles);
-        return ToDto(mesocycle, scheduledCounts);
+        return ToDto(mesocycle);
     }
 
     // ── Microcycle CRUD ──────────────────────────────────────────────────────
@@ -509,7 +458,7 @@ public class SeasonPlanController(
         context.Microcycles.Add(microcycle);
         await context.SaveChangesAsync();
 
-        return Ok(await LoadMicrocycleDtoAsync(microcycle.Id, mesocycle.TeamId));
+        return Ok(await LoadMicrocycleDtoAsync(microcycle.Id));
     }
 
     /// <summary>
@@ -567,7 +516,7 @@ public class SeasonPlanController(
 
         await context.SaveChangesAsync();
 
-        return Ok(await LoadMicrocycleDtoAsync(id, mesocycle.TeamId));
+        return Ok(await LoadMicrocycleDtoAsync(id));
     }
 
     /// <summary>DELETE /seasonplan/microcycles/{id}</summary>
@@ -611,51 +560,41 @@ public class SeasonPlanController(
         return await ValidateGoalSkillsAsync(dto.GoalSkillIds);
     }
 
-    private async Task<MicrocycleDto> LoadMicrocycleDtoAsync(int id, int teamId)
+    private async Task<MicrocycleDto> LoadMicrocycleDtoAsync(int id)
     {
         var microcycle = await context.Microcycles
             .Include(mc => mc.GoalSkill1).Include(mc => mc.GoalSkill2).Include(mc => mc.GoalSkill3)
-            .Include(mc => mc.RecommendedTrainings).ThenInclude(rt => rt.Training)
             .FirstAsync(mc => mc.Id == id);
-        var scheduledCounts = await GetScheduledCountsAsync(teamId, [microcycle]);
-        return ToDto(microcycle, scheduledCounts);
+        return ToDto(microcycle);
     }
 
-    // ── Recommended trainings ────────────────────────────────────────────────
+    // ── Team events inside the plan ──────────────────────────────────────────
 
-    /// <summary>PUT /seasonplan/microcycles/{id}/trainings — replace-set of recommended trainings</summary>
-    [HttpPut("microcycles/{id:int}/trainings")]
-    public async Task<IActionResult> SetMicrocycleTrainings(int id, [FromBody] MicrocycleTrainingsUpdateDto dto)
+    public class SetAppointmentTrainingDto
     {
-        var microcycle = await context.Microcycles
-            .Include(mc => mc.Mesocycle)
-            .Include(mc => mc.RecommendedTrainings)
-            .FirstOrDefaultAsync(mc => mc.Id == id);
-        if (microcycle == null) return NotFound();
+        /// <summary>Training to attach, or null to detach.</summary>
+        public int? TrainingId { get; set; }
+    }
 
-        var teamId = microcycle.Mesocycle!.TeamId;
-        if (!await CanManagePlanAsync(teamId)) return Forbid();
+    /// <summary>
+    /// PUT /seasonplan/appointments/{id}/training — attach or detach a training on a team event
+    /// straight from the plan view (per-week event → training). Only the linked training changes.
+    /// </summary>
+    [HttpPut("appointments/{id:int}/training")]
+    public async Task<IActionResult> SetAppointmentTraining(int id, [FromBody] SetAppointmentTrainingDto dto)
+    {
+        var appointment = await context.Appointments.FirstOrDefaultAsync(a => a.Id == id);
+        if (appointment == null) return NotFound();
+        if (appointment.TeamId == null || !await CanManagePlanAsync(appointment.TeamId.Value))
+            return Forbid();
 
-        var trainingIds = dto.Items.Select(i => i.TrainingId).ToList();
-        if (trainingIds.Distinct().Count() != trainingIds.Count)
-            return BadRequest(new { message = "Trénink lze doporučit jen jednou." });
+        if (dto.TrainingId.HasValue &&
+            !await context.Trainings.AnyAsync(tr => tr.Id == dto.TrainingId.Value))
+            return BadRequest(new { message = "Trénink neexistuje." });
 
-        var existingCount = await context.Trainings.CountAsync(t => trainingIds.Contains(t.Id));
-        if (existingCount != trainingIds.Count)
-            return BadRequest(new { message = "Některý z tréninků neexistuje." });
-
-        context.MicrocycleTrainings.RemoveRange(microcycle.RecommendedTrainings);
-        microcycle.RecommendedTrainings = dto.Items.Select(i => new MicrocycleTraining
-        {
-            MicrocycleId = id,
-            TrainingId = i.TrainingId,
-            Note = i.Note,
-            SortOrder = i.SortOrder
-        }).ToList();
-
+        appointment.TrainingId = dto.TrainingId;
         await context.SaveChangesAsync();
-
-        return Ok(await LoadMicrocycleDtoAsync(id, teamId));
+        return NoContent();
     }
 
     // ── Evaluation ───────────────────────────────────────────────────────────

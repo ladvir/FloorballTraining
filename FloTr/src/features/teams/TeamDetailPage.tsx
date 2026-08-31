@@ -27,6 +27,7 @@ import { SortableTh } from '../../components/shared/SortableTh'
 import { useTableSort } from '../../utils/tableSort'
 import { teamsApi, xpApi, appointmentsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
+import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
 import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { refreshAppointments } from '../appointments/refreshAppointments'
@@ -208,6 +209,11 @@ export function TeamDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Season goals — self-hides when the team has no season or no goals yet */}
+      <div className="mb-4">
+        <SeasonGoalsCard teamId={team.id} compact />
+      </div>
 
       {/* Actions */}
       {canManage && (
