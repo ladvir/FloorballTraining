@@ -11,6 +11,7 @@ import { dfLocale } from '../../utils/dateLocale'
 import { cn } from '../../utils/cn'
 import type { MesocycleDto } from '../../types/domain.types'
 import { generateWeeksPreview, typeBlockClass, daySpan } from './planningUtils'
+import { refreshPlan } from './refreshPlan'
 
 const TYPES = [0, 1, 2, 3, 4]
 
@@ -42,8 +43,7 @@ export function GenerateWeeksModal({ isOpen, onClose, mesocycle }: GenerateWeeks
     mutationFn: (overwrite: boolean) =>
       planningApi.generateWeeks(mesocycle.id, { type, namePrefix, overwrite }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
-      queryClient.invalidateQueries({ queryKey: ['planCalendar'] })
+      refreshPlan(queryClient)
       toast.success(t('planning.weeksGenerated', { count: preview.length }))
       setConfirmOverwrite(false)
       onClose()

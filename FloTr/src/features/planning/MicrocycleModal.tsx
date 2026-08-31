@@ -13,6 +13,7 @@ import { planningApi } from '../../api/planning.api'
 import { toast } from '../../utils/toast'
 import type { MesocycleDto, MicrocycleDto } from '../../types/domain.types'
 import { findOverlap, suggestNextStart } from './planningUtils'
+import { refreshPlan } from './refreshPlan'
 import { GoalSkillPicker } from './GoalSkillPicker'
 
 const TYPES = [0, 1, 2, 3, 4]
@@ -129,8 +130,7 @@ export function MicrocycleModal({ isOpen, onClose, mesocycle, existing }: Microc
         : planningApi.createMicrocycle(dto)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
-      queryClient.invalidateQueries({ queryKey: ['planCalendar'] })
+      refreshPlan(queryClient)
       toast.success(t('planning.saved'))
       onClose()
     },

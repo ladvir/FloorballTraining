@@ -12,6 +12,7 @@ import { planningApi } from '../../api/planning.api'
 import { toast } from '../../utils/toast'
 import type { MesocycleDto } from '../../types/domain.types'
 import { findOverlap, isOutsideRange, suggestNextStart } from './planningUtils'
+import { refreshPlan } from './refreshPlan'
 import { GoalSkillPicker } from './GoalSkillPicker'
 
 const PHASES = [0, 1, 2, 3, 4]
@@ -118,8 +119,7 @@ export function MesocycleModal({
         : planningApi.createMesocycle(dto)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
-      queryClient.invalidateQueries({ queryKey: ['planCalendar'] })
+      refreshPlan(queryClient)
       toast.success(t('planning.saved'))
       onClose()
     },

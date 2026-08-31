@@ -17,6 +17,8 @@ import { daySpan, dayIndex, phaseBlockClass, typeBlockClass, monthSegments } fro
 interface PlanTimelineProps {
   rangeStart: Date
   rangeEnd: Date
+  /** Fixed column width in px (zoom). `null`/omitted → stretch to container width. */
+  pxPerDay?: number | null
   mesocycles: MesocycleDto[]
   selectedMesocycleId: number | null
   selectedMicrocycleId: number | null
@@ -129,6 +131,7 @@ function ResizeHandle({
 export function PlanTimeline({
   rangeStart,
   rangeEnd,
+  pxPerDay,
   mesocycles,
   selectedMesocycleId,
   selectedMicrocycleId,
@@ -151,7 +154,11 @@ export function PlanTimeline({
   const todayIndex = differenceInCalendarDays(new Date(), rangeStart)
   const todayVisible = todayIndex >= 0 && todayIndex < totalDays
 
-  const gridStyle = { gridTemplateColumns: `repeat(${totalDays}, minmax(0, 1fr))` }
+  const gridStyle = {
+    gridTemplateColumns: pxPerDay
+      ? `repeat(${totalDays}, ${pxPerDay}px)`
+      : `repeat(${totalDays}, minmax(0, 1fr))`,
+  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
@@ -210,7 +217,11 @@ export function PlanTimeline({
 
   return (
     <div className="overflow-x-auto">
-      <div ref={containerRef} className="relative min-w-[840px]">
+      <div
+        ref={containerRef}
+        className={cn('relative', !pxPerDay && 'min-w-[840px]')}
+        style={pxPerDay ? { width: totalDays * pxPerDay } : undefined}
+      >
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           {/* Months header */}
           <div className="grid" style={gridStyle}>

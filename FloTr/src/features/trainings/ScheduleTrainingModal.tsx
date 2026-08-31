@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { teamsApi, placesApi, appointmentsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
+import { refreshPlan } from '../planning/refreshPlan'
 import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto } from '../../types/domain.types'
 
@@ -166,7 +167,7 @@ export function ScheduleTrainingModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] }) // refresh ScheduledCount badges
+      refreshPlan(queryClient) // refresh ScheduledCount badges
       onClose()
     },
   })
@@ -184,7 +185,7 @@ export function ScheduleTrainingModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
+      refreshPlan(queryClient)
       onClose()
     },
   })

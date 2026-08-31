@@ -1,7 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { addDays, format, parseISO } from 'date-fns'
-import { CalendarDays, Info, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  endOfMonth,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns'
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Info,
+  Maximize2,
+  Pencil,
+  Plus,
+  Trash2,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -31,10 +53,19 @@ import { GenerateWeeksModal } from './GenerateWeeksModal'
 import { AssignTrainingsModal } from './AssignTrainingsModal'
 import { EvaluationPanel } from './EvaluationPanel'
 import { ScheduleTrainingModal } from '../trainings/ScheduleTrainingModal'
+import { TrainingDetailModal } from '../trainings/TrainingDetailModal'
 import { daySpan, phaseBlockClass, typeBlockClass, isOutsideRange } from './planningUtils'
+import { refreshPlan } from './refreshPlan'
 
 const TEAM_KEY = 'flotr_current_team'
 const SEASON_KEY = 'flotr_current_season'
+const PLAN_VIEW_KEY = 'flotr_plan_view'
+const PLAN_ZOOM_KEY = 'flotr_plan_zoom'
+
+type PlanView = 'season' | 'month' | 'week' | 'custom'
+
+// Timeline density (px per day) presets; null = stretch to container width
+const ZOOM_STEPS = [3, 4, 6, 9, 14, 20, 30, 45]
 
 function loadFromStorage(key: string): number {
   try {
@@ -96,6 +127,45 @@ export function SeasonPlanPage() {
   const [generateWeeksFor, setGenerateWeeksFor] = useState<MesocycleDto | null>(null)
   const [assignTrainingsFor, setAssignTrainingsFor] = useState<MicrocycleDto | null>(null)
   const [scheduling, setScheduling] = useState<{ training: TrainingDto; date: string } | null>(null)
+  const [previewTrainingId, setPreviewTrainingId] = useState<number | null>(null)
+
+  // Timeline view window + zoom
+  const [planView, setPlanView] = useState<PlanView>(() => {
+    try {
+      const v = localStorage.getItem(PLAN_VIEW_KEY)
+      return v === 'month' || v === 'week' || v === 'custom' ? v : 'season'
+    } catch {
+      return 'season'
+    }
+  })
+  const [pxPerDay, setPxPerDay] = useState<number | null>(() => {
+    const n = loadFromStorage(PLAN_ZOOM_KEY)
+    return n > 0 ? n : null
+  })
+  const [anchor, setAnchor] = useState<Date>(new Date())
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PLAN_VIEW_KEY, planView)
+    } catch {
+      /* ignore */
+    }
+  }, [planView])
+  useEffect(() => {
+    try {
+      if (pxPerDay) localStorage.setItem(PLAN_ZOOM_KEY, String(pxPerDay))
+      else localStorage.removeItem(PLAN_ZOOM_KEY)
+    } catch {
+      /* ignore */
+    }
+  }, [pxPerDay])
+
+  const zoomIn = () =>
+    setPxPerDay((p) => ZOOM_STEPS.find((s) => s > (p ?? 6)) ?? ZOOM_STEPS[ZOOM_STEPS.length - 1])
+  const zoomOut = () =>
+    setPxPerDay((p) => [...ZOOM_STEPS].reverse().find((s) => s < (p ?? 6)) ?? ZOOM_STEPS[0])
 
   const { data: seasons } = useQuery({
     queryKey: ['seasons', activeClubId],
@@ -165,10 +235,38 @@ export function SeasonPlanPage() {
     }
   }, [plan, mesocycles])
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
-    queryClient.invalidateQueries({ queryKey: ['planCalendar'] })
+  // Visible timeline window: whole plan, a month, an ISO week, or a custom span
+  const displayRange = useMemo(() => {
+    if (!timelineRange) return null
+    if (planView === 'week')
+      return {
+        start: startOfWeek(anchor, { weekStartsOn: 1 }),
+        end: endOfWeek(anchor, { weekStartsOn: 1 }),
+      }
+    if (planView === 'month') return { start: startOfMonth(anchor), end: endOfMonth(anchor) }
+    if (planView === 'custom' && customStart && customEnd && customEnd >= customStart)
+      return { start: parseISO(customStart), end: parseISO(customEnd) }
+    return timelineRange
+  }, [planView, anchor, customStart, customEnd, timelineRange])
+
+  const changeView = (v: PlanView) => {
+    setPlanView(v)
+    if ((v === 'week' || v === 'month') && timelineRange) {
+      const now = new Date()
+      setAnchor(now < timelineRange.start || now > timelineRange.end ? timelineRange.start : now)
+    }
   }
+  const stepPeriod = (dir: -1 | 1) =>
+    setAnchor((a) => (planView === 'week' ? addWeeks(a, dir) : addMonths(a, dir)))
+  const periodLabel =
+    planView === 'week'
+      ? fmtRange(
+          format(startOfWeek(anchor, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+          format(endOfWeek(anchor, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+        )
+      : format(anchor, 'LLLL yyyy', { locale: dfLocale() })
+
+  const invalidate = () => refreshPlan(queryClient)
 
   const shiftIso = (iso: string, days: number) =>
     format(addDays(parseISO(iso.slice(0, 10)), days), 'yyyy-MM-dd')
@@ -385,12 +483,97 @@ export function SeasonPlanPage() {
           ) : (
             <>
               {/* Timeline */}
-              {timelineRange && (
+              {displayRange && (
                 <Card>
-                  <CardContent className="py-4">
+                  <CardContent className="space-y-3 py-4">
+                    {/* View window + zoom toolbar */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={planView}
+                        onChange={(e) => changeView(e.target.value as PlanView)}
+                        className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
+                      >
+                        <option value="season">{t('planning.viewSeason')}</option>
+                        <option value="month">{t('planning.viewMonth')}</option>
+                        <option value="week">{t('planning.viewWeek')}</option>
+                        <option value="custom">{t('planning.viewCustom')}</option>
+                      </select>
+
+                      {(planView === 'week' || planView === 'month') && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => stepPeriod(-1)}
+                            aria-label={t('planning.prevPeriod')}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <span className="min-w-[8rem] text-center text-xs font-medium capitalize text-gray-600">
+                            {periodLabel}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => stepPeriod(1)}
+                            aria-label={t('planning.nextPeriod')}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {planView === 'custom' && (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="date"
+                            value={customStart}
+                            onChange={(e) => setCustomStart(e.target.value)}
+                            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
+                          />
+                          <span className="text-gray-400">–</span>
+                          <input
+                            type="date"
+                            value={customEnd}
+                            min={customStart || undefined}
+                            onChange={(e) => setCustomEnd(e.target.value)}
+                            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
+                          />
+                        </div>
+                      )}
+
+                      <div className="ml-auto flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={zoomOut}
+                          aria-label={t('planning.zoomOut')}
+                        >
+                          <ZoomOut className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={pxPerDay ? 'ghost' : 'outline'}
+                          onClick={() => setPxPerDay(null)}
+                          aria-label={t('planning.zoomFit')}
+                        >
+                          <Maximize2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={zoomIn}
+                          aria-label={t('planning.zoomIn')}
+                        >
+                          <ZoomIn className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
                     <PlanTimeline
-                      rangeStart={timelineRange.start}
-                      rangeEnd={timelineRange.end}
+                      rangeStart={displayRange.start}
+                      rangeEnd={displayRange.end}
+                      pxPerDay={pxPerDay}
                       mesocycles={mesocycles}
                       selectedMesocycleId={selectedMesoId}
                       selectedMicrocycleId={selectedMicroId}
@@ -620,6 +803,15 @@ export function SeasonPlanPage() {
                                 >
                                   {t('planning.scheduledCount', { count: rt.scheduledCount })}
                                 </Badge>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewTrainingId(rt.trainingId)}
+                                  title={t('planning.preview')}
+                                  aria-label={t('planning.preview')}
+                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
                                 {isCoach && (
                                   <Button
                                     size="sm"
@@ -705,6 +897,10 @@ export function SeasonPlanPage() {
           defaultTeamId={effectiveTeamId}
         />
       )}
+      <TrainingDetailModal
+        trainingId={previewTrainingId}
+        onClose={() => setPreviewTrainingId(null)}
+      />
     </div>
   )
 }
