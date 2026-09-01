@@ -12,6 +12,7 @@ import { Input } from '../../components/ui/Input'
 import { teamsApi, placesApi, appointmentsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { refreshPlan } from '../planning/refreshPlan'
+import { refreshAppointments } from '../appointments/refreshAppointments'
 import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto } from '../../types/domain.types'
 
@@ -165,8 +166,7 @@ export function ScheduleTrainingModal({
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void refreshAppointments(queryClient) // refetchType:'all' — calendar/dashboard may be unmounted
       refreshPlan(queryClient) // refresh ScheduledCount badges
       onClose()
     },
@@ -183,8 +183,7 @@ export function ScheduleTrainingModal({
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      void refreshAppointments(queryClient)
       refreshPlan(queryClient)
       onClose()
     },
