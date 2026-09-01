@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { User, Dumbbell, Copy, FileDown, PlayCircle } from 'lucide-react'
+import { User, Dumbbell, Copy, FileDown, PlayCircle, Target } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
@@ -149,35 +149,55 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
               {t('trainings.detailSkills')}
             </h4>
-            <div className="flex flex-wrap items-center gap-1">
-              {goalDerivedSkills.map((s) => {
-                const palette = skillPalette(s.skillCategoryId ?? 0)
-                return (
-                  <span
-                    key={s.skillId}
-                    className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium text-white"
-                    style={{ backgroundColor: palette.activeBg, borderColor: palette.activeBorder }}
-                  >
-                    {s.skillName}
-                  </span>
-                )
-              })}
-              {goalDerivedSkills.length > 0 && otherDerivedSkills.length > 0 && (
-                <span className="w-2.5" />
-              )}
-              {otherDerivedSkills.map((s) => {
-                const palette = skillPalette(s.skillCategoryId ?? 0)
-                return (
-                  <span
-                    key={s.skillId}
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                    style={{ backgroundColor: palette.activeBg }}
-                  >
-                    {s.skillName}
-                  </span>
-                )
-              })}
-            </div>
+            {goalDerivedSkills.length > 0 && (
+              <div className="mb-2">
+                <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                  <Target className="h-3 w-3" />
+                  {t('trainings.detailGoalSkills')}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {goalDerivedSkills.map((s) => {
+                    const palette = skillPalette(s.skillCategoryId ?? 0)
+                    return (
+                      <span
+                        key={s.skillId}
+                        className="inline-flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-xs font-semibold text-white"
+                        style={{
+                          backgroundColor: palette.activeBg,
+                          borderColor: palette.activeBorder,
+                        }}
+                      >
+                        <Target className="h-3 w-3" />
+                        {s.skillName}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            {otherDerivedSkills.length > 0 && (
+              <div>
+                {goalDerivedSkills.length > 0 && (
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                    {t('trainings.detailOtherSkills')}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  {otherDerivedSkills.map((s) => {
+                    const palette = skillPalette(s.skillCategoryId ?? 0)
+                    return (
+                      <span
+                        key={s.skillId}
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                        style={{ backgroundColor: palette.activeBg }}
+                      >
+                        {s.skillName}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

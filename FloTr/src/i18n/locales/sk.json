@@ -936,6 +936,8 @@
     "formEnvironment": "Prostredie",
     "detailAgeGroups": "Vekové kategórie",
     "detailSkills": "Zameranie tréningu",
+    "detailGoalSkills": "Cielené zručnosti",
+    "detailOtherSkills": "Doplnkové zručnosti",
     "detailCommentBefore": "Poznámka pred tréningom",
     "detailCommentAfter": "Poznámka po tréningu",
     "formCopy": "Kopírovať"

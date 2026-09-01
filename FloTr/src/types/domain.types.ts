@@ -154,6 +154,8 @@ export interface TrainingDto {
   validationErrors?: string[]
   createdByUserId?: string
   createdByUserName?: string
+  /** Server-computed for the current user (list + detail reads): own, unclaimed, or same-club author. */
+  canEdit?: boolean
   activitySignature?: string
   /** Doplňující, neomezené a nevalidované štítky (#163) — nahrazuje dřívější trainingGoal1/2/3. */
   trainingTags?: TrainingTagDto[]

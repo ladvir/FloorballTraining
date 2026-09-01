@@ -1794,8 +1794,14 @@ export function TrainingFormPage() {
 
   if (isEdit && loadingTraining) return <LoadingSpinner />
 
-  // Only admin or the author can edit
-  if (isEdit && existingTraining && !isAdmin && existingTraining.createdByUserId !== user?.id) {
+  // Admin, the author, or (per server) a coach from the author's club can edit
+  if (
+    isEdit &&
+    existingTraining &&
+    existingTraining.canEdit !== true &&
+    !isAdmin &&
+    existingTraining.createdByUserId !== user?.id
+  ) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">{t('trainings.formPermissions')}</p>

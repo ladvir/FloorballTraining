@@ -339,7 +339,9 @@ export function TrainingsPage() {
 
   if (isLoading) return <LoadingSpinner />
 
-  const canEdit = (t: TrainingDto) => isAdmin || (user && t.createdByUserId === user.id)
+  // Server-computed (own / unclaimed / same-club author); the `??` keeps a stale cache workable.
+  const canEdit = (t: TrainingDto) =>
+    t.canEdit ?? (isAdmin || (!!user && t.createdByUserId === user.id))
   const hasFilters =
     searchText ||
     selectedGoalIds.length > 0 ||

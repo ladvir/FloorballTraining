@@ -936,6 +936,8 @@
     "formEnvironment": "Environment",
     "detailAgeGroups": "Age groups",
     "detailSkills": "Training focus",
+    "detailGoalSkills": "Target skills",
+    "detailOtherSkills": "Additional skills",
     "detailCommentBefore": "Note before training",
     "detailCommentAfter": "Note after training",
     "formCopy": "Copy"

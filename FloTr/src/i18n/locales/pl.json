@@ -936,6 +936,8 @@
     "formEnvironment": "Środowisko",
     "detailAgeGroups": "Kategorie wiekowe",
     "detailSkills": "Ukierunkowanie treningu",
+    "detailGoalSkills": "Umiejętności docelowe",
+    "detailOtherSkills": "Dodatkowe umiejętności",
     "detailCommentBefore": "Notatka przed treningiem",
     "detailCommentAfter": "Notatka po treningu",
     "formCopy": "Kopiuj"

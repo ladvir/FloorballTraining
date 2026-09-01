@@ -9,6 +9,13 @@ namespace FloorballTraining.UseCases.Tests.Trainings;
 
 public class TrainingPdfCompactTests
 {
+    // Both layouts draw icon images (e.g. the "Cílené dovednosti" goal box) — point AssetsPath
+    // at the copied icons/ folder, same as production DI does.
+    private static AppSettings Settings() => new()
+    {
+        AssetsPath = Path.Combine(AppContext.BaseDirectory, "icons") + Path.DirectorySeparatorChar,
+    };
+
     // Compact ("preview modal") layout uses QuestPDF Inlined + SkiaSharp rounded
     // boxes + an HSL→hex skill-pill colour: all compile-clean but only fail at
     // Compose() time, so render one representative training end to end.
@@ -60,9 +67,39 @@ public class TrainingPdfCompactTests
         var doc = new TrainingDocument(
             training,
             Substitute.For<IFileHandlingService>(),
-            new AppSettings(),
+            Settings(),
             requestedFrom: "",
             new PdfOptions { Compact = true });
+
+        var bytes = doc.GeneratePdf();
+
+        Assert.NotNull(bytes);
+        Assert.True(bytes.Length > 0);
+    }
+
+    // Full layout separates "Cílené dovednosti" (own row, goal icon) from the supplementary
+    // tags/equipment/environment row — the split only fails at Compose() time.
+    [Fact]
+    public void Full_layout_renders_a_nonempty_pdf()
+    {
+        var training = new TrainingDto
+        {
+            Name = "Ukázkový trénink",
+            Duration = 60,
+            Difficulty = 1,
+            Intensity = 2,
+            Environment = Environment.Indoor,
+            TrainingGoalSkill1 = new SkillDto { Id = 5, Name = "Přihrávka", SkillCategoryId = 2 },
+            TrainingAgeGroups = { new AgeGroupDto { Name = "U12" } },
+            TrainingTags = { new TrainingTagDto { Tag = new TagDto { Name = "Rychlost" } } },
+        };
+
+        var doc = new TrainingDocument(
+            training,
+            Substitute.For<IFileHandlingService>(),
+            Settings(),
+            requestedFrom: "",
+            new PdfOptions { Compact = false });
 
         var bytes = doc.GeneratePdf();
 

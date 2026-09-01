@@ -51,19 +51,39 @@ public class TrainingsController(
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
         if (roleInfo.EffectiveRole == "User") return false;
+        if (User.IsInRole("Admin")) return true;
 
-        var canEditAny = User.IsInRole("Admin") || roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only edit their own trainings; null-author (pre-auth seed) treated as unclaimed.
-        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return false;
+        // Any coach-role user (Coach / HeadCoach / ClubAdmin) may edit their own training, an
+        // unclaimed one (pre-auth seed), or one authored by a member of their own club.
+        if (existing.CreatedByUserId is null || existing.CreatedByUserId == userId) return true;
+        return await AuthorInSameClubAsync(existing.CreatedByUserId, roleInfo.ClubId);
+    }
 
-        // Club-scope guard: HeadCoach/ClubAdmin may only edit trainings authored by members of
-        // their own club. Null-author or missing ClubId → Admin only.
-        if (canEditAny && !User.IsInRole("Admin") &&
-            !await AuthorInSameClubAsync(existing.CreatedByUserId, roleInfo.ClubId))
-            return false;
+    // Batch equivalent of CanModifyTrainingAsync for read endpoints — same rule, one query for
+    // the whole page instead of one per training. Keep in sync with CanModifyTrainingAsync.
+    private async Task PopulateCanEdit(IReadOnlyCollection<TrainingDto> dtos, string userId)
+    {
+        if (dtos.Count == 0) return;
 
-        return true;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return; // CanEdit stays false
+        if (User.IsInRole("Admin"))
+        {
+            foreach (var d in dtos) d.CanEdit = true;
+            return;
+        }
+
+        var authorIds = dtos.Select(d => d.CreatedByUserId)
+            .Where(id => id != null && id != userId).Cast<string>().Distinct().ToList();
+        HashSet<string> clubAuthors = [];
+        if (roleInfo.ClubId is int cid && authorIds.Count > 0)
+            clubAuthors = (await context.Members
+                .Where(m => m.ClubId == cid && m.AppUserId != null && authorIds.Contains(m.AppUserId))
+                .Select(m => m.AppUserId!).ToListAsync()).ToHashSet();
+
+        foreach (var d in dtos)
+            d.CanEdit = d.CreatedByUserId is null || d.CreatedByUserId == userId
+                || clubAuthors.Contains(d.CreatedByUserId);
     }
 
     /// <summary>
@@ -173,6 +193,7 @@ public class TrainingsController(
         }
 
         await PopulateUserNames(items);
+        await PopulateCanEdit(items!, GetCurrentUserId()!);
         return new ActionResult<IReadOnlyList<TrainingDto>>(items!);
     }
 
@@ -180,7 +201,11 @@ public class TrainingsController(
     public async Task<TrainingDto?> Get(int id)
     {
         var dto = await viewTrainingByIdUseCase.ExecuteAsync(id);
-        if (dto != null) await PopulateUserNames(new[] { dto });
+        if (dto != null)
+        {
+            await PopulateUserNames(new[] { dto });
+            await PopulateCanEdit(new[] { dto }, GetCurrentUserId()!);
+        }
         return dto;
     }
 

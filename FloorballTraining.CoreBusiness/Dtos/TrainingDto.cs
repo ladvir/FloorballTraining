@@ -43,6 +43,9 @@ public class TrainingDto : BaseEntityDto
     public string? CreatedByUserName { get; set; }
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>Server-computed for the calling user (read endpoints only) — mirrors CanModifyTrainingAsync.</summary>
+    public bool CanEdit { get; set; }
+
     public string? ActivitySignature { get; set; }
 
     [NotMapped]

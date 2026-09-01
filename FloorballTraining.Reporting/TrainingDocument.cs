@@ -185,14 +185,20 @@ public class TrainingDocument : IDocument
 
             if (_options.IncludeTrainingDetails)
             {
-                column.Item().PaddingVertical(4).Row(row =>
+                // Cílené dovednosti stand on their own line with the goal icon, kept clearly apart
+                // from the supplementary tags / equipment / environment on the row below.
+                column.Item().PaddingTop(4).Row(row =>
                 {
                     row.Spacing(4);
                     row.RelativeItem().Element((e) =>
-                        RoundedInfoBox(e, "Zaměření",
+                        RoundedInfoBox(e, "Cílené dovednosti",
                             Model.NoSpecificGoal ? "Bez cílené dovednosti" : Model.GetGoalSkillsAsString(),
-                            "tags.png", HorizontalAlignment.Left));
+                            "mission.png", HorizontalAlignment.Left));
+                });
 
+                column.Item().PaddingBottom(4).PaddingTop(3).Row(row =>
+                {
+                    row.Spacing(4);
                     row.RelativeItem().Element((e) => RoundedInfoBox(e, "Doplňující štítky", Model.GetTrainingGoalsAsString(),
                         "tags.png", HorizontalAlignment.Left));
 
@@ -332,21 +338,54 @@ public class TrainingDocument : IDocument
                         Model.TrainingGoalSkill1?.Id, Model.TrainingGoalSkill2?.Id, Model.TrainingGoalSkill3?.Id
                     }
                     .Where(id => id is > 0).Select(id => id!.Value));
-                var ordered = derived.Where(s => goalIds.Contains(s.SkillId!.Value))
-                    .Concat(derived.Where(s => !goalIds.Contains(s.SkillId!.Value)))
-                    .ToList();
+                var goalSkills = derived.Where(s => goalIds.Contains(s.SkillId!.Value)).ToList();
+                var otherSkills = derived.Where(s => !goalIds.Contains(s.SkillId!.Value)).ToList();
+
+                void SkillChips(IContainer host, List<ActivitySkillDto> skills) =>
+                    host.Inlined(inlined =>
+                    {
+                        inlined.Spacing(4);
+                        inlined.VerticalSpacing(4);
+                        foreach (var s in skills)
+                            inlined.Item()
+                                .Background(CategoryColorHex(s.SkillCategoryId ?? 0))
+                                .PaddingHorizontal(6).PaddingVertical(2)
+                                .Text(s.SkillName!).FontSize(8).FontColor(Colors.White);
+                    });
 
                 column.Item().Element(e => CompactLabel(e, "Zaměření tréninku"));
-                column.Item().Inlined(inlined =>
+
+                if (goalSkills.Count > 0)
                 {
-                    inlined.Spacing(4);
-                    inlined.VerticalSpacing(4);
-                    foreach (var s in ordered)
-                        inlined.Item()
-                            .Background(CategoryColorHex(s.SkillCategoryId ?? 0))
-                            .PaddingHorizontal(6).PaddingVertical(2)
-                            .Text(s.SkillName!).FontSize(8).FontColor(Colors.White);
-                });
+                    // Boxed, goal-icon group — mirrors the preview modal's "Cílené dovednosti" block
+                    // (tinted panel + target icon + heavier framing) instead of a per-chip border,
+                    // which QuestPDF's Inlined items render too faintly to read.
+                    column.Item().PaddingTop(2)
+                        .Border(1).BorderColor(Colors.Grey.Darken1)
+                        .Background(Colors.Grey.Lighten4)
+                        .Padding(5).Column(box =>
+                        {
+                            box.Item().Row(r =>
+                            {
+                                r.Spacing(4);
+                                SetIcon("mission.png", r);
+                                r.RelativeItem().AlignMiddle()
+                                    .Text("Cílené dovednosti").FontSize(8).SemiBold()
+                                    .FontColor(Colors.Grey.Darken3);
+                            });
+                            box.Item().PaddingTop(3).Element(e => SkillChips(e, goalSkills));
+                        });
+
+                    if (otherSkills.Count > 0)
+                    {
+                        column.Item().PaddingTop(3).Element(e => CompactLabel(e, "Dodatečné dovednosti"));
+                        column.Item().Element(e => SkillChips(e, otherSkills));
+                    }
+                }
+                else
+                {
+                    column.Item().Element(e => SkillChips(e, otherSkills));
+                }
             }
 
             // Supplementary tags

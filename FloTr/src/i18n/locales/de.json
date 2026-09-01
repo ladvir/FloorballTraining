@@ -936,6 +936,8 @@
     "formEnvironment": "Umgebung",
     "detailAgeGroups": "Altersgruppen",
     "detailSkills": "Trainingsschwerpunkt",
+    "detailGoalSkills": "Zielfähigkeiten",
+    "detailOtherSkills": "Weitere Fähigkeiten",
     "detailCommentBefore": "Notiz vor dem Training",
     "detailCommentAfter": "Notiz nach dem Training",
     "formCopy": "Kopieren"
