@@ -149,11 +149,16 @@ export function AiGroupActivityModal({
         activityEquipments: equipmentDtos,
       })
     },
-    onSuccess: async (activity) => {
-      await queryClient.refetchQueries({ queryKey: ['activities'] })
+    onSuccess: (activity) => {
+      // Make the new activity usable in this training immediately — don't wait on the
+      // network refetch, which may not land before the training is saved.
+      queryClient.setQueryData<ActivityDto[]>(['activities'], (old) =>
+        old && !old.some((a) => a.id === activity.id) ? [...old, activity] : old
+      )
       onUse(activity)
       setResult(null)
       onClose()
+      void queryClient.refetchQueries({ queryKey: ['activities'] })
     },
   })
 

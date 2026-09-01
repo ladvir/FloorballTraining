@@ -211,8 +211,12 @@ function ActivityNameModal({
         isThumbnail: true,
       })
       setCreated(true)
-      await queryClient.refetchQueries({ queryKey: ['activities'] })
+      // Make the new activity usable in this training immediately (see ActivityPicker).
+      queryClient.setQueryData<ActivityDto[]>(['activities'], (old) =>
+        old && !old.some((a) => a.id === newActivity.id) ? [...old, newActivity] : old
+      )
       onCreated(newActivity.id, trimmed)
+      await queryClient.refetchQueries({ queryKey: ['activities'] })
     } catch (err) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
@@ -338,10 +342,15 @@ function ActivityPicker({
         personsMax: newActivityDefaults?.personsMax,
         durationMax: newActivityDefaults?.durationMax,
       }),
-    onSuccess: async (newActivity) => {
-      await queryClient.refetchQueries({ queryKey: ['activities'] })
+    onSuccess: (newActivity) => {
+      // Make the new activity usable in this training immediately — don't wait on the
+      // network refetch, which may not land before the user picks/saves.
+      queryClient.setQueryData<ActivityDto[]>(['activities'], (old) =>
+        old && !old.some((a) => a.id === newActivity.id) ? [...old, newActivity] : old
+      )
       onChange(newActivity.id)
       setOpen(false)
+      void queryClient.refetchQueries({ queryKey: ['activities'] })
     },
   })
 
