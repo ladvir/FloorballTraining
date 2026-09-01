@@ -1,6 +1,6 @@
 import type { PlayerSkillCategoryDto, PlayerSkillDto } from '../types/domain.types'
 
-export type SkillFilterMode = 'all' | 'weakest' | 'strongest' | 'category' | 'unrated'
+export type SkillFilterMode = 'all' | 'weakest' | 'strongest' | 'category'
 
 export interface SkillSection {
   categoryId: number
@@ -27,8 +27,8 @@ export function filterSkillSections(
         if (query && !s.name.toLowerCase().includes(query)) return false
         if (mode === 'weakest') return s.grade != null && s.grade >= 4
         if (mode === 'strongest') return s.grade === 1
-        if (mode === 'unrated') return s.grade == null
-        // 'all' and 'category': a never-rated skill only appears via the 'unrated' entry point (#92).
+        // 'all' and 'category': a never-rated skill is hidden from the normal list - the coach
+        // reaches it only via the "Přidat hodnocení dovednosti" entry point (#92).
         return s.grade != null
       }),
     }))

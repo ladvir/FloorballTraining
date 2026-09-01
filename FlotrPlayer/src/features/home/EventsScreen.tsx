@@ -17,8 +17,10 @@ import { useLiveTrainingStore } from '../../store/liveTrainingStore'
 import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
 import type { AppointmentDto } from '../../types/domain.types'
 
-// Admin / club admin / head coach / coach — the roles allowed to run a training live.
-const LIVE_ROLES = ['Admin', 'ClubAdmin', 'HeadCoach', 'Coach']
+// Admin / club admin / head coach / coach — the roles that get the coach-only event actions
+// (run live, award bonuses).
+const COACH_ROLES = ['Admin', 'ClubAdmin', 'HeadCoach', 'Coach']
+const MATCH_TYPE = 3 // AppointmentType.Match
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const formatWhen = (iso: string) => {
@@ -29,7 +31,7 @@ const formatWhen = (iso: string) => {
 // A personal (team-less) event is a self-logged home training; otherwise map the appointment type.
 const typeLabel = (a: AppointmentDto) => {
   if (a.teamId == null) return t('events.typeHome')
-  if (a.appointmentType === 3) return t('events.typeMatch')
+  if (a.appointmentType === MATCH_TYPE) return t('events.typeMatch')
   if (a.appointmentType === 0) return t('events.typeTraining')
   return t('events.typeOther')
 }
@@ -121,18 +123,28 @@ function EventRow({
   const startLive = useLiveTrainingStore((s) => s.start)
   const liveSession = useLiveTrainingStore((s) => s.session)
 
+  // ponytail: one videos request per visible event (N+1). Fine for a player's short event list;
+  // if it grows, add `HasVideos` to the appointment list DTO and gate the expander on that instead.
   const videosQuery = useQuery({
     queryKey: ['appointments', appointment.id, 'videos'],
     queryFn: () => appointmentsApi.getVideos(appointment.id),
-    enabled: expanded,
   })
+  const videos = videosQuery.data ?? []
+  const hasVideos = videos.length > 0
 
-  const canRunLive =
-    LIVE_ROLES.includes(effectiveRole ?? '') &&
-    appointment.appointmentType === 0 &&
-    appointment.trainingId != null
+  const isCoach = COACH_ROLES.includes(effectiveRole ?? '')
+  const canRunLive = isCoach && appointment.appointmentType === 0 && appointment.trainingId != null
+  // Coach bonuses live here now (pick event → pick player), not under every player's card.
+  const canAward = isCoach && appointment.teamId != null
   const liveActiveForThis =
     liveSession?.appointmentId === appointment.id && !liveSession.finished
+
+  const openAwards = () =>
+    (navigation as any).navigate('CoachAwards', {
+      appointmentId: appointment.id,
+      title: appointment.name || appointment.trainingName || typeLabel(appointment),
+      isMatch: appointment.appointmentType === MATCH_TYPE,
+    })
 
   const launchLive = () => {
     if (!appointment.trainingId) return
@@ -149,7 +161,8 @@ function EventRow({
 
   return (
     <GlassCard>
-      <Pressable style={styles.row} onPress={onToggle}>
+      {/* Row only toggles when the event actually has videos - no expander, no "no videos" panel otherwise. */}
+      <Pressable style={styles.row} onPress={onToggle} disabled={!hasVideos}>
         <View style={styles.rowIcon}>
           <Icon
             name={appointment.teamId == null ? 'home-outline' : 'people-outline'}
@@ -164,7 +177,9 @@ function EventRow({
           <Text style={styles.rowMeta}>{formatWhen(appointment.start)}</Text>
         </View>
         <Text style={styles.rowType}>{typeLabel(appointment)}</Text>
-        <Icon name={expanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={16} color={colors.textMuted} />
+        {hasVideos && (
+          <Icon name={expanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={16} color={colors.textMuted} />
+        )}
       </Pressable>
 
       {canRunLive && (
@@ -176,26 +191,20 @@ function EventRow({
         </Pressable>
       )}
 
+      {canAward && (
+        <Pressable style={styles.awardButton} onPress={openAwards}>
+          <Icon name="trophy-outline" size={14} color={colors.accent} />
+          <Text style={styles.awardButtonText}>{t('coachAwards.title')}</Text>
+        </Pressable>
+      )}
+
       {showRating && <RatingWidget appointmentId={appointment.id} />}
 
-      {expanded && (
+      {expanded && hasVideos && (
         <View style={styles.videos}>
-          {videosQuery.isLoading ? (
-            <LoadingState inline />
-          ) : videosQuery.isError ? (
-            <ErrorState
-              inline
-              message={t('videos.loadError')}
-              onRetry={() => videosQuery.refetch()}
-              retrying={videosQuery.isRefetching}
-            />
-          ) : (videosQuery.data ?? []).length === 0 ? (
-            <Text style={styles.empty}>{t('videos.empty')}</Text>
-          ) : (
-            (videosQuery.data ?? []).map((v) => (
-              <VideoPlayer key={v.id} video={v} appointmentId={appointment.id} />
-            ))
-          )}
+          {videos.map((v) => (
+            <VideoPlayer key={v.id} video={v} appointmentId={appointment.id} />
+          ))}
         </View>
       )}
     </GlassCard>
@@ -243,4 +252,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   liveButtonText: { color: colors.textPrimary, fontSize: typography.caption.fontSize, fontWeight: '700' },
+  awardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+  },
+  awardButtonText: { color: colors.accent, fontSize: typography.caption.fontSize, fontWeight: '700' },
 })

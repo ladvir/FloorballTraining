@@ -63,7 +63,9 @@ export function TrainingCompareModal({
   const [showOnlyDiffs, setShowOnlyDiffs] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const { isCoach } = useAuthStore()
+  // Delete is HeadCoach/ClubAdmin/Admin only — a plain Coach (even the training's author) can
+  // edit but not delete, mirroring the API's CanDeleteTrainingAsync.
+  const { isHeadCoach } = useAuthStore()
   const queryClient = useQueryClient()
 
   const envLabels: Record<number, string> = {
@@ -314,7 +316,7 @@ export function TrainingCompareModal({
                       </span>
                     )}
                   </div>
-                  {!isDraftEntry && isCoach && canDelete && (
+                  {!isDraftEntry && isHeadCoach && canDelete && (
                     <Button
                       size="sm"
                       variant="danger"

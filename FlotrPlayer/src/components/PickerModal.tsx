@@ -14,6 +14,9 @@ interface PickerModalProps<T extends string | number> {
   /** Renders each option's display text - defaults to the raw value (fine for team names/years,
    * but position/role are enum-like codes that need a Czech label - see positionLabel/teamRoleLabel). */
   formatLabel?: (value: T) => string
+  /** The leading "Vše" row that clears the filter (onSelect(null)). Off for a plain item picker
+   * where "no selection" isn't a meaningful choice - e.g. picking a skill to rate (#92). */
+  showAllOption?: boolean
 }
 
 // Single-select bottom-sheet-style picker shared by the roster's Tým/Ročník/Pozice/Role filters
@@ -26,6 +29,7 @@ export function PickerModal<T extends string | number>({
   onSelect,
   onClose,
   formatLabel,
+  showAllOption = true,
 }: PickerModalProps<T>) {
   const label = (value: T) => (formatLabel ? formatLabel(value) : String(value))
   return (
@@ -40,16 +44,18 @@ export function PickerModal<T extends string | number>({
             data={options}
             keyExtractor={(item) => String(item)}
             ListHeaderComponent={
-              <Pressable
-                style={[styles.option, selected === null && styles.optionSelected]}
-                onPress={() => {
-                  onSelect(null)
-                  onClose()
-                }}
-              >
-                <Text style={styles.optionText}>{t('roster.filterAll')}</Text>
-                {selected === null && <Icon name="checkmark" size={18} color={colors.accent} />}
-              </Pressable>
+              showAllOption ? (
+                <Pressable
+                  style={[styles.option, selected === null && styles.optionSelected]}
+                  onPress={() => {
+                    onSelect(null)
+                    onClose()
+                  }}
+                >
+                  <Text style={styles.optionText}>{t('roster.filterAll')}</Text>
+                  {selected === null && <Icon name="checkmark" size={18} color={colors.accent} />}
+                </Pressable>
+              ) : null
             }
             renderItem={({ item }) => (
               <Pressable

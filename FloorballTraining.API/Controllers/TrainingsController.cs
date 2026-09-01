@@ -45,7 +45,8 @@ public class TrainingsController(
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     private bool IsAdmin() => User.IsInRole("Admin");
 
-    // Shared by Update/Delete and the video endpoints — same edit permission applies to both.
+    // Shared by Update and the video endpoints — same edit permission applies to all of them.
+    // Delete is deliberately NOT routed through here (see CanDeleteTrainingAsync).
     private async Task<bool> CanModifyTrainingAsync(TrainingDto existing, string userId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
@@ -58,16 +59,35 @@ public class TrainingsController(
 
         // Club-scope guard: HeadCoach/ClubAdmin may only edit trainings authored by members of
         // their own club. Null-author or missing ClubId → Admin only.
-        if (canEditAny && !User.IsInRole("Admin"))
-        {
-            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null) return false;
-            var authorInSameClub = await context.Members
-                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
-            if (!authorInSameClub) return false;
-        }
+        if (canEditAny && !User.IsInRole("Admin") &&
+            !await AuthorInSameClubAsync(existing.CreatedByUserId, roleInfo.ClubId))
+            return false;
 
         return true;
     }
+
+    /// <summary>
+    /// Delete is stricter than edit: being the training's author does NOT grant delete. A Coach
+    /// listed as the club's author of a training may revise it (CanModifyTrainingAsync) but never
+    /// remove it — only an Admin, or a HeadCoach/ClubAdmin acting over a training authored by a
+    /// member of their own club, may delete.
+    /// </summary>
+    private async Task<bool> CanDeleteTrainingAsync(TrainingDto existing, string userId)
+    {
+        if (User.IsInRole("Admin")) return true;
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin")) return false;
+
+        return await AuthorInSameClubAsync(existing.CreatedByUserId, roleInfo.ClubId);
+    }
+
+    // Shared club-scope guard: the training's author is a member of the caller's club.
+    // Missing author or club → not in scope (Admin-only territory).
+    private Task<bool> AuthorInSameClubAsync(string? authorUserId, int? clubId) =>
+        authorUserId is not null && clubId is int cid
+            ? context.Members.AnyAsync(m => m.AppUserId == authorUserId && m.ClubId == cid)
+            : Task.FromResult(false);
 
     private async Task<List<string>> GetClubMemberUserIdsAsync(string userId)
     {
@@ -213,7 +233,7 @@ public class TrainingsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+        if (!await CanDeleteTrainingAsync(existing, userId)) return Forbid();
 
         var now = DateTime.UtcNow;
         var pastCount = await context.Appointments.CountAsync(a => a.TrainingId == id && a.Start < now);

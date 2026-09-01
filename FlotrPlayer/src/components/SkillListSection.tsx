@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Button } from './Button'
 import { GradePickerSheet } from './GradePickerSheet'
 import { IconTile } from './Icon'
 import { PickerModal } from './PickerModal'
@@ -34,10 +35,22 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false)
   const [gradeSkill, setGradeSkill] = useState<PlayerSkillDto | null>(null)
+  const [addRatingOpen, setAddRatingOpen] = useState(false)
 
   const sections = useMemo(
     () => filterSkillSections(categories, mode, categoryId, search),
     [categories, mode, categoryId, search],
+  )
+  // Never-rated skills are hidden from every filter above (filterSkillSections) - the coach
+  // reaches them only through the "Přidat hodnocení dovednosti" picker below (#92).
+  const unratedOptions = useMemo(
+    () =>
+      editable
+        ? categories.flatMap((c) =>
+            c.skills.filter((s) => s.grade == null).map((s) => ({ skill: s, categoryName: c.name })),
+          )
+        : [],
+    [categories, editable],
   )
   const totalSkills = categories.reduce((sum, c) => sum + c.skills.length, 0)
   const selectedCategoryName = categoryId != null ? categories.find((c) => c.categoryId === categoryId)?.name : null
@@ -100,16 +113,18 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
                 active={mode === 'category'}
                 onPress={() => setCategoryPickerOpen(true)}
               />
-              {/* Coach-only entry point to rate a skill for the first time (#92) - a never-rated
-                  skill is otherwise hidden from every other filter mode, see filterSkillSections. */}
-              {editable && (
-                <FilterChip
-                  label={t('skills.filterUnrated')}
-                  active={mode === 'unrated'}
-                  onPress={() => selectMode('unrated')}
-                />
-              )}
             </View>
+            {/* Coach's entry point to first-rate a never-rated skill (#92) - hidden once every
+                skill has a grade, and never shown to a read-only Hráč (editable). */}
+            {editable && unratedOptions.length > 0 && (
+              <View style={styles.addRating}>
+                <Button
+                  variant="outline"
+                  title={t('skills.addRating')}
+                  onPress={() => setAddRatingOpen(true)}
+                />
+              </View>
+            )}
           </>
         }
         ListEmptyComponent={<EmptyState message={t(totalSkills === 0 ? 'skills.empty' : 'skills.noResults')} />}
@@ -137,6 +152,26 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
           if (gradeSkill) onGradeChange?.(gradeSkill, grade)
         }}
         onClose={() => setGradeSkill(null)}
+      />
+
+      {/* Pick a never-rated skill → its detail screen, where the grade badge (manual) and
+          "Zaznamenat test" (RecordTestSheet) already live - no rating UI duplicated here (#92). */}
+      <PickerModal
+        visible={addRatingOpen}
+        title={t('skills.addRatingTitle')}
+        options={unratedOptions.map((o) => o.skill.skillId)}
+        selected={null}
+        showAllOption={false}
+        onSelect={(skillId) => {
+          setAddRatingOpen(false)
+          const picked = unratedOptions.find((o) => o.skill.skillId === skillId)
+          if (picked) openSkill(picked.skill)
+        }}
+        onClose={() => setAddRatingOpen(false)}
+        formatLabel={(skillId) => {
+          const picked = unratedOptions.find((o) => o.skill.skillId === skillId)
+          return picked ? `${picked.categoryName} · ${picked.skill.name}` : String(skillId)
+        }}
       />
     </>
   )
@@ -179,6 +214,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  addRating: {
+    marginTop: spacing.sm,
     marginBottom: spacing.xs,
   },
   chip: {

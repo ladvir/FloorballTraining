@@ -4,7 +4,6 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
 import { ActivityIndicator, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { BadgesSection } from '../../components/BadgesSection'
-import { CoachAwardsSection } from '../../components/CoachAwardsSection'
 import { Icon } from '../../components/Icon'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
@@ -101,8 +100,8 @@ export function CardDetailScreen() {
       >
         <PlayerSkillCard card={card} />
       </Animated.View>
-      {canEdit && <CoachAwardsSection memberId={card.memberId} />}
-      {/* Milestone badges (#97) - Coach sees locked ones too; a browsing Hráč only sees teammate's earned ones. */}
+      {/* Milestone badges (#97) - earned only, for coach and player alike (see BadgesSection).
+          Coach bonuses moved to the per-event CoachAwardsScreen (reached from Události). */}
       <BadgesSection memberId={card.memberId} />
     </View>
   )

@@ -68,7 +68,8 @@ export type StringKey =
   | 'skills.filterWeakest'
   | 'skills.filterStrongest'
   | 'skills.filterCategory'
-  | 'skills.filterUnrated'
+  | 'skills.addRating'
+  | 'skills.addRatingTitle'
   | 'skills.empty'
   | 'skills.noResults'
   | 'skills.noRecommendation'
@@ -146,6 +147,98 @@ export type StringKey =
   | 'badge.IronMan.desc'
   | 'badge.Loyalty3.name'
   | 'badge.Loyalty3.desc'
+  | 'badge.Attendance150.name'
+  | 'badge.Attendance150.desc'
+  | 'badge.Attendance250.name'
+  | 'badge.Attendance250.desc'
+  | 'badge.Attendance400.name'
+  | 'badge.Attendance400.desc'
+  | 'badge.Matches25.name'
+  | 'badge.Matches25.desc'
+  | 'badge.Matches100.name'
+  | 'badge.Matches100.desc'
+  | 'badge.Matches250.name'
+  | 'badge.Matches250.desc'
+  | 'badge.Goals100.name'
+  | 'badge.Goals100.desc'
+  | 'badge.Goals250.name'
+  | 'badge.Goals250.desc'
+  | 'badge.Goals500.name'
+  | 'badge.Goals500.desc'
+  | 'badge.FourGoalsInMatch.name'
+  | 'badge.FourGoalsInMatch.desc'
+  | 'badge.FiveGoalsInMatch.name'
+  | 'badge.FiveGoalsInMatch.desc'
+  | 'badge.Assists50.name'
+  | 'badge.Assists50.desc'
+  | 'badge.Assists100.name'
+  | 'badge.Assists100.desc'
+  | 'badge.Points50.name'
+  | 'badge.Points50.desc'
+  | 'badge.Points150.name'
+  | 'badge.Points150.desc'
+  | 'badge.Points300.name'
+  | 'badge.Points300.desc'
+  | 'badge.Points600.name'
+  | 'badge.Points600.desc'
+  | 'badge.PlusMinus20.name'
+  | 'badge.PlusMinus20.desc'
+  | 'badge.PlusMinus50.name'
+  | 'badge.PlusMinus50.desc'
+  | 'badge.PlusMinus100.name'
+  | 'badge.PlusMinus100.desc'
+  | 'badge.SeasonAttendance90.name'
+  | 'badge.SeasonAttendance90.desc'
+  | 'badge.SeasonAttendance100.name'
+  | 'badge.SeasonAttendance100.desc'
+  | 'badge.Loyalty5.name'
+  | 'badge.Loyalty5.desc'
+  | 'badge.Loyalty8.name'
+  | 'badge.Loyalty8.desc'
+  | 'badge.Loyalty10.name'
+  | 'badge.Loyalty10.desc'
+  | 'badge.HomeTraining10.name'
+  | 'badge.HomeTraining10.desc'
+  | 'badge.HomeTraining50.name'
+  | 'badge.HomeTraining50.desc'
+  | 'badge.HomeTraining150.name'
+  | 'badge.HomeTraining150.desc'
+  | 'badge.SkillImprovement1.name'
+  | 'badge.SkillImprovement1.desc'
+  | 'badge.SkillImprovement10.name'
+  | 'badge.SkillImprovement10.desc'
+  | 'badge.SkillImprovement25.name'
+  | 'badge.SkillImprovement25.desc'
+  | 'badge.SkillTarget5.name'
+  | 'badge.SkillTarget5.desc'
+  | 'badge.SkillTarget15.name'
+  | 'badge.SkillTarget15.desc'
+  | 'badge.TestRecord1.name'
+  | 'badge.TestRecord1.desc'
+  | 'badge.TestRecord10.name'
+  | 'badge.TestRecord10.desc'
+  | 'badge.PlayerOfTraining5.name'
+  | 'badge.PlayerOfTraining5.desc'
+  | 'badge.PlayerOfTraining20.name'
+  | 'badge.PlayerOfTraining20.desc'
+  | 'badge.FairPlay5.name'
+  | 'badge.FairPlay5.desc'
+  | 'badge.FairPlay20.name'
+  | 'badge.FairPlay20.desc'
+  | 'badge.FamilyCheered10.name'
+  | 'badge.FamilyCheered10.desc'
+  | 'badge.FamilyCheered50.name'
+  | 'badge.FamilyCheered50.desc'
+  | 'badge.Challenges10.name'
+  | 'badge.Challenges10.desc'
+  | 'badge.Challenges50.name'
+  | 'badge.Challenges50.desc'
+  | 'badge.CareerXp5000.name'
+  | 'badge.CareerXp5000.desc'
+  | 'badge.CareerXp15000.name'
+  | 'badge.CareerXp15000.desc'
+  | 'badge.CareerXp30000.name'
+  | 'badge.CareerXp30000.desc'
   | 'nav.leaderboard'
   | 'leaderboard.title'
   | 'leaderboard.sortSeason'
@@ -220,11 +313,9 @@ export type StringKey =
   | 'ratings.delete'
   | 'ratings.deleteConfirmTitle'
   | 'ratings.saveError'
-  | 'videos.empty'
-  | 'videos.loadError'
   | 'videos.openVideo'
   | 'coachAwards.title'
-  | 'coachAwards.noEvents'
+  | 'coachAwards.noPlayers'
   | 'coachAwards.saveError'
   | 'xpHowto.link'
   | 'xpHowto.back'
@@ -348,7 +439,8 @@ const cs: Record<StringKey, string> = {
   'skills.filterWeakest': 'Nejslabší',
   'skills.filterStrongest': 'Nejsilnější',
   'skills.filterCategory': 'Kategorie',
-  'skills.filterUnrated': 'Nehodnocené',
+  'skills.addRating': 'Přidat hodnocení dovednosti',
+  'skills.addRatingTitle': 'Vyberte dovednost k ohodnocení',
   'skills.empty': 'Žádné dovednosti k zobrazení.',
   'skills.noResults': 'Žádná dovednost neodpovídá filtru.',
   'skills.noRecommendation': 'Bez doporučení',
@@ -429,6 +521,98 @@ const cs: Record<StringKey, string> = {
   'badge.IronMan.desc': 'Docházka nad 80 % za sezónu',
   'badge.Loyalty3.name': 'Věrnost',
   'badge.Loyalty3.desc': '3 odehrané sezóny',
+  'badge.Attendance150.name': 'Docházka 150',
+  'badge.Attendance150.desc': '150 tréninků',
+  'badge.Attendance250.name': 'Docházka 250',
+  'badge.Attendance250.desc': '250 tréninků',
+  'badge.Attendance400.name': 'Docházka 400',
+  'badge.Attendance400.desc': '400 tréninků',
+  'badge.Matches25.name': 'Bojovník 25',
+  'badge.Matches25.desc': '25 odehraných zápasů',
+  'badge.Matches100.name': 'Bojovník 100',
+  'badge.Matches100.desc': '100 odehraných zápasů',
+  'badge.Matches250.name': 'Bojovník 250',
+  'badge.Matches250.desc': '250 odehraných zápasů',
+  'badge.Goals100.name': 'Kanonýr II',
+  'badge.Goals100.desc': '100 gólů',
+  'badge.Goals250.name': 'Kanonýr III',
+  'badge.Goals250.desc': '250 gólů',
+  'badge.Goals500.name': 'Kanonýr IV',
+  'badge.Goals500.desc': '500 gólů',
+  'badge.FourGoalsInMatch.name': 'Poker',
+  'badge.FourGoalsInMatch.desc': '4 góly v jednom zápase',
+  'badge.FiveGoalsInMatch.name': 'Nezastavitelný',
+  'badge.FiveGoalsInMatch.desc': '5 a více gólů v jednom zápase',
+  'badge.Assists50.name': 'Nahrávač III',
+  'badge.Assists50.desc': '50 asistencí',
+  'badge.Assists100.name': 'Nahrávač IV',
+  'badge.Assists100.desc': '100 asistencí',
+  'badge.Points50.name': 'Kompletní hráč I',
+  'badge.Points50.desc': '50 bodů (góly + asistence)',
+  'badge.Points150.name': 'Kompletní hráč II',
+  'badge.Points150.desc': '150 bodů (góly + asistence)',
+  'badge.Points300.name': 'Kompletní hráč III',
+  'badge.Points300.desc': '300 bodů (góly + asistence)',
+  'badge.Points600.name': 'Kompletní hráč IV',
+  'badge.Points600.desc': '600 bodů (góly + asistence)',
+  'badge.PlusMinus20.name': 'Jistota',
+  'badge.PlusMinus20.desc': 'kariérní bilance +20',
+  'badge.PlusMinus50.name': 'Opora obrany',
+  'badge.PlusMinus50.desc': 'kariérní bilance +50',
+  'badge.PlusMinus100.name': 'Zeď',
+  'badge.PlusMinus100.desc': 'kariérní bilance +100',
+  'badge.SeasonAttendance90.name': 'Železný muž II',
+  'badge.SeasonAttendance90.desc': '90% docházka v sezóně',
+  'badge.SeasonAttendance100.name': 'Železný muž III',
+  'badge.SeasonAttendance100.desc': '100% docházka v sezóně',
+  'badge.Loyalty5.name': 'Věrnost II',
+  'badge.Loyalty5.desc': '5 odehraných sezón',
+  'badge.Loyalty8.name': 'Věrnost III',
+  'badge.Loyalty8.desc': '8 odehraných sezón',
+  'badge.Loyalty10.name': 'Věrnost IV',
+  'badge.Loyalty10.desc': '10 odehraných sezón',
+  'badge.HomeTraining10.name': 'Domácí bojovník I',
+  'badge.HomeTraining10.desc': '10 domácích tréninků',
+  'badge.HomeTraining50.name': 'Domácí bojovník II',
+  'badge.HomeTraining50.desc': '50 domácích tréninků',
+  'badge.HomeTraining150.name': 'Domácí bojovník III',
+  'badge.HomeTraining150.desc': '150 domácích tréninků',
+  'badge.SkillImprovement1.name': 'Na vzestupu I',
+  'badge.SkillImprovement1.desc': 'první zlepšená známka',
+  'badge.SkillImprovement10.name': 'Na vzestupu II',
+  'badge.SkillImprovement10.desc': '10× zlepšená známka',
+  'badge.SkillImprovement25.name': 'Na vzestupu III',
+  'badge.SkillImprovement25.desc': '25× zlepšená známka',
+  'badge.SkillTarget5.name': 'Cíl splněn I',
+  'badge.SkillTarget5.desc': '5× dosažená cílová známka',
+  'badge.SkillTarget15.name': 'Cíl splněn II',
+  'badge.SkillTarget15.desc': '15× dosažená cílová známka',
+  'badge.TestRecord1.name': 'Osobák I',
+  'badge.TestRecord1.desc': 'první osobní rekord v testu',
+  'badge.TestRecord10.name': 'Osobák II',
+  'badge.TestRecord10.desc': '10 osobních rekordů v testech',
+  'badge.PlayerOfTraining5.name': 'Hráč tréninku I',
+  'badge.PlayerOfTraining5.desc': '5× hráč tréninku',
+  'badge.PlayerOfTraining20.name': 'Hráč tréninku II',
+  'badge.PlayerOfTraining20.desc': '20× hráč tréninku',
+  'badge.FairPlay5.name': 'Fair play I',
+  'badge.FairPlay5.desc': '5× ocenění za fair play',
+  'badge.FairPlay20.name': 'Fair play II',
+  'badge.FairPlay20.desc': '20× ocenění za fair play',
+  'badge.FamilyCheered10.name': 'Rodinná podpora I',
+  'badge.FamilyCheered10.desc': '10× přišla povzbudit rodina',
+  'badge.FamilyCheered50.name': 'Rodinná podpora II',
+  'badge.FamilyCheered50.desc': '50× přišla povzbudit rodina',
+  'badge.Challenges10.name': 'Bojovník výzev I',
+  'badge.Challenges10.desc': '10 splněných výzev',
+  'badge.Challenges50.name': 'Bojovník výzev II',
+  'badge.Challenges50.desc': '50 splněných výzev',
+  'badge.CareerXp5000.name': '5 000 XP',
+  'badge.CareerXp5000.desc': '5 000 XP za kariéru',
+  'badge.CareerXp15000.name': '15 000 XP',
+  'badge.CareerXp15000.desc': '15 000 XP za kariéru',
+  'badge.CareerXp30000.name': '30 000 XP',
+  'badge.CareerXp30000.desc': '30 000 XP za kariéru',
   'nav.leaderboard': 'Žebříček',
   'leaderboard.title': 'Žebříček',
   'leaderboard.sortSeason': 'Sezónní',
@@ -504,11 +688,9 @@ const cs: Record<StringKey, string> = {
   'ratings.delete': 'Smazat',
   'ratings.deleteConfirmTitle': 'Smazat hodnocení?',
   'ratings.saveError': 'Hodnocení se nepodařilo uložit.',
-  'videos.empty': 'U této události nejsou žádná videa.',
-  'videos.loadError': 'Nepodařilo se načíst videa.',
   'videos.openVideo': 'Otevřít video',
   'coachAwards.title': 'Trenérské bonusy',
-  'coachAwards.noEvents': 'Žádná událost týmu k udělení bonusu.',
+  'coachAwards.noPlayers': 'Žádní hráči k ocenění.',
   'coachAwards.saveError': 'Uložení bonusu se nezdařilo. Zkuste to prosím znovu.',
   'xpHowto.link': 'Jak získat XP',
   'xpHowto.back': 'Zpět',
@@ -570,7 +752,9 @@ const locales = { cs }
 const currentLocale: keyof typeof locales = 'cs'
 
 export const t = (key: StringKey, params?: Record<string, string>): string => {
-  const template = locales[currentLocale][key]
+  // Fall back to the key itself if a locale is missing an entry - a visible "badge.Foo.name"
+  // beats a blank <Text> when the backend adds a code the client hasn't translated yet.
+  const template = locales[currentLocale][key] ?? key
   if (!params) return template
   return Object.entries(params).reduce((str, [name, value]) => str.replace(`{${name}}`, value), template)
 }

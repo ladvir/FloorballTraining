@@ -5,6 +5,12 @@ import { Button } from './Button'
 import { t } from '../i18n/strings'
 import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 import { isoDate } from '../utils/date'
+import {
+  buildTestResultPayload,
+  canSubmitTestResult,
+  TEST_TYPE_GRADE,
+  TEST_TYPE_NUMBER,
+} from '../utils/testResult'
 import type { CreateTestResultDto, TestDefinitionDto } from '../types/domain.types'
 
 interface RecordTestSheetProps {
@@ -16,11 +22,6 @@ interface RecordTestSheetProps {
   submitting: boolean
   error: string | null
 }
-
-// FloorballTraining.CoreBusiness.Enums.TestType - wire value is the raw int (see TestType in
-// domain.types.ts), not a string.
-const TEST_TYPE_NUMBER = 0
-const TEST_TYPE_GRADE = 1
 
 interface FormState {
   testDefinitionId: number | null
@@ -63,20 +64,11 @@ export function RecordTestSheet({ visible, tests, onSubmit, onClose, submitting,
   const setTestDate = (v: string) => setForm((f) => ({ ...f, testDate: v }))
 
   const selectedTest = tests.find((td) => td.id === testDefinitionId) ?? null
-  const canSubmit =
-    !submitting &&
-    selectedTest != null &&
-    (selectedTest.testType === TEST_TYPE_GRADE ? gradeOptionId != null : numericValue.trim().length > 0)
+  const canSubmit = !submitting && selectedTest != null && canSubmitTestResult(selectedTest, form)
 
   const submit = () => {
     if (!selectedTest) return
-    onSubmit({
-      testDefinitionId: selectedTest.id,
-      numericValue: selectedTest.testType === TEST_TYPE_NUMBER ? Number(numericValue) : null,
-      gradeOptionId: selectedTest.testType === TEST_TYPE_GRADE ? gradeOptionId : null,
-      testDate,
-      note: note.trim() || null,
-    })
+    onSubmit(buildTestResultPayload(selectedTest, form))
   }
 
   return (

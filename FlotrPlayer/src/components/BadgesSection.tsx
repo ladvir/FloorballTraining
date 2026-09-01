@@ -5,22 +5,22 @@ import { t, type StringKey } from '../i18n/strings'
 import type { BadgeStatusDto } from '../types/domain.types'
 import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 
-// Collectible milestone badges (#97). The API already tailors the list to the caller: a Coach sees
-// every badge (locked ones greyed out with progress, so they know what a player is close to), a
-// Player only ever receives badges they've already earned - so this component never needs its own
-// earned/locked branching logic beyond how to render whatever came back.
+// Collectible milestone badges (#97). Only ever shows *earned* badges - a Player is sent only those
+// anyway; a Coach's response also carries locked ones (with progress) but they're filtered out here,
+// per feedback that the coach just wants a player's actual collection, not a to-do list.
 export function BadgesSection({ memberId }: { memberId: number }) {
   const { data } = useQuery({
     queryKey: ['xp', 'badges', memberId],
     queryFn: () => xpApi.getBadges(memberId),
   })
-  if (!data || data.length === 0) return null
+  const earned = (data ?? []).filter((b) => b.earned)
+  if (earned.length === 0) return null
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('badge.section')}</Text>
       <View style={styles.grid}>
-        {data.map((b) => (
+        {earned.map((b) => (
           <BadgeTile key={b.code} badge={b} />
         ))}
       </View>
@@ -29,27 +29,15 @@ export function BadgesSection({ memberId }: { memberId: number }) {
 }
 
 function BadgeTile({ badge }: { badge: BadgeStatusDto }) {
-  const pct = Math.round(badge.progress * 100)
   return (
     <View style={styles.tile}>
-      <Image
-        source={{ uri: `${API_BASE_URL}/${badge.icon}` }}
-        style={[styles.icon, !badge.earned && styles.iconLocked]}
-      />
-      <Text style={styles.name} numberOfLines={2}>
+      <Image source={{ uri: `${API_BASE_URL}/${badge.icon}` }} style={styles.icon} />
+      <Text style={styles.name} numberOfLines={3}>
         {t(`badge.${badge.code}.name` as StringKey)}
       </Text>
-      <Text style={styles.desc} numberOfLines={2}>
+      <Text style={styles.desc} numberOfLines={3}>
         {t(`badge.${badge.code}.desc` as StringKey)}
       </Text>
-      {!badge.earned && (
-        <>
-          <View style={styles.track}>
-            {pct > 0 && <View style={[styles.fill, { width: `${pct}%` }]} />}
-          </View>
-          <Text style={styles.progress}>{badge.current} / {badge.threshold}</Text>
-        </>
-      )}
     </View>
   )
 }
@@ -86,9 +74,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
   },
-  iconLocked: {
-    opacity: 0.35,
-  },
   name: {
     color: colors.textSecondary,
     fontSize: typography.caption.fontSize - 1,
@@ -99,22 +84,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: typography.caption.fontSize - 2,
     textAlign: 'center',
-  },
-  track: {
-    width: '100%',
-    height: 4,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    overflow: 'hidden',
-    marginTop: 2,
-  },
-  fill: {
-    height: '100%',
-    borderRadius: radius.pill,
-    backgroundColor: colors.accent,
-  },
-  progress: {
-    color: colors.textMuted,
-    fontSize: typography.caption.fontSize - 2,
   },
 })

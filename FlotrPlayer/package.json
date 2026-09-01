@@ -40,7 +40,8 @@
     "eslint-config-expo": "~57.0.1",
     "lint-staged": "^17.1.0",
     "sharp": "^0.35.3",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "start": "expo start",
@@ -49,6 +50,7 @@
     "web": "expo start --web --port 8082",
     "lint": "expo lint",
     "typecheck": "tsc -b",
+    "test": "vitest run",
     "icons": "node scripts/generate-icons.mjs"
   },
   "lint-staged": {
