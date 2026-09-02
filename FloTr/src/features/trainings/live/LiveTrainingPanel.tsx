@@ -13,6 +13,8 @@ import {
   Check,
   Circle,
   Info,
+  Pause,
+  Play,
 } from 'lucide-react'
 import { trainingsApi } from '../../../api/trainings.api'
 import { useLiveTrainingStore } from '../../../store/liveTrainingStore'
@@ -20,6 +22,7 @@ import { useConfirm } from '../../../store/confirmStore'
 import { chime, siren } from '../../../utils/sound'
 import { RatingForm } from '../../appointments/RatingForm'
 import { AppointmentDetailModal } from '../../appointments/AppointmentDetailModal'
+import { ActivityDetailModal } from '../../activities/ActivityDetailModal'
 import { computeLiveStatus, formatClock, type LivePart } from './liveSchedule'
 import type { TrainingGroupDto } from '../../../types/domain.types'
 
@@ -28,15 +31,36 @@ interface RunnerPart extends LivePart {
   groups: TrainingGroupDto[]
 }
 
-function GroupList({ groups, muted }: { groups: TrainingGroupDto[]; muted?: boolean }) {
-  const names = groups.map((g) => g.activity?.name).filter(Boolean)
-  if (names.length === 0) return null
+function GroupList({
+  groups,
+  muted,
+  onOpen,
+}: {
+  groups: TrainingGroupDto[]
+  muted?: boolean
+  /** When set, each activity name becomes a button that opens its detail. */
+  onOpen?: (activityId: number) => void
+}) {
+  const activities = groups
+    .map((g) => g.activity)
+    .filter((a): a is NonNullable<typeof a> => !!a?.name)
+  if (activities.length === 0) return null
   return (
     <ul className={`space-y-1 ${muted ? 'text-gray-400' : 'text-gray-700'}`}>
-      {names.map((n, i) => (
-        <li key={i} className="flex items-center gap-2 text-base">
+      {activities.map((a, i) => (
+        <li key={a.id ?? i} className="flex items-center gap-2 text-base">
           <Dumbbell className="h-4 w-4 shrink-0 text-gray-400" />
-          <span className="truncate">{n}</span>
+          {onOpen ? (
+            <button
+              type="button"
+              onClick={() => onOpen(a.id)}
+              className="truncate text-left hover:text-sky-600 hover:underline"
+            >
+              {a.name}
+            </button>
+          ) : (
+            <span className="truncate">{a.name}</span>
+          )}
         </li>
       ))}
     </ul>
@@ -109,7 +133,11 @@ export function LiveTrainingPanel() {
   const finish = useLiveTrainingStore((s) => s.finish)
   const close = useLiveTrainingStore((s) => s.close)
   const setMinimized = useLiveTrainingStore((s) => s.setMinimized)
+  const pause = useLiveTrainingStore((s) => s.pause)
+  const resume = useLiveTrainingStore((s) => s.resume)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
+  const paused = session?.pausedAtMs != null
 
   const { data: training } = useQuery({
     queryKey: ['training', session?.trainingId],
@@ -119,10 +147,12 @@ export function LiveTrainingPanel() {
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
-    if (!session || session.finished) return
+    if (!session || session.finished || session.pausedAtMs != null) return
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [session])
+  // While paused the clock is frozen at the instant pause was hit.
+  const clockNow = session?.pausedAtMs ?? now
 
   // Keep the screen awake while a training is running (released on finish/close/unmount). The OS
   // drops the lock whenever the tab is hidden, so re-acquire it on visibilitychange.
@@ -170,21 +200,22 @@ export function LiveTrainingPanel() {
   }, [training, t])
 
   // Sound: a rising chime on every part change, one siren the moment a part goes overtime.
-  const lastPartStartRef = useRef<number | null>(null)
+  // Track the part *index* (not partStartedMs) so a resume — which shifts the timestamps — is silent.
+  const lastPartIndexRef = useRef<number | null>(null)
   const sirenedIndexRef = useRef<number | null>(null)
   const idx = session ? Math.min(session.currentPartIndex, Math.max(0, parts.length - 1)) : 0
   const status =
     session && parts.length > 0
-      ? computeLiveStatus(parts, idx, session.sessionStartMs, session.partStartedMs, now)
+      ? computeLiveStatus(parts, idx, session.sessionStartMs, session.partStartedMs, clockNow)
       : null
 
   useEffect(() => {
     if (!session || session.finished) return
-    if (lastPartStartRef.current != null && lastPartStartRef.current !== session.partStartedMs) {
+    if (lastPartIndexRef.current != null && lastPartIndexRef.current !== session.currentPartIndex) {
       chime()
+      sirenedIndexRef.current = null
     }
-    lastPartStartRef.current = session.partStartedMs
-    sirenedIndexRef.current = null
+    lastPartIndexRef.current = session.currentPartIndex
   }, [session])
 
   useEffect(() => {
@@ -238,6 +269,13 @@ export function LiveTrainingPanel() {
 
   const endSession = () => confirm(t('liveTraining.finishConfirm'), () => finish())
 
+  // Refresh `now` in the same tick as resume: the 1s ticker's stored value is stale (up to a
+  // second old, plus the whole pause), so without this the clock briefly reads pausedElapsed − pausedSpan.
+  const handleResume = () => {
+    resume()
+    setNow(Date.now())
+  }
+
   // ── Minimized pill (stays out of the way, bottom-right) ───────────────────
   if (session.minimized && !session.finished) {
     return (
@@ -245,12 +283,16 @@ export function LiveTrainingPanel() {
         onClick={() => setMinimized(false)}
         className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-3 shadow-lg hover:shadow-xl"
       >
-        <span className="relative flex h-3 w-3">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-          <span
-            className={`relative inline-flex h-3 w-3 rounded-full ${behind > 30 ? 'bg-red-500' : 'bg-green-500'}`}
-          />
-        </span>
+        {paused ? (
+          <Pause className="h-4 w-4 fill-amber-500 text-amber-500" />
+        ) : (
+          <span className="relative flex h-3 w-3">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            <span
+              className={`relative inline-flex h-3 w-3 rounded-full ${behind > 30 ? 'bg-red-500' : 'bg-green-500'}`}
+            />
+          </span>
+        )}
         <span className="text-base font-medium text-gray-800">
           {current?.name} · {formatClock(status?.elapsedInPartSec ?? 0)}
         </span>
@@ -265,10 +307,14 @@ export function LiveTrainingPanel() {
       <div className="fixed left-1/2 top-1/2 z-40 flex max-h-[88vh] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50 px-5 py-3">
-          <span className="relative flex h-3 w-3">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
-          </span>
+          {paused ? (
+            <Pause className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+          ) : (
+            <span className="relative flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-bold text-gray-900">{session.trainingName}</p>
             {session.appointmentName && (
@@ -312,10 +358,17 @@ export function LiveTrainingPanel() {
           <>
             {/* Scrollable body — every part of the training */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className={`mb-4 flex items-center gap-2 text-sm font-semibold ${behindTone}`}>
-                <Clock3 className="h-4 w-4" />
-                {behindLabel}
-              </div>
+              {paused ? (
+                <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700">
+                  <Pause className="h-4 w-4 fill-amber-500 text-amber-500" />
+                  {t('liveTraining.pausedNote')}
+                </div>
+              ) : (
+                <div className={`mb-4 flex items-center gap-2 text-sm font-semibold ${behindTone}`}>
+                  <Clock3 className="h-4 w-4" />
+                  {behindLabel}
+                </div>
+              )}
 
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 {t('liveTraining.allParts')} ·{' '}
@@ -365,7 +418,7 @@ export function LiveTrainingPanel() {
                             }}
                           />
                         </div>
-                        <GroupList groups={p.groups} />
+                        <GroupList groups={p.groups} onOpen={setDetailActivityId} />
                         {p.description && (
                           <p className="mt-3 text-sm text-gray-500">{p.description}</p>
                         )}
@@ -406,7 +459,7 @@ export function LiveTrainingPanel() {
                                 })}
                           </span>
                         )}
-                        {j === idx + 1 && <GroupList groups={p.groups} muted />}
+                        <GroupList groups={p.groups} muted onOpen={setDetailActivityId} />
                       </div>
                     </li>
                   )
@@ -414,31 +467,51 @@ export function LiveTrainingPanel() {
               </ol>
             </div>
 
-            {/* Sticky footer — "next part" / "end" are ALWAYS visible, never scrolled away */}
+            {/* Sticky footer — progression + pause are ALWAYS visible, never scrolled away */}
             <div className="flex gap-2 border-t border-gray-100 bg-white px-5 py-4">
-              {status?.isLastPart ? (
+              {paused ? (
                 <button
-                  onClick={endSession}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3.5 text-base font-semibold text-white hover:bg-gray-800"
+                  onClick={handleResume}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-3.5 text-base font-semibold text-white hover:bg-amber-600"
                 >
-                  <Flag className="h-5 w-5" />
-                  {t('liveTraining.finish')}
+                  <Play className="h-5 w-5" />
+                  {t('liveTraining.unpause')}
                 </button>
               ) : (
                 <>
                   <button
-                    onClick={endSession}
-                    className="rounded-lg border border-gray-300 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-gray-50"
+                    onClick={() => pause()}
+                    title={t('liveTraining.pause')}
+                    aria-label={t('liveTraining.pause')}
+                    className="flex items-center justify-center rounded-lg border border-gray-300 px-4 py-3.5 text-gray-700 hover:bg-gray-50"
                   >
-                    {t('liveTraining.endEarly')}
+                    <Pause className="h-5 w-5" />
                   </button>
-                  <button
-                    onClick={() => nextPart()}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3.5 text-base font-semibold text-white hover:bg-green-700"
-                  >
-                    <SkipForward className="h-5 w-5" />
-                    {t('liveTraining.nextPart')}
-                  </button>
+                  {status?.isLastPart ? (
+                    <button
+                      onClick={endSession}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3.5 text-base font-semibold text-white hover:bg-gray-800"
+                    >
+                      <Flag className="h-5 w-5" />
+                      {t('liveTraining.finish')}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={endSession}
+                        className="rounded-lg border border-gray-300 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        {t('liveTraining.endEarly')}
+                      </button>
+                      <button
+                        onClick={() => nextPart()}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3.5 text-base font-semibold text-white hover:bg-green-700"
+                      >
+                        <SkipForward className="h-5 w-5" />
+                        {t('liveTraining.nextPart')}
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -452,6 +525,10 @@ export function LiveTrainingPanel() {
           onClose={() => setDetailOpen(false)}
         />
       )}
+      <ActivityDetailModal
+        activityId={detailActivityId}
+        onClose={() => setDetailActivityId(null)}
+      />
     </>
   )
 }

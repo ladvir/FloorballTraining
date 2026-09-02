@@ -306,6 +306,9 @@ export type StringKey =
   | 'liveTraining.ratePrompt'
   | 'liveTraining.done'
   | 'liveTraining.emptyParts'
+  | 'liveTraining.pause'
+  | 'liveTraining.unpause'
+  | 'liveTraining.pausedNote'
   | 'ratings.pickGrade'
   | 'ratings.commentPlaceholder'
   | 'ratings.save'
@@ -681,6 +684,9 @@ const cs: Record<StringKey, string> = {
   'liveTraining.ratePrompt': 'Chceš událost ohodnotit?',
   'liveTraining.done': 'Hotovo',
   'liveTraining.emptyParts': 'Trénink nemá žádné části.',
+  'liveTraining.pause': 'Pozastavit',
+  'liveTraining.unpause': 'Pokračovat',
+  'liveTraining.pausedNote': 'Pozastaveno — čas se nepočítá',
   'ratings.pickGrade': 'Zvolit známku',
   'ratings.commentPlaceholder': 'Komentář (volitelný)...',
   'ratings.save': 'Uložit hodnocení',

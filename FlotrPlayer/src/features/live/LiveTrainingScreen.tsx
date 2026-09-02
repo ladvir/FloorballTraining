@@ -45,6 +45,9 @@ export function LiveTrainingScreen() {
   const nextPart = useLiveTrainingStore((s) => s.nextPart)
   const finish = useLiveTrainingStore((s) => s.finish)
   const close = useLiveTrainingStore((s) => s.close)
+  const pause = useLiveTrainingStore((s) => s.pause)
+  const resume = useLiveTrainingStore((s) => s.resume)
+  const paused = session?.pausedAtMs != null
 
   // Screen stays lit for as long as this screen is on top (coach is running a session).
   useKeepAwake()
@@ -57,10 +60,12 @@ export function LiveTrainingScreen() {
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
-    if (!session || session.finished) return
+    if (!session || session.finished || session.pausedAtMs != null) return
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [session])
+  // While paused the clock is frozen at the instant pause was hit.
+  const clockNow = session?.pausedAtMs ?? now
 
   const parts: RunnerPart[] = useMemo(() => {
     const raw = training?.trainingParts ?? []
@@ -77,19 +82,23 @@ export function LiveTrainingScreen() {
   const idx = session ? Math.min(session.currentPartIndex, Math.max(0, parts.length - 1)) : 0
   const status =
     session && parts.length > 0
-      ? computeLiveStatus(parts, idx, session.sessionStartMs, session.partStartedMs, now)
+      ? computeLiveStatus(parts, idx, session.sessionStartMs, session.partStartedMs, clockNow)
       : null
 
   // Sound/haptics: beep on part change, one warning the moment a part runs over.
-  const lastPartStartRef = useRef<number | null>(null)
+  // Track the part *index* (not partStartedMs) so a resume — which shifts the timestamps — is silent.
+  const lastPartIndexRef = useRef<number | null>(null)
   const overrunSignalledForRef = useRef<number | null>(null)
   useEffect(() => {
     if (!session || session.finished) return
-    if (lastPartStartRef.current != null && lastPartStartRef.current !== session.partStartedMs) {
+    if (
+      lastPartIndexRef.current != null &&
+      lastPartIndexRef.current !== session.currentPartIndex
+    ) {
       signalNextPart()
+      overrunSignalledForRef.current = null
     }
-    lastPartStartRef.current = session.partStartedMs
-    overrunSignalledForRef.current = null
+    lastPartIndexRef.current = session.currentPartIndex
   }, [session])
   useEffect(() => {
     if (!session || session.finished || !status) return
@@ -107,6 +116,12 @@ export function LiveTrainingScreen() {
   const endAndClose = () => {
     close()
     navigation.goBack()
+  }
+  // Refresh `now` in the same tick as resume: the 1s ticker's stored value is stale (up to a second
+  // old, plus the whole pause), so without this the clock briefly reads pausedElapsed − pausedSpan.
+  const handleResume = () => {
+    resume()
+    setNow(Date.now())
   }
 
   if (!session) {
@@ -199,10 +214,19 @@ export function LiveTrainingScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {header}
 
-        <View style={[styles.statusPill, { borderColor: behindColor }]}>
-          <Icon name="time-outline" size={14} color={behindColor} />
-          <Text style={[styles.statusText, { color: behindColor }]}>{behindLabel}</Text>
-        </View>
+        {paused ? (
+          <View style={[styles.statusPill, { borderColor: gradeColors[3] }]}>
+            <Icon name="pause" size={14} color={gradeColors[3]} />
+            <Text style={[styles.statusText, { color: gradeColors[3] }]}>
+              {t('liveTraining.pausedNote')}
+            </Text>
+          </View>
+        ) : (
+          <View style={[styles.statusPill, { borderColor: behindColor }]}>
+            <Icon name="time-outline" size={14} color={behindColor} />
+            <Text style={[styles.statusText, { color: behindColor }]}>{behindLabel}</Text>
+          </View>
+        )}
 
         <Text style={styles.kicker}>
           {t('liveTraining.allParts')} ·{' '}
@@ -271,7 +295,7 @@ export function LiveTrainingScreen() {
                       : t('liveTraining.overdueBy', { time: formatClock(startsInSec[j]) })}
                   </Text>
                 ) : null}
-                {j === idx + 1 ? <GroupList groups={p.groups} muted /> : null}
+                <GroupList groups={p.groups} muted />
               </View>
             </View>
           )
@@ -300,21 +324,41 @@ export function LiveTrainingScreen() {
               </View>
             </View>
           </>
+        ) : paused ? (
+          <Button title={t('liveTraining.unpause')} onPress={handleResume} />
         ) : status?.isLastPart ? (
-          <Button title={t('liveTraining.finish')} onPress={() => setConfirmingEnd(true)} />
-        ) : (
           <View style={styles.footerRow}>
             <View style={styles.footerEnd}>
               <Button
-                title={t('liveTraining.endEarly')}
+                title={t('liveTraining.pause')}
                 variant="outline"
-                onPress={() => setConfirmingEnd(true)}
+                onPress={() => pause()}
               />
             </View>
             <View style={styles.footerNext}>
-              <Button title={t('liveTraining.nextPart')} onPress={() => nextPart()} />
+              <Button title={t('liveTraining.finish')} onPress={() => setConfirmingEnd(true)} />
             </View>
           </View>
+        ) : (
+          <>
+            <View style={styles.footerRow}>
+              <View style={styles.footerEnd}>
+                <Button
+                  title={t('liveTraining.endEarly')}
+                  variant="outline"
+                  onPress={() => setConfirmingEnd(true)}
+                />
+              </View>
+              <View style={styles.footerNext}>
+                <Button title={t('liveTraining.nextPart')} onPress={() => nextPart()} />
+              </View>
+            </View>
+            <Button
+              title={t('liveTraining.pause')}
+              variant="outline"
+              onPress={() => pause()}
+            />
+          </>
         )}
       </View>
     </Screen>
@@ -382,6 +426,7 @@ const styles = StyleSheet.create({
     borderTopColor: glass.border,
     padding: spacing.lg,
     backgroundColor: colors.background,
+    gap: spacing.sm,
   },
   footerRow: { flexDirection: 'row', gap: spacing.sm },
   footerEnd: { flex: 1 },

@@ -17,6 +17,8 @@ export interface LiveSession {
   /** true once the coach advances past the last part. */
   finished: boolean
   minimized: boolean
+  /** Wall-clock ms when the coach hit pause; while set, the clock is frozen at this instant. */
+  pausedAtMs?: number
 }
 
 interface LiveTrainingStore {
@@ -31,6 +33,8 @@ interface LiveTrainingStore {
   finish: () => void
   close: () => void
   setMinimized: (v: boolean) => void
+  pause: () => void
+  resume: () => void
 }
 
 const load = (): LiveSession | null => {
@@ -70,11 +74,35 @@ export const useLiveTrainingStore = create<LiveTrainingStore>((set, get) => ({
 
   nextPart: () => {
     const s = get().session
-    if (!s || s.finished) return
+    if (!s || s.finished || s.pausedAtMs != null) return
     const next: LiveSession = {
       ...s,
       currentPartIndex: s.currentPartIndex + 1,
       partStartedMs: Date.now(),
+    }
+    save(next)
+    set({ session: next })
+  },
+
+  pause: () => {
+    const s = get().session
+    if (!s || s.finished || s.pausedAtMs != null) return
+    const next: LiveSession = { ...s, pausedAtMs: Date.now() }
+    save(next)
+    set({ session: next })
+  },
+
+  // Continue where we left off: shift the start timestamps forward by the paused span so the
+  // derived elapsed / drift numbers pick up exactly where they froze.
+  resume: () => {
+    const s = get().session
+    if (!s || s.pausedAtMs == null) return
+    const delta = Date.now() - s.pausedAtMs
+    const next: LiveSession = {
+      ...s,
+      sessionStartMs: s.sessionStartMs + delta,
+      partStartedMs: s.partStartedMs + delta,
+      pausedAtMs: undefined,
     }
     save(next)
     set({ session: next })

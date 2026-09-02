@@ -13,6 +13,8 @@ export interface LiveSession {
   partStartedMs: number
   currentPartIndex: number
   finished: boolean
+  /** Wall-clock ms when the coach hit pause; while set, the clock is frozen at this instant. */
+  pausedAtMs?: number
 }
 
 interface LiveTrainingStore {
@@ -26,6 +28,8 @@ interface LiveTrainingStore {
   nextPart: () => void
   finish: () => void
   close: () => void
+  pause: () => void
+  resume: () => void
 }
 
 export const useLiveTrainingStore = create<LiveTrainingStore>((set, get) => ({
@@ -46,8 +50,29 @@ export const useLiveTrainingStore = create<LiveTrainingStore>((set, get) => ({
 
   nextPart: () => {
     const s = get().session
-    if (!s || s.finished) return
+    if (!s || s.finished || s.pausedAtMs != null) return
     set({ session: { ...s, currentPartIndex: s.currentPartIndex + 1, partStartedMs: Date.now() } })
+  },
+
+  pause: () => {
+    const s = get().session
+    if (!s || s.finished || s.pausedAtMs != null) return
+    set({ session: { ...s, pausedAtMs: Date.now() } })
+  },
+
+  // Continue where we left off: shift the start timestamps forward by the paused span.
+  resume: () => {
+    const s = get().session
+    if (!s || s.pausedAtMs == null) return
+    const delta = Date.now() - s.pausedAtMs
+    set({
+      session: {
+        ...s,
+        sessionStartMs: s.sessionStartMs + delta,
+        partStartedMs: s.partStartedMs + delta,
+        pausedAtMs: undefined,
+      },
+    })
   },
 
   finish: () => {
