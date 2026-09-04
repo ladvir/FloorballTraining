@@ -2439,9 +2439,12 @@
     "unsupported": "Ta przeglądarka nie obsługuje syntezy mowy (Web Speech API).",
     "noVoice": "Zainstaluj w systemie czeski głos (Windows: Ustawienia → Czas i język → Mowa).",
     "voice": "Głos",
+    "voiceHint": "Wszystkie zainstalowane głosy, czeskie na początku",
     "tempo": "Tempo",
+    "tempoHint": "Ogólna prędkość czytania",
     "dynamics": "Dynamika",
-    "dynamicsHint": "Siła nacisku, entuzjazmu i skandowania",
+    "dynamicsHint": "Siła nacisku, entuzjazmu i skandowania względem zwykłego tekstu",
+    "testVoice": "Test głosu",
     "text": "Treść komunikatu",
     "textPlaceholder": "Wpisz komunikat…\n\n*nacisk*  !entuzjazm!  WIELKIE = skandowanie\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = odczytają skład",
     "read": "Odczytaj",
@@ -2476,7 +2479,9 @@
       "emphasis": "Nacisk (Ctrl/⌘+B)",
       "excited": "Entuzjazm (Ctrl/⌘+I)",
       "chant": "Skandowanie WIELKIMI (Ctrl/⌘+K)",
-      "pause": "Wstaw pauzę"
+      "pause": "Wstaw pauzę",
+      "stripDiacritics": "Usuń znaki diakrytyczne (á→a, č→c) z zaznaczenia lub całego tekstu",
+      "stripDiacriticsShort": "á→a"
     },
     "aiNote": "Wkrótce: asystent AI, który sam oznaczy tekst znacznikami dynamiki, oraz głosy premium przez dostawców AI."
   },

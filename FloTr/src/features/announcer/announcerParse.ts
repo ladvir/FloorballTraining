@@ -36,12 +36,13 @@ export const DYNAMICS: Record<
   'emphasis' | 'excited' | 'chant',
   { rate: number; pitch: number; gapBeforeMs: number; gapAfterMs: number }
 > = {
-  emphasis: { rate: 0.55, pitch: 1.6, gapBeforeMs: 420, gapAfterMs: 420 },
-  excited: { rate: 1.7, pitch: 1.9, gapBeforeMs: 120, gapAfterMs: 240 },
-  chant: { rate: 1.5, pitch: 1.75, gapBeforeMs: 220, gapAfterMs: 260 },
+  emphasis: { rate: 0.6, pitch: 1.6, gapBeforeMs: 380, gapAfterMs: 380 },
+  excited: { rate: 1.45, pitch: 1.9, gapBeforeMs: 110, gapAfterMs: 220 },
+  chant: { rate: 1.45, pitch: 1.75, gapBeforeMs: 200, gapAfterMs: 240 },
 }
-/** Gap between the words of a chant. */
+/** Gap between the words of a chant and between the clauses of a marked phrase. */
 const CHANT_WORD_GAP = 140
+const CLAUSE_GAP = 90
 
 const PAUSE_MS = 550
 /** Split anything longer than this so Chrome's ~15 s TTS cutoff can't truncate a segment. */
@@ -94,29 +95,43 @@ function pushPlain(text: string, out: Segment[]): void {
   }
 }
 
-function pushEmphasis(inner: string, out: Segment[]): void {
-  const d = DYNAMICS.emphasis
-  out.push({
-    text: inner,
-    speak: /[.,;:!?…]$/.test(inner) ? inner : `${inner},`, // trailing comma → the engine slows & stresses
-    kind: 'emphasis',
-    rate: d.rate,
-    pitch: d.pitch,
-    gapBeforeMs: d.gapBeforeMs,
-    gapAfterMs: d.gapAfterMs,
-  })
+/** Split a phrase on comma/semicolon/dash/colon boundaries, keeping the delimiter attached. */
+function clauseSplit(s: string): string[] {
+  return s
+    .split(/(?<=[,;:–—])\s+/)
+    .map((x) => x.trim())
+    .filter(Boolean)
 }
 
-function pushExcited(inner: string, out: Segment[]): void {
-  const d = DYNAMICS.excited
-  out.push({
-    text: inner,
-    speak: /[!?…]$/.test(inner) ? inner : `${inner}!`,
-    kind: 'excited',
-    rate: d.rate,
-    pitch: d.pitch,
-    gapBeforeMs: d.gapBeforeMs,
-    gapAfterMs: d.gapAfterMs,
+/**
+ * A `*…*` or `!…!` phrase. Long / multi-clause phrases are broken into one segment per
+ * clause (each also length-capped for the TTS cutoff) so the engine never has to render a
+ * long string at an extreme rate in one go — that was silently dropping whole phrases.
+ */
+function pushShaped(kind: 'emphasis' | 'excited', inner: string, out: Segment[]): void {
+  const d = DYNAMICS[kind]
+  const chunks = clauseSplit(inner)
+    .flatMap((c) => splitForTts(c))
+    .map((c) => c.trim())
+    .filter(Boolean)
+  chunks.forEach((chunk, i) => {
+    const first = i === 0
+    const last = i === chunks.length - 1
+    const speak =
+      kind === 'excited'
+        ? chunk.replace(/[,;:–—]?$/, '') + '!' // every burst punched out
+        : /[.,;:!?…]$/.test(chunk)
+          ? chunk
+          : chunk + ',' // trailing comma → the engine keeps slowing & stressing
+    out.push({
+      text: chunk,
+      speak: speak === chunk ? undefined : speak,
+      kind,
+      rate: d.rate,
+      pitch: d.pitch,
+      gapBeforeMs: first ? d.gapBeforeMs : CLAUSE_GAP,
+      gapAfterMs: last ? d.gapAfterMs : CLAUSE_GAP,
+    })
   })
 }
 
@@ -145,8 +160,8 @@ function parseChunk(input: string, out: Segment[]): void {
   while ((m = TOKEN.exec(input))) {
     if (m.index > last) pushPlain(input.slice(last, m.index), out)
     const s = m[0]
-    if (s[0] === '*') pushEmphasis(s.slice(1, -1), out)
-    else if (s[0] === '!') pushExcited(s.slice(1, -1), out)
+    if (s[0] === '*') pushShaped('emphasis', s.slice(1, -1), out)
+    else if (s[0] === '!') pushShaped('excited', s.slice(1, -1), out)
     else pushChant(s, out)
     last = m.index + s.length
   }

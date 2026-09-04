@@ -2439,9 +2439,12 @@
     "unsupported": "Dieser Browser hat keine Sprachausgabe (Web Speech API).",
     "noVoice": "Installieren Sie eine tschechische Systemstimme (Windows: Einstellungen → Zeit und Sprache → Sprache).",
     "voice": "Stimme",
+    "voiceHint": "Alle installierten Stimmen, Tschechisch zuerst",
     "tempo": "Tempo",
+    "tempoHint": "Gesamte Lesegeschwindigkeit",
     "dynamics": "Dynamik",
-    "dynamicsHint": "Stärke von Betonung, Begeisterung und Sprechchor",
+    "dynamicsHint": "Stärke von Betonung, Begeisterung und Sprechchor gegenüber Fließtext",
+    "testVoice": "Stimme testen",
     "text": "Durchsagetext",
     "textPlaceholder": "Durchsage eingeben…\n\n*Betonung*  !Begeisterung!  GROSS = Sprechchor\n//  = Pause\n[DOMÁCÍ]  [HOSTÉ] = Aufstellung vorlesen",
     "read": "Vorlesen",
@@ -2476,7 +2479,9 @@
       "emphasis": "Betonung (Strg/⌘+B)",
       "excited": "Begeisterung (Strg/⌘+I)",
       "chant": "Sprechchor in GROSSBUCHSTABEN (Strg/⌘+K)",
-      "pause": "Pause einfügen"
+      "pause": "Pause einfügen",
+      "stripDiacritics": "Diakritika entfernen (á→a, č→c) aus Auswahl oder ganzem Text",
+      "stripDiacriticsShort": "á→a"
     },
     "aiNote": "Demnächst: ein KI-Assistent, der den Text selbst mit Dynamik-Markierungen versieht, sowie Premium-Stimmen über KI-Anbieter."
   },

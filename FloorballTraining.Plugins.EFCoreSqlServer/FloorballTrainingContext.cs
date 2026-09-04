@@ -136,6 +136,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<ReportScoreWeight> ReportScoreWeights { get; set; } = null!;
 
+        public DbSet<AnnouncerLibraryItem> AnnouncerLibraryItems { get; set; } = null!;
+
         public DbSet<UserAiCredential> UserAiCredentials { get; set; } = null!;
         public DbSet<AiCredentialConsent> AiCredentialConsents { get; set; } = null!;
         public DbSet<AiSettings> AiSettings { get; set; } = null!;

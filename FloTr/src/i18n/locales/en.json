@@ -2439,9 +2439,12 @@
     "unsupported": "This browser has no text-to-speech (Web Speech API).",
     "noVoice": "Install a Czech system voice (Windows: Settings → Time & language → Speech).",
     "voice": "Voice",
+    "voiceHint": "All installed voices, Czech first",
     "tempo": "Tempo",
+    "tempoHint": "Overall reading speed",
     "dynamics": "Dynamics",
-    "dynamicsHint": "How strong emphasis, excitement and chants are",
+    "dynamicsHint": "How strong emphasis, excitement and chants are vs plain text",
+    "testVoice": "Test voice",
     "text": "Announcement text",
     "textPlaceholder": "Type the announcement…\n\n*emphasis*  !excited!  ALLCAPS = chant\n//  = pause\n[DOMÁCÍ]  [HOSTÉ] = read a roster",
     "read": "Read",
@@ -2476,7 +2479,9 @@
       "emphasis": "Emphasis (Ctrl/⌘+B)",
       "excited": "Excited (Ctrl/⌘+I)",
       "chant": "Chant in CAPS (Ctrl/⌘+K)",
-      "pause": "Insert pause"
+      "pause": "Insert pause",
+      "stripDiacritics": "Remove diacritics (á→a, č→c) from the selection or whole text",
+      "stripDiacriticsShort": "á→a"
     },
     "aiNote": "Coming soon: an AI assistant that marks up the text with dynamics itself, and premium voices via AI providers."
   },

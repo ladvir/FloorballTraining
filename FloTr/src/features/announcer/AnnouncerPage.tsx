@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Play, Square, Trash2, Save, Upload } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Play, Square, Trash2, Save, Upload, Eraser, Volume2 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../utils/cn'
+import { announcerApi } from '../../api'
 import { parseAnnouncement, type SegmentKind } from './announcerParse'
 import { useAnnouncer, INTENSITY_MIN, INTENSITY_MAX } from './useAnnouncer'
 
-const LIB_KEY = 'flotr.announcer.lib'
+const LIB_KEY = 'flotr.announcer.lib' // legacy browser-only store — migrated to the server once
 const ROSTER_KEY = (team: 'home' | 'away') => `flotr.announcer.roster.${team}`
 
-interface LibItem {
-  t: string
-  x: string
-}
+// Demo line for the "Test" button — every marker + a pause, so slider changes are audible A/B.
+const DEMO = 'Toto je *důraz*. Toto je !nadšení, energie a tempo! // A TOHLE JE SKANDOVÁNÍ.'
 
 const readLS = (k: string) => {
   try {
@@ -30,13 +30,9 @@ const writeLS = (k: string, v: string) => {
     /* ignore */
   }
 }
-const getLib = (): LibItem[] => {
-  try {
-    return JSON.parse(readLS(LIB_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
+
+/** Strip combining diacritics (á→a, č→c, ř→r …) — some voices mispronounce accented text. */
+const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '')
 
 // Preview tint per dynamic — FloTr palette, styled to hint at how it will sound.
 const KIND_CLASS: Record<SegmentKind, string> = {
@@ -49,6 +45,7 @@ const KIND_CLASS: Record<SegmentKind, string> = {
 
 export function AnnouncerPage() {
   const { t } = useTranslation()
+  const qc = useQueryClient()
   const {
     supported,
     hasCzechVoice,
@@ -68,7 +65,7 @@ export function AnnouncerPage() {
   const textRef = useRef<HTMLTextAreaElement>(null)
   const [text, setText] = useState('')
 
-  // Rosters
+  // Rosters (still browser-local — device-specific scratch)
   const [home, setHome] = useState(() => readLS(ROSTER_KEY('home')) || '')
   const [away, setAway] = useState(() => readLS(ROSTER_KEY('away')) || '')
 
@@ -94,11 +91,49 @@ export function AnnouncerPage() {
 
   const segments = useMemo(() => parseAnnouncement(expandedText), [expandedText])
 
-  // Library
-  const [lib, setLib] = useState<LibItem[]>(getLib)
-  useEffect(() => writeLS(LIB_KEY, JSON.stringify(lib)), [lib])
+  // ── Library (server-persisted) ─────────────────────────────────────────────
+  const { data: lib = [], isLoading: libLoading } = useQuery({
+    queryKey: ['announcer-library'],
+    queryFn: announcerApi.list,
+  })
+  const createItem = useMutation({
+    mutationFn: (v: { name: string; text: string }) => announcerApi.create(v.name, v.text),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['announcer-library'] }),
+  })
+  const deleteItem = useMutation({
+    mutationFn: (id: number) => announcerApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['announcer-library'] }),
+  })
 
-  // ── textarea editing helpers (toolbar + shortcuts) ──────────────────────────
+  // One-time push of the old browser-only library to the server, then drop the local copy.
+  // ponytail: once per browser (no server-empty check) — rare dupes across devices are acceptable.
+  const migratedRef = useRef(false)
+  useEffect(() => {
+    if (migratedRef.current) return
+    migratedRef.current = true
+    const raw = readLS(LIB_KEY)
+    if (!raw) return
+    let old: { t: string; x: string }[] = []
+    try {
+      old = JSON.parse(raw)
+    } catch {
+      /* not JSON */
+    }
+    try {
+      localStorage.removeItem(LIB_KEY)
+    } catch {
+      /* ignore */
+    }
+    if (!old.length) return
+    ;(async () => {
+      for (const it of old) {
+        if (it?.t && it?.x) await announcerApi.create(it.t, it.x).catch(() => {})
+      }
+      qc.invalidateQueries({ queryKey: ['announcer-library'] })
+    })()
+  }, [qc])
+
+  // ── textarea editing helpers (toolbar + shortcuts) ─────────────────────────
   const wrapSel = useCallback((mark: string) => {
     const el = textRef.current
     if (!el) return
@@ -112,18 +147,30 @@ export function AnnouncerPage() {
     })
   }, [])
 
-  const upperSel = useCallback(() => {
+  /** Apply `fn` to the selection, or to the whole text when nothing is selected. */
+  const transformText = useCallback((fn: (s: string) => string) => {
     const el = textRef.current
     if (!el) return
     const s = el.selectionStart
     const e = el.selectionEnd
-    if (s === e) return
-    setText(el.value.slice(0, s) + el.value.slice(s, e).toUpperCase() + el.value.slice(e))
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(s, e)
-    })
+    if (s !== e) {
+      const rep = fn(el.value.slice(s, e))
+      setText(el.value.slice(0, s) + rep + el.value.slice(e))
+      requestAnimationFrame(() => {
+        el.focus()
+        el.setSelectionRange(s, s + rep.length)
+      })
+    } else {
+      setText(fn(el.value))
+      requestAnimationFrame(() => el.focus())
+    }
   }, [])
+
+  const upperSel = useCallback(() => {
+    const el = textRef.current
+    if (!el || el.selectionStart === el.selectionEnd) return
+    transformText((s) => s.toUpperCase())
+  }, [transformText])
 
   const insertText = useCallback((str: string) => {
     const el = textRef.current
@@ -164,7 +211,7 @@ export function AnnouncerPage() {
       window.prompt(t('announcer.namePrompt'), x.slice(0, 40).replace(/\s+/g, ' ')) || ''
     ).trim()
     if (!name) return
-    setLib((a) => [...a, { t: name, x }])
+    createItem.mutate({ name, text: x })
   }
 
   const loadRosterFile = async (team: 'home' | 'away', file: File) => {
@@ -210,6 +257,7 @@ export function AnnouncerPage() {
                 </option>
               ))}
             </select>
+            <span className="text-xs text-gray-400">{t('announcer.voiceHint')}</span>
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">
@@ -224,6 +272,7 @@ export function AnnouncerPage() {
               onChange={(e) => setTempo(Number(e.target.value))}
               className="mt-2 w-full accent-sky-500"
             />
+            <span className="text-xs text-gray-400">{t('announcer.tempoHint')}</span>
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">
@@ -242,6 +291,18 @@ export function AnnouncerPage() {
           </label>
         </CardContent>
       </Card>
+
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => speak(DEMO)}
+          disabled={!supported || speaking}
+        >
+          <Volume2 className="h-4 w-4" />
+          {t('announcer.testVoice')}
+        </Button>
+      </div>
 
       {/* Help / legend */}
       <details className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -314,6 +375,16 @@ export function AnnouncerPage() {
         >
           //
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => transformText(stripDiacritics)}
+          title={t('announcer.toolbar.stripDiacritics')}
+        >
+          <Eraser className="h-4 w-4" />
+          {t('announcer.toolbar.stripDiacriticsShort')}
+        </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => insertText('[DOMÁCÍ]')}>
           [DOMÁCÍ]
         </Button>
@@ -378,7 +449,11 @@ export function AnnouncerPage() {
           <Trash2 className="h-4 w-4" />
           {t('announcer.clear')}
         </Button>
-        <Button variant="ghost" onClick={saveToLibrary} disabled={!text.trim()}>
+        <Button
+          variant="ghost"
+          onClick={saveToLibrary}
+          disabled={!text.trim() || createItem.isPending}
+        >
           <Save className="h-4 w-4" />
           {t('announcer.saveToLibrary')}
         </Button>
@@ -388,20 +463,22 @@ export function AnnouncerPage() {
       <h2 className="mb-2 mt-8 text-xs font-semibold uppercase tracking-wider text-gray-400">
         {t('announcer.library')}
       </h2>
-      {lib.length === 0 ? (
+      {libLoading ? (
+        <p className="text-sm text-gray-400">…</p>
+      ) : lib.length === 0 ? (
         <p className="rounded-lg border border-dashed border-gray-300 p-3 text-sm text-gray-400">
           {t('announcer.libraryEmpty')}
         </p>
       ) : (
         <ul className="space-y-1.5">
-          {lib.map((it, idx) => (
-            <li key={idx} className="flex gap-1.5">
+          {lib.map((it) => (
+            <li key={it.id} className="flex gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
                 className="px-2"
-                onClick={() => speak(it.x)}
-                aria-label={`${t('announcer.play')}: ${it.t}`}
+                onClick={() => speak(it.text)}
+                aria-label={`${t('announcer.play')}: ${it.name}`}
               >
                 <Play className="h-4 w-4" />
               </Button>
@@ -410,18 +487,18 @@ export function AnnouncerPage() {
                 className="min-w-0 flex-1 truncate rounded-lg border border-gray-300 bg-white px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
                 title={t('announcer.loadToField')}
                 onClick={() => {
-                  setText(it.x)
+                  setText(it.text)
                   textRef.current?.focus()
                 }}
               >
-                {it.t}
+                {it.name}
               </button>
               <Button
                 variant="outline"
                 size="sm"
                 className="px-2"
-                onClick={() => setLib((a) => a.filter((_, i) => i !== idx))}
-                aria-label={`${t('announcer.delete')}: ${it.t}`}
+                onClick={() => deleteItem.mutate(it.id)}
+                aria-label={`${t('announcer.delete')}: ${it.name}`}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

@@ -66,24 +66,26 @@ export function useAnnouncer() {
     return () => synth.removeEventListener('voiceschanged', load)
   }, [synth])
 
-  const csVoices = useMemo(
-    () =>
-      voices
-        .filter((v) => /^cs/i.test(v.lang) || /czech|česk/i.test(v.name))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [voices]
-  )
+  const isCzech = (v: SpeechSynthesisVoice) => /^cs/i.test(v.lang) || /czech|česk/i.test(v.name)
+  const isNatural = (v: SpeechSynthesisVoice) => /natural|neural|online/i.test(v.name)
 
-  const options: VoiceOption[] = useMemo(
-    () =>
-      csVoices.flatMap((v) =>
-        VARIANTS.map(([suffix, p, r]) => ({
-          id: `${v.name}|${p}|${r}`,
-          label: v.name.replace(/^Microsoft /, '') + (suffix ? ` · ${suffix}` : ''),
-        }))
-      ),
-    [csVoices]
-  )
+  const csVoices = useMemo(() => voices.filter(isCzech), [voices])
+
+  // All installed voices, Czech first, then the "natural/neural/online" ones (the interesting,
+  // more expressive voices), then the rest — each with the 3 pitch/rate variants.
+  const options: VoiceOption[] = useMemo(() => {
+    const ranked = [...voices].sort((a, b) => {
+      const rank = (v: SpeechSynthesisVoice) => (isCzech(v) ? 0 : isNatural(v) ? 1 : 2)
+      return rank(a) - rank(b) || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name)
+    })
+    return ranked.flatMap((v) =>
+      VARIANTS.map(([suffix, p, r]) => {
+        const base = v.name.replace(/^Microsoft /, '')
+        const tag = isCzech(v) ? '' : ` (${v.lang})`
+        return { id: `${v.name}|${p}|${r}`, label: base + tag + (suffix ? ` · ${suffix}` : '') }
+      })
+    )
+  }, [voices])
 
   // Keep the selection valid as voices arrive.
   useEffect(() => {
@@ -162,7 +164,14 @@ export function useAnnouncer() {
           window.setTimeout(next, gap(seg.pauseMs ?? 500))
           return
         }
-        const go = () => {
+        const after = () => {
+          const g = gap(seg.gapAfterMs)
+          if (g) window.setTimeout(next, g)
+          else next()
+        }
+        // `safeRate` = a rate the engine is guaranteed to accept; some voices error
+        // (and would then be silently skipped) on the extremes the slider can reach.
+        const go = (safeRate = false) => {
           if (myGen !== genRef.current) return
           const u = new SpeechSynthesisUtterance(seg.speak ?? seg.text)
           if (voice) {
@@ -171,21 +180,31 @@ export function useAnnouncer() {
           } else {
             u.lang = 'cs-CZ'
           }
-          // Rate floor 0.5 keeps a heavily-slowed emphasis intelligible.
-          u.rate = clamp(rateAdj * shape(seg.rate), 0.5, 2.5)
+          // Floor 0.5 keeps a heavily-slowed emphasis intelligible; ceiling 2.0 is
+          // Chrome's real max — asking above it makes some voices drop the utterance.
+          u.rate = safeRate
+            ? clamp(rateAdj * (seg.rate > 1 ? 1.3 : 0.8), 0.6, 1.6)
+            : clamp(rateAdj * shape(seg.rate), 0.5, 2.0)
           u.pitch = clamp(pitchAdj * shape(seg.pitch), 0, 2)
           u.volume = seg.kind === 'plain' ? plainVolume : 1
-          const after = () => {
-            const g = gap(seg.gapAfterMs)
-            if (g) window.setTimeout(next, g)
-            else next()
+          let done = false
+          u.onend = () => {
+            if (done) return
+            done = true
+            after()
           }
-          u.onend = after
-          u.onerror = after
+          u.onerror = () => {
+            if (done) return
+            done = true
+            // First failure at an extreme rate → retry once at a conservative rate so
+            // the phrase is never lost. Second failure → give up and move on.
+            if (!safeRate) go(true)
+            else after()
+          }
           synth.speak(u)
         }
         const before = gap(seg.gapBeforeMs)
-        if (before) window.setTimeout(go, before)
+        if (before) window.setTimeout(() => go(), before)
         else go()
       }
       window.setTimeout(next, 50) // Chrome drops the first utterance right after cancel()

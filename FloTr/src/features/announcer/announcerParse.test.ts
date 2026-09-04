@@ -57,4 +57,14 @@ describe('parseAnnouncement', () => {
     expect(seg[0].text).toBe('hrajeme')
     expect(seg[0].gapAfterMs).toBeGreaterThan(0)
   })
+
+  it('splits a long multi-clause !excited! phrase into per-clause bursts (no dropped phrase)', () => {
+    const seg = parseAnnouncement('plný !rychlosti, emocí, nasazení a především florbalu!')
+    const exc = seg.filter((s) => s.kind === 'excited')
+    expect(exc.length).toBeGreaterThanOrEqual(3)
+    expect(exc.every((s) => (s.speak ?? s.text).endsWith('!'))).toBe(true)
+    expect(exc.every((s) => (s.speak ?? s.text).length <= 60)).toBe(true)
+    // the leading plain word survives
+    expect(seg.some((s) => s.kind === 'plain' && s.text === 'plný')).toBe(true)
+  })
 })

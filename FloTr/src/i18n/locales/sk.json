@@ -2439,9 +2439,12 @@
     "unsupported": "Tento prehliadač nevie previesť text na reč (Web Speech API).",
     "noVoice": "Nainštalujte v systéme český alebo slovenský hlas (Windows: Nastavenia → Čas a jazyk → Reč).",
     "voice": "Hlas",
+    "voiceHint": "Zobrazené všetky nainštalované hlasy, české prvé",
     "tempo": "Tempo",
+    "tempoHint": "Celková rýchlosť čítania",
     "dynamics": "Dynamika",
-    "dynamicsHint": "Sila dôrazov, nadšenia a skandovania",
+    "dynamicsHint": "Sila dôrazov, nadšenia a skandovania oproti bežnému textu",
+    "testVoice": "Skúška hlasu",
     "text": "Text hlásenia",
     "textPlaceholder": "Napíšte hlásenie…\n\n*dôraz*  !nadšenie!  VEĽKÉ = skandovanie\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = prečítajú súpisku",
     "read": "Prečítať",
@@ -2476,7 +2479,9 @@
       "emphasis": "Dôraz (Ctrl/⌘+B)",
       "excited": "Nadšenie (Ctrl/⌘+I)",
       "chant": "Skandovanie VEĽKÝMI (Ctrl/⌘+K)",
-      "pause": "Vložiť pauzu"
+      "pause": "Vložiť pauzu",
+      "stripDiacritics": "Odstrániť diakritiku (á→a, č→c) z výberu alebo celého textu",
+      "stripDiacriticsShort": "á→a"
     },
     "aiNote": "Pripravujeme: AI asistent, ktorý text sám ozdobí značkami dynamiky, a prémiové hlasy cez AI poskytovateľov."
   },

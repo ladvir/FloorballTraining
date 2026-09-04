@@ -1926,6 +1926,14 @@ export interface XpRuleCatalogItemDto {
   selfActionable: boolean
 }
 
+/** One saved announcement in the user's Hlasatel library (server-persisted). */
+export interface AnnouncerLibraryItemDto {
+  id: number
+  name: string
+  text: string
+  createdAt: string
+}
+
 export interface MemberRewardClaimDto {
   id: number
   memberId: number
