@@ -2495,7 +2495,9 @@
       "getKeyHint": "Utwórz zasób Speech w portalu Azure",
       "azureVoice": "Głos",
       "azureStyle": "Styl",
-      "styleNone": "Bez stylu"
+      "styleNone": "Bez stylu",
+      "downloadMp3": "Pobierz MP3",
+      "downloading": "Pobieranie…"
     }
   },
   "notifications": {

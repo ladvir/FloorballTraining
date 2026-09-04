@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Play, Square, Trash2, Save, Upload, Volume2 } from 'lucide-react'
+import { Play, Square, Trash2, Save, Upload, Volume2, Download } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +17,17 @@ const SELECT_CLASS =
 const errText = (e: unknown): string => {
   const r = (e as { response?: { data?: unknown } })?.response?.data
   return typeof r === 'string' && r ? r : (e as Error)?.message || 'Chyba.'
+}
+
+/** "Vážení diváci!" → "vazeni-divaci.mp3" — ASCII-only, safe on every filesystem. */
+const mp3Filename = (text: string) => {
+  const slug = text
+    .trim()
+    .slice(0, 40)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${slug || 'hlaseni'}.mp3`
 }
 
 const LIB_KEY = 'flotr.announcer.lib' // legacy browser-only store — migrated to the server once
@@ -65,6 +76,8 @@ export function AnnouncerPage() {
     azureStyle,
     setAzureStyle,
     azureError,
+    downloading,
+    downloadAzure,
     tempo,
     setTempo,
     intensity,
@@ -205,6 +218,11 @@ export function AnnouncerPage() {
   const readNow = () => {
     const trimmed = expandedText.trim()
     if (trimmed) speak(trimmed)
+  }
+
+  const downloadNow = () => {
+    const trimmed = expandedText.trim()
+    if (trimmed) void downloadAzure(trimmed, mp3Filename(text))
   }
 
   const saveToLibrary = () => {
@@ -462,6 +480,16 @@ export function AnnouncerPage() {
           <Square className="h-4 w-4" />
           {t('announcer.stop')}
         </Button>
+        {engine === 'azure' && (
+          <Button
+            variant="outline"
+            onClick={downloadNow}
+            disabled={!speakReady || downloading || !segments.length}
+          >
+            <Download className="h-4 w-4" />
+            {downloading ? t('announcer.tts.downloading') : t('announcer.tts.downloadMp3')}
+          </Button>
+        )}
         <Button
           variant="ghost"
           onClick={() => {

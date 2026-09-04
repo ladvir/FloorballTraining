@@ -2496,7 +2496,9 @@
       "getKeyHint": "Vytvořit Speech resource v Azure portálu",
       "azureVoice": "Hlas",
       "azureStyle": "Styl",
-      "styleNone": "Bez stylu"
+      "styleNone": "Bez stylu",
+      "downloadMp3": "Stáhnout MP3",
+      "downloading": "Stahuji…"
     }
   },
   "notifications": {

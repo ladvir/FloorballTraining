@@ -2495,7 +2495,9 @@
       "getKeyHint": "Create a Speech resource in the Azure portal",
       "azureVoice": "Voice",
       "azureStyle": "Style",
-      "styleNone": "No style"
+      "styleNone": "No style",
+      "downloadMp3": "Download MP3",
+      "downloading": "Downloading…"
     }
   },
   "notifications": {

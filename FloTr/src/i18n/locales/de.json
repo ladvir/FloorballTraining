@@ -2495,7 +2495,9 @@
       "getKeyHint": "Speech-Ressource im Azure-Portal erstellen",
       "azureVoice": "Stimme",
       "azureStyle": "Stil",
-      "styleNone": "Kein Stil"
+      "styleNone": "Kein Stil",
+      "downloadMp3": "MP3 herunterladen",
+      "downloading": "Wird heruntergeladen…"
     }
   },
   "notifications": {

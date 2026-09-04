@@ -78,6 +78,7 @@ export function useAnnouncer() {
   const [azureError, setAzureError] = useState<string | null>(null)
 
   const [speaking, setSpeaking] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const genRef = useRef(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -260,6 +261,18 @@ export function useAnnouncer() {
     [synth, voiceId, voices, tempo, intensity]
   )
 
+  const ssmlFor = useCallback(
+    (text: string) =>
+      buildSsml(text, {
+        voice: azureVoice,
+        locale: localeOf(azureVoice),
+        style: azureStyle || undefined,
+        tempo,
+        intensity,
+      }),
+    [azureVoice, azureStyle, tempo, intensity]
+  )
+
   const speakAzure = useCallback(
     async (text: string) => {
       if (!azureVoice) {
@@ -273,13 +286,7 @@ export function useAnnouncer() {
       setActiveIndex(-1)
       setSpeaking(true)
 
-      const ssml = buildSsml(text, {
-        voice: azureVoice,
-        locale: localeOf(azureVoice),
-        style: azureStyle || undefined,
-        tempo,
-        intensity,
-      })
+      const ssml = ssmlFor(text)
 
       try {
         const blob = await announcerTtsApi.speak(ssml)
@@ -307,7 +314,35 @@ export function useAnnouncer() {
         }
       }
     },
-    [azureVoice, azureStyle, tempo, intensity, synth, releaseAudio]
+    [azureVoice, ssmlFor, synth, releaseAudio]
+  )
+
+  /** Synthesizes `text` with the Azure engine and saves the MP3 as `filename`. */
+  const downloadAzure = useCallback(
+    async (text: string, filename: string) => {
+      if (!azureVoice) {
+        setAzureError('Vyberte hlas.')
+        return
+      }
+      setAzureError(null)
+      setDownloading(true)
+      try {
+        const blob = await announcerTtsApi.speak(ssmlFor(text))
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+      } catch (e) {
+        setAzureError(errText(e))
+      } finally {
+        setDownloading(false)
+      }
+    },
+    [azureVoice, ssmlFor]
   )
 
   /**
@@ -338,6 +373,8 @@ export function useAnnouncer() {
     azureStyle,
     setAzureStyle,
     azureError,
+    downloading,
+    downloadAzure,
     // shared
     tempo,
     setTempo,

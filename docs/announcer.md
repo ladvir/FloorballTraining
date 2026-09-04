@@ -135,3 +135,8 @@ neopustí server** – prohlížeč posílá SSML na `/announcer/tts/speak` a do
 `gpt-4o-mini-tts` – `instructions` prompt; Google Chirp3-HD.)
 
 **Fallback:** bez klíče / offline → engine „Hlas prohlížeče" funguje beze změny.
+
+**Stažení MP3** – tlačítko „Stáhnout MP3" (jen u Azure enginu, vedle Přečíst/Stop)
+zavolá stejné `/announcer/tts/speak`, ale výsledek neposílá do `<audio>`, nýbrž ho
+uloží přes dočasný `<a download>` odkaz na `blob:` URL. Název souboru je slug prvních
+~40 znaků hlášení (`mp3Filename` v `AnnouncerPage.tsx`).
