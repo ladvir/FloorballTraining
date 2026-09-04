@@ -41,6 +41,7 @@
     "rewards": "Odměny",
     "xpRules": "XP body",
     "howToEarnXp": "Jak získat XP",
+    "announcer": "Hlasatel",
     "myCard": "Moje karta"
   },
   "auth": {
@@ -2432,6 +2433,51 @@
     "lineStraight": "Rovně",
     "lineFreehand": "Volně",
     "lineFreehandRaw": "Bez vyhlazení"
+  },
+  "announcer": {
+    "title": "Hlasatel",
+    "subtitle": "Přečte hlášení lidským hlasem – náhrada živého hlasatele na utkání.",
+    "unsupported": "Tento prohlížeč neumí převod textu na řeč (Web Speech API).",
+    "noVoice": "Nainstalujte v systému český hlas (Windows: Nastavení → Čas a jazyk → Řeč).",
+    "voice": "Hlas",
+    "tempo": "Tempo",
+    "text": "Text hlášení",
+    "textPlaceholder": "Napište hlášení…\n\n*důraz*  !nadšení!  VELKÁ = skandování\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = přečtou soupisku",
+    "read": "Přečíst",
+    "stop": "Stop",
+    "clear": "Vymazat",
+    "saveToLibrary": "Uložit do knihovny",
+    "namePrompt": "Název hlášení:",
+    "library": "Knihovna",
+    "libraryEmpty": "Zatím prázdná",
+    "loadToField": "Načíst do pole",
+    "play": "Přehrát",
+    "delete": "Smazat",
+    "playFromHere": "Přehrát od tohoto místa",
+    "preview": "Náhled – klikni na část pro přehrání odsud",
+    "rosters": "Soupisky",
+    "home": "Domácí",
+    "away": "Hosté",
+    "rosterPlaceholder": "Jeden hráč na řádek:\n9 Jan Novák\n1 Petr Svoboda – brankář",
+    "save": "Uložit",
+    "loadFile": "Načíst soubor",
+    "helpTitle": "Dynamika a soupisky",
+    "help": {
+      "emphasis": "Důraz – pomalu, výš",
+      "excited": "Nadšení – rychle, hodně vysoko",
+      "chant": "Skandování – rychle, vysoko (3+ velkých písmen)",
+      "pause": "Pauza",
+      "home": "přečte celou soupisku domácích",
+      "away": "přečte celou soupisku hostů",
+      "note": "Dynamiku řídí výhradně tyto značky. Hlasitost je vždy na maximu."
+    },
+    "toolbar": {
+      "emphasis": "Důraz (Ctrl/⌘+B)",
+      "excited": "Nadšení (Ctrl/⌘+I)",
+      "chant": "Skandování VELKÝMI (Ctrl/⌘+K)",
+      "pause": "Vložit pauzu"
+    },
+    "aiNote": "Připravujeme: AI asistent, který text sám ozdobí značkami dynamiky, a prémiové hlasy přes AI poskytovatele."
   },
   "notifications": {
     "title": "Oznámení",

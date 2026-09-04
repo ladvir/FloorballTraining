@@ -41,6 +41,7 @@
     "rewards": "Belohnungen",
     "xpRules": "XP-Punkte",
     "howToEarnXp": "Wie man XP verdient",
+    "announcer": "Stadionsprecher",
     "myCard": "Meine Karte"
   },
   "auth": {
@@ -2431,6 +2432,51 @@
     "lineStraight": "Gerade",
     "lineFreehand": "Freihand",
     "lineFreehandRaw": "Ohne Glättung"
+  },
+  "announcer": {
+    "title": "Stadionsprecher",
+    "subtitle": "Liest die Durchsage mit menschlicher Stimme vor – Ersatz für den Live-Stadionsprecher.",
+    "unsupported": "Dieser Browser hat keine Sprachausgabe (Web Speech API).",
+    "noVoice": "Installieren Sie eine tschechische Systemstimme (Windows: Einstellungen → Zeit und Sprache → Sprache).",
+    "voice": "Stimme",
+    "tempo": "Tempo",
+    "text": "Durchsagetext",
+    "textPlaceholder": "Durchsage eingeben…\n\n*Betonung*  !Begeisterung!  GROSS = Sprechchor\n//  = Pause\n[DOMÁCÍ]  [HOSTÉ] = Aufstellung vorlesen",
+    "read": "Vorlesen",
+    "stop": "Stopp",
+    "clear": "Löschen",
+    "saveToLibrary": "In Bibliothek speichern",
+    "namePrompt": "Name der Durchsage:",
+    "library": "Bibliothek",
+    "libraryEmpty": "Noch leer",
+    "loadToField": "In das Feld laden",
+    "play": "Abspielen",
+    "delete": "Löschen",
+    "playFromHere": "Ab hier abspielen",
+    "preview": "Vorschau – auf einen Teil klicken, um ab dort abzuspielen",
+    "rosters": "Aufstellungen",
+    "home": "Heim",
+    "away": "Gast",
+    "rosterPlaceholder": "Ein Spieler pro Zeile:\n9 Jan Novák\n1 Petr Svoboda – Torwart",
+    "save": "Speichern",
+    "loadFile": "Datei laden",
+    "helpTitle": "Dynamik & Aufstellungen",
+    "help": {
+      "emphasis": "Betonung – langsamer, höher",
+      "excited": "Begeisterung – schnell, sehr hoch",
+      "chant": "Sprechchor – schnell, hoch (3+ Großbuchstaben)",
+      "pause": "Pause",
+      "home": "liest die gesamte Heimaufstellung",
+      "away": "liest die gesamte Gastaufstellung",
+      "note": "Die Dynamik steuern ausschließlich diese Markierungen. Die Lautstärke ist immer auf Maximum."
+    },
+    "toolbar": {
+      "emphasis": "Betonung (Strg/⌘+B)",
+      "excited": "Begeisterung (Strg/⌘+I)",
+      "chant": "Sprechchor in GROSSBUCHSTABEN (Strg/⌘+K)",
+      "pause": "Pause einfügen"
+    },
+    "aiNote": "Demnächst: ein KI-Assistent, der den Text selbst mit Dynamik-Markierungen versieht, sowie Premium-Stimmen über KI-Anbieter."
   },
   "notifications": {
     "title": "Benachrichtigungen",

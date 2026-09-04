@@ -41,6 +41,7 @@
     "rewards": "Nagrody",
     "xpRules": "Punkty XP",
     "howToEarnXp": "Jak zdobyć XP",
+    "announcer": "Spiker",
     "myCard": "Moja karta"
   },
   "auth": {
@@ -2431,6 +2432,51 @@
     "lineStraight": "Prosto",
     "lineFreehand": "Odręcznie",
     "lineFreehandRaw": "Bez wygładzania"
+  },
+  "announcer": {
+    "title": "Spiker",
+    "subtitle": "Odczytuje komunikat ludzkim głosem – zastępuje spikera na meczu.",
+    "unsupported": "Ta przeglądarka nie obsługuje syntezy mowy (Web Speech API).",
+    "noVoice": "Zainstaluj w systemie czeski głos (Windows: Ustawienia → Czas i język → Mowa).",
+    "voice": "Głos",
+    "tempo": "Tempo",
+    "text": "Treść komunikatu",
+    "textPlaceholder": "Wpisz komunikat…\n\n*nacisk*  !entuzjazm!  WIELKIE = skandowanie\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = odczytają skład",
+    "read": "Odczytaj",
+    "stop": "Stop",
+    "clear": "Wyczyść",
+    "saveToLibrary": "Zapisz w bibliotece",
+    "namePrompt": "Nazwa komunikatu:",
+    "library": "Biblioteka",
+    "libraryEmpty": "Na razie pusta",
+    "loadToField": "Wczytaj do pola",
+    "play": "Odtwórz",
+    "delete": "Usuń",
+    "playFromHere": "Odtwórz od tego miejsca",
+    "preview": "Podgląd – kliknij fragment, aby odtworzyć od niego",
+    "rosters": "Składy",
+    "home": "Gospodarze",
+    "away": "Goście",
+    "rosterPlaceholder": "Jeden zawodnik na wiersz:\n9 Jan Novák\n1 Petr Svoboda – bramkarz",
+    "save": "Zapisz",
+    "loadFile": "Wczytaj plik",
+    "helpTitle": "Dynamika i składy",
+    "help": {
+      "emphasis": "Nacisk – wolniej, wyżej",
+      "excited": "Entuzjazm – szybko, bardzo wysoko",
+      "chant": "Skandowanie – szybko, wysoko (3+ wielkie litery)",
+      "pause": "Pauza",
+      "home": "odczytuje cały skład gospodarzy",
+      "away": "odczytuje cały skład gości",
+      "note": "Dynamiką sterują wyłącznie te znaczniki. Głośność jest zawsze maksymalna."
+    },
+    "toolbar": {
+      "emphasis": "Nacisk (Ctrl/⌘+B)",
+      "excited": "Entuzjazm (Ctrl/⌘+I)",
+      "chant": "Skandowanie WIELKIMI (Ctrl/⌘+K)",
+      "pause": "Wstaw pauzę"
+    },
+    "aiNote": "Wkrótce: asystent AI, który sam oznaczy tekst znacznikami dynamiki, oraz głosy premium przez dostawców AI."
   },
   "notifications": {
     "title": "Powiadomienia",

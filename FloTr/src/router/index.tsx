@@ -93,6 +93,9 @@ const TranslationsPage = lazy(() =>
 const DrawingPage = lazy(() =>
   import('../features/drawing/DrawingPage').then((m) => ({ default: m.DrawingPage }))
 )
+const AnnouncerPage = lazy(() =>
+  import('../features/announcer/AnnouncerPage').then((m) => ({ default: m.AnnouncerPage }))
+)
 const NotificationsPage = lazy(() =>
   import('../features/notifications/NotificationsPage').then((m) => ({
     default: m.NotificationsPage,
@@ -305,6 +308,8 @@ export const router = createBrowserRouter(
                 { path: '/dashboard', element: <DashboardPage /> },
                 // "How to earn XP" catalog (#107): any signed-in member.
                 { path: '/xp/how-to-earn', element: <HowToEarnXpPage /> },
+                // Announcer / Hlasatel — text-to-speech match announcer, open to any signed-in member.
+                { path: '/announcer', element: <AnnouncerPage /> },
                 { path: '/trainings', element: <TrainingsPage /> },
                 // Training create/edit + KPI: Coach+
                 {

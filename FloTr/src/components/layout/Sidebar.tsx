@@ -26,6 +26,7 @@ import {
   Gift,
   Coins,
   Medal,
+  Megaphone,
   Users,
   Video,
   X,
@@ -80,6 +81,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
         ...(isPlayer ? [{ to: '/me', icon: UserCircle, label: t('nav.myCard') }] : []),
         { to: '/xp/how-to-earn', icon: Medal, label: t('nav.howToEarnXp') },
+        { to: '/announcer', icon: Megaphone, label: t('nav.announcer') },
       ],
     },
     {

@@ -41,6 +41,7 @@
     "rewards": "Odmeny",
     "xpRules": "XP body",
     "howToEarnXp": "Ako získať XP",
+    "announcer": "Hlásateľ",
     "myCard": "Moja karta"
   },
   "auth": {
@@ -2431,6 +2432,51 @@
     "lineStraight": "Rovno",
     "lineFreehand": "Voľne",
     "lineFreehandRaw": "Bez vyhladenia"
+  },
+  "announcer": {
+    "title": "Hlásateľ",
+    "subtitle": "Prečíta hlásenie ľudským hlasom – náhrada živého hlásateľa na zápase.",
+    "unsupported": "Tento prehliadač nevie previesť text na reč (Web Speech API).",
+    "noVoice": "Nainštalujte v systéme český alebo slovenský hlas (Windows: Nastavenia → Čas a jazyk → Reč).",
+    "voice": "Hlas",
+    "tempo": "Tempo",
+    "text": "Text hlásenia",
+    "textPlaceholder": "Napíšte hlásenie…\n\n*dôraz*  !nadšenie!  VEĽKÉ = skandovanie\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = prečítajú súpisku",
+    "read": "Prečítať",
+    "stop": "Stop",
+    "clear": "Vymazať",
+    "saveToLibrary": "Uložiť do knižnice",
+    "namePrompt": "Názov hlásenia:",
+    "library": "Knižnica",
+    "libraryEmpty": "Zatiaľ prázdna",
+    "loadToField": "Načítať do poľa",
+    "play": "Prehrať",
+    "delete": "Odstrániť",
+    "playFromHere": "Prehrať odtiaľto",
+    "preview": "Náhľad – kliknutím na časť sa prehrá odtiaľ",
+    "rosters": "Súpisky",
+    "home": "Domáci",
+    "away": "Hostia",
+    "rosterPlaceholder": "Jeden hráč na riadok:\n9 Jan Novák\n1 Petr Svoboda – brankár",
+    "save": "Uložiť",
+    "loadFile": "Načítať súbor",
+    "helpTitle": "Dynamika a súpisky",
+    "help": {
+      "emphasis": "Dôraz – pomaly, vyššie",
+      "excited": "Nadšenie – rýchlo, veľmi vysoko",
+      "chant": "Skandovanie – rýchlo, vysoko (3+ veľké písmená)",
+      "pause": "Pauza",
+      "home": "prečíta celú súpisku domácich",
+      "away": "prečíta celú súpisku hostí",
+      "note": "Dynamiku riadia výhradne tieto značky. Hlasitosť je vždy na maxime."
+    },
+    "toolbar": {
+      "emphasis": "Dôraz (Ctrl/⌘+B)",
+      "excited": "Nadšenie (Ctrl/⌘+I)",
+      "chant": "Skandovanie VEĽKÝMI (Ctrl/⌘+K)",
+      "pause": "Vložiť pauzu"
+    },
+    "aiNote": "Pripravujeme: AI asistent, ktorý text sám ozdobí značkami dynamiky, a prémiové hlasy cez AI poskytovateľov."
   },
   "notifications": {
     "title": "Oznámenia",

@@ -41,6 +41,7 @@
     "rewards": "Rewards",
     "xpRules": "XP points",
     "howToEarnXp": "How to earn XP",
+    "announcer": "Announcer",
     "myCard": "My card"
   },
   "auth": {
@@ -2431,6 +2432,51 @@
     "lineStraight": "Straight",
     "lineFreehand": "Freehand",
     "lineFreehandRaw": "No smoothing"
+  },
+  "announcer": {
+    "title": "Announcer",
+    "subtitle": "Reads your announcement aloud in a human voice — a stand-in for the live match announcer.",
+    "unsupported": "This browser has no text-to-speech (Web Speech API).",
+    "noVoice": "Install a Czech system voice (Windows: Settings → Time & language → Speech).",
+    "voice": "Voice",
+    "tempo": "Tempo",
+    "text": "Announcement text",
+    "textPlaceholder": "Type the announcement…\n\n*emphasis*  !excited!  ALLCAPS = chant\n//  = pause\n[DOMÁCÍ]  [HOSTÉ] = read a roster",
+    "read": "Read",
+    "stop": "Stop",
+    "clear": "Clear",
+    "saveToLibrary": "Save to library",
+    "namePrompt": "Announcement name:",
+    "library": "Library",
+    "libraryEmpty": "Empty so far",
+    "loadToField": "Load into field",
+    "play": "Play",
+    "delete": "Delete",
+    "playFromHere": "Play from here",
+    "preview": "Preview — click a part to play from there",
+    "rosters": "Rosters",
+    "home": "Home",
+    "away": "Away",
+    "rosterPlaceholder": "One player per line:\n9 Jan Novák\n1 Petr Svoboda – goalkeeper",
+    "save": "Save",
+    "loadFile": "Load file",
+    "helpTitle": "Dynamics & rosters",
+    "help": {
+      "emphasis": "Emphasis — slower, higher",
+      "excited": "Excited — fast, very high",
+      "chant": "Chant — fast, high (3+ capital letters)",
+      "pause": "Pause",
+      "home": "reads the whole home roster",
+      "away": "reads the whole away roster",
+      "note": "Delivery is driven solely by these markers. Volume is always at maximum."
+    },
+    "toolbar": {
+      "emphasis": "Emphasis (Ctrl/⌘+B)",
+      "excited": "Excited (Ctrl/⌘+I)",
+      "chant": "Chant in CAPS (Ctrl/⌘+K)",
+      "pause": "Insert pause"
+    },
+    "aiNote": "Coming soon: an AI assistant that marks up the text with dynamics itself, and premium voices via AI providers."
   },
   "notifications": {
     "title": "Notifications",
