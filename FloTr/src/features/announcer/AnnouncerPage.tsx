@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Play, Square, Trash2, Save, Upload, Eraser, Volume2 } from 'lucide-react'
+import { Play, Square, Trash2, Save, Upload, Volume2 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -39,9 +39,6 @@ const writeLS = (k: string, v: string) => {
     /* ignore */
   }
 }
-
-/** Strip combining diacritics (á→a, č→c, ř→r …) — some voices mispronounce accented text. */
-const stripDiacritics = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '')
 
 // Preview tint per dynamic — FloTr palette, styled to hint at how it will sound.
 const KIND_CLASS: Record<SegmentKind, string> = {
@@ -165,30 +162,18 @@ export function AnnouncerPage() {
     })
   }, [])
 
-  /** Apply `fn` to the selection, or to the whole text when nothing is selected. */
-  const transformText = useCallback((fn: (s: string) => string) => {
+  const upperSel = useCallback(() => {
     const el = textRef.current
     if (!el) return
     const s = el.selectionStart
     const e = el.selectionEnd
-    if (s !== e) {
-      const rep = fn(el.value.slice(s, e))
-      setText(el.value.slice(0, s) + rep + el.value.slice(e))
-      requestAnimationFrame(() => {
-        el.focus()
-        el.setSelectionRange(s, s + rep.length)
-      })
-    } else {
-      setText(fn(el.value))
-      requestAnimationFrame(() => el.focus())
-    }
+    if (s === e) return
+    setText(el.value.slice(0, s) + el.value.slice(s, e).toUpperCase() + el.value.slice(e))
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(s, e)
+    })
   }, [])
-
-  const upperSel = useCallback(() => {
-    const el = textRef.current
-    if (!el || el.selectionStart === el.selectionEnd) return
-    transformText((s) => s.toUpperCase())
-  }, [transformText])
 
   const insertText = useCallback((str: string) => {
     const el = textRef.current
@@ -422,16 +407,6 @@ export function AnnouncerPage() {
           title={t('announcer.toolbar.pause')}
         >
           //
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => transformText(stripDiacritics)}
-          title={t('announcer.toolbar.stripDiacritics')}
-        >
-          <Eraser className="h-4 w-4" />
-          {t('announcer.toolbar.stripDiacriticsShort')}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => insertText('[DOMÁCÍ]')}>
           [DOMÁCÍ]

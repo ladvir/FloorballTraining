@@ -88,11 +88,6 @@ Náhled ve stylu karaoke pod polem: řetěz „chipů", tón podle značky (`pla
 - Test: `AnnouncerLibraryTests` (create→list→delete, prázdné = 400, cizí id = 404,
   bez tokenu = 401).
 
-## Odstranění diakritiky
-
-Tlačítko v toolbaru: `text.normalize('NFD').replace(/\p{Diacritic}/gu, '')` na
-výběr, jinak na celý text. Pro hlasy, které komolí háčky/čárky.
-
 ## Neurální hlas – Azure AI Speech (implementováno)
 
 Druhý engine vedle Web Speech, přepíná se přepínačem nahoře na stránce. BYOK –

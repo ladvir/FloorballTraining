@@ -2479,9 +2479,7 @@
       "emphasis": "Emphasis (Ctrl/⌘+B)",
       "excited": "Excited (Ctrl/⌘+I)",
       "chant": "Chant in CAPS (Ctrl/⌘+K)",
-      "pause": "Insert pause",
-      "stripDiacritics": "Remove diacritics (á→a, č→c) from the selection or whole text",
-      "stripDiacriticsShort": "á→a"
+      "pause": "Insert pause"
     },
     "aiNote": "The neural voice (Azure) runs alongside the browser voice — switch with the toggle above. Still coming: an AI assistant that marks up the text with dynamics itself.",
     "tts": {

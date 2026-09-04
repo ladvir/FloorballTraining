@@ -2479,9 +2479,7 @@
       "emphasis": "Nacisk (Ctrl/⌘+B)",
       "excited": "Entuzjazm (Ctrl/⌘+I)",
       "chant": "Skandowanie WIELKIMI (Ctrl/⌘+K)",
-      "pause": "Wstaw pauzę",
-      "stripDiacritics": "Usuń znaki diakrytyczne (á→a, č→c) z zaznaczenia lub całego tekstu",
-      "stripDiacriticsShort": "á→a"
+      "pause": "Wstaw pauzę"
     },
     "aiNote": "Głos neuronowy (Azure) działa obok głosu przeglądarki — przełącznik u góry. W przygotowaniu: asystent AI, który sam oznaczy tekst znacznikami dynamiki.",
     "tts": {

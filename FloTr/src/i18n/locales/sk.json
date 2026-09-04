@@ -2479,9 +2479,7 @@
       "emphasis": "Dôraz (Ctrl/⌘+B)",
       "excited": "Nadšenie (Ctrl/⌘+I)",
       "chant": "Skandovanie VEĽKÝMI (Ctrl/⌘+K)",
-      "pause": "Vložiť pauzu",
-      "stripDiacritics": "Odstrániť diakritiku (á→a, č→c) z výberu alebo celého textu",
-      "stripDiacriticsShort": "á→a"
+      "pause": "Vložiť pauzu"
     },
     "aiNote": "Neurálny hlas (Azure) beží popri hlase prehliadača — prepína sa prepínačom hore. Pripravujeme ešte AI asistenta, ktorý text sám ozdobí značkami dynamiky.",
     "tts": {

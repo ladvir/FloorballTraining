@@ -2479,9 +2479,7 @@
       "emphasis": "Betonung (Strg/⌘+B)",
       "excited": "Begeisterung (Strg/⌘+I)",
       "chant": "Sprechchor in GROSSBUCHSTABEN (Strg/⌘+K)",
-      "pause": "Pause einfügen",
-      "stripDiacritics": "Diakritika entfernen (á→a, č→c) aus Auswahl oder ganzem Text",
-      "stripDiacriticsShort": "á→a"
+      "pause": "Pause einfügen"
     },
     "aiNote": "Die neuronale Stimme (Azure) läuft parallel zur Browserstimme — Umschalten mit dem Schalter oben. In Vorbereitung: ein KI-Assistent, der den Text selbst mit Dynamik-Markierungen versieht.",
     "tts": {
