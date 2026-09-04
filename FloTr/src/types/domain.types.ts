@@ -1934,6 +1934,25 @@ export interface AnnouncerLibraryItemDto {
   createdAt: string
 }
 
+/** Whether the user has connected an Azure AI Speech resource for the announcer's premium voice. */
+export interface AnnouncerTtsStatusDto {
+  configured: boolean
+  region: string | null
+  keyLast4: string | null
+}
+
+/** One Azure neural voice from the connected region's voices/list. */
+export interface AzureVoiceDto {
+  shortName: string
+  displayName: string
+  localName: string
+  gender: string
+  locale: string
+  localeName: string
+  styleList: string[]
+  wordsPerMinute: string | null
+}
+
 export interface MemberRewardClaimDto {
   id: number
   memberId: number

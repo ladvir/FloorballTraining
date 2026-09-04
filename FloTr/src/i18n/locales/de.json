@@ -2483,7 +2483,22 @@
       "stripDiacritics": "Diakritika entfernen (á→a, č→c) aus Auswahl oder ganzem Text",
       "stripDiacriticsShort": "á→a"
     },
-    "aiNote": "Demnächst: ein KI-Assistent, der den Text selbst mit Dynamik-Markierungen versieht, sowie Premium-Stimmen über KI-Anbieter."
+    "aiNote": "Die neuronale Stimme (Azure) läuft parallel zur Browserstimme — Umschalten mit dem Schalter oben. In Vorbereitung: ein KI-Assistent, der den Text selbst mit Dynamik-Markierungen versieht.",
+    "tts": {
+      "engineBrowser": "Browserstimme",
+      "engineAzure": "Azure (neuronal)",
+      "connectTitle": "Azure AI Speech verbinden",
+      "regionPlaceholder": "Region, z. B. westeurope",
+      "apiKeyPlaceholder": "Schlüssel der Azure-Speech-Ressource",
+      "connect": "Prüfen & verbinden",
+      "connecting": "Prüfe…",
+      "connected": "Verbunden",
+      "disconnect": "Trennen",
+      "getKeyHint": "Speech-Ressource im Azure-Portal erstellen",
+      "azureVoice": "Stimme",
+      "azureStyle": "Stil",
+      "styleNone": "Kein Stil"
+    }
   },
   "notifications": {
     "title": "Benachrichtigungen",

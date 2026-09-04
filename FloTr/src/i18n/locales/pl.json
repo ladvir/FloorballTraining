@@ -2483,7 +2483,22 @@
       "stripDiacritics": "Usuń znaki diakrytyczne (á→a, č→c) z zaznaczenia lub całego tekstu",
       "stripDiacriticsShort": "á→a"
     },
-    "aiNote": "Wkrótce: asystent AI, który sam oznaczy tekst znacznikami dynamiki, oraz głosy premium przez dostawców AI."
+    "aiNote": "Głos neuronowy (Azure) działa obok głosu przeglądarki — przełącznik u góry. W przygotowaniu: asystent AI, który sam oznaczy tekst znacznikami dynamiki.",
+    "tts": {
+      "engineBrowser": "Głos przeglądarki",
+      "engineAzure": "Azure (neuronowy)",
+      "connectTitle": "Połącz Azure AI Speech",
+      "regionPlaceholder": "region, np. westeurope",
+      "apiKeyPlaceholder": "klucz zasobu Azure Speech",
+      "connect": "Zweryfikuj i połącz",
+      "connecting": "Weryfikuję…",
+      "connected": "Połączono",
+      "disconnect": "Rozłącz",
+      "getKeyHint": "Utwórz zasób Speech w portalu Azure",
+      "azureVoice": "Głos",
+      "azureStyle": "Styl",
+      "styleNone": "Bez stylu"
+    }
   },
   "notifications": {
     "title": "Powiadomienia",

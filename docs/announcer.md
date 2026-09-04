@@ -5,18 +5,23 @@ přečte hlášení lidským hlasem přes **Web Speech API** prohlížeče. Bez 
 dostupné každému přihlášenému uživateli.
 
 - Menu: sekce _Moje_, hned pod _Jak získat XP_ (`/announcer`).
+- **Dva enginy vedle sebe**, přepínač na stránce: `browser` (Web Speech, zdarma,
+  offline) a `azure` (neurální hlasy přes proxy, viz níže).
 - FE: [`FloTr/src/features/announcer/`](../FloTr/src/features/announcer/)
   - `announcerParse.ts` – tokenizér textu → fronta segmentů (`Segment[]`)
-  - `useAnnouncer.ts` – obálka nad `speechSynthesis` (hlasy, tempo, dynamika, karaoke index, workaroundy)
-  - `AnnouncerPage.tsx` – stránka ve stylu FloTr
+  - `announcerSsml.ts` – segmenty → SSML pro Azure engine
+  - `useAnnouncer.ts` – oba enginy; `speak()` větví podle `engine`
+  - `AnnouncerPage.tsx` – stránka ve stylu FloTr (+ `AzureTtsPanel`)
 - BE: `AnnouncerLibraryController` + `AnnouncerLibraryItem` (per-user knihovna v DB,
-  migrace `20260904081432_AddAnnouncerLibrary`).
+  migrace `20260904081432_AddAnnouncerLibrary`); `AnnouncerTtsController` +
+  `AnnouncerTtsCredential` + `AzureSpeechClient` (Azure proxy, migrace
+  `20260904090409_AddAnnouncerTtsCredential`).
 
 ## Analýza původní aplikace
 
 | Část                           | Původní (`hlasatel/`)                   | Ve FloTr                                                         |
 | ------------------------------ | --------------------------------------- | ---------------------------------------------------------------- |
-| Engine                         | `speechSynthesis` (Web Speech API)      | beze změny                                                       |
+| Engine                         | `speechSynthesis` (Web Speech API)      | zůstává + druhý engine Azure AI Speech (přepínač)                |
 | Značky dynamiky                | `*důraz*`, `!nadšení!`, `VELKÁ` (3+)    | výrazně zesíleno (viz níže) + nově `//` pauza                    |
 | Soupisky                       | 2× localStorage, `[DOMÁCÍ]` / `[HOSTÉ]` | beze změny (localStorage `flotr.announcer.roster.*`)             |
 | Knihovna hlášení               | localStorage                            | **DB, per-user** (`/announcerlibrary`); jednorázová migrace z LS |
@@ -88,40 +93,50 @@ Náhled ve stylu karaoke pod polem: řetěz „chipů", tón podle značky (`pla
 Tlačítko v toolbaru: `text.normalize('NFD').replace(/\p{Diacritic}/gu, '')` na
 výběr, jinak na celý text. Pro hlasy, které komolí háčky/čárky.
 
-## Zajímavější hlasy (M/Ž) – jak to dělají tvůrci videí
+## Neurální hlas – Azure AI Speech (implementováno)
 
-Tvůrci videí **nepoužívají Web Speech**. Sáhnou po **cloudovém neurálním TTS**,
-kde je na výběr desítky pojmenovaných hlasů (muž/žena, per-jazyk) a často styl/
-emoce:
+Druhý engine vedle Web Speech, přepíná se přepínačem nahoře na stránce. BYOK –
+uživatel zadá **region + klíč** svého Azure Speech resource; klíč se ověří,
+uloží šifrovaně (stejný `IAiCredentialProtector` jako AI klíče) a **nikdy
+neopustí server** – prohlížeč posílá SSML na `/announcer/tts/speak` a dostane MP3.
 
-| Poskytovatel                       | Hlasy                               | Emoce / styl                          | Cena (orient.)       |
-| ---------------------------------- | ----------------------------------- | ------------------------------------- | -------------------- |
-| **ElevenLabs**                     | stovky, klonování vlastního hlasu   | „stability/style" + v2 tagy `[smích]` | ~$0,10–0,30 / 1k zn. |
-| **OpenAI** `gpt-4o-mini-tts`       | ~11 (alloy, nova, shimmer, onyx, …) | volný `instructions` prompt           | ~$0,015 / 1k zn.     |
-| **Google Cloud / Gemini TTS**      | Chirp3-HD, ~30 hlasů, cs-CZ         | omezené (prompt u Gemini)             | ~$0,016 / 1k zn.     |
-| **Azure AI Speech** (cs-CZ Neural) | Vlasta, Antonín + „multilingual"    | SSML `<mstts:express-as>`             | ~$0,016 / 1k zn.     |
-| **PlayHT**                         | stovky, klonování                   | emoce presety                         | předplatné           |
+**Backend**
 
-Pipeline u videí: text → (často LLM na doladění/SSML) → TTS API → MP3/WAV →
-sestřih. Klíč je vždy na serveru, ne v prohlížeči.
+- `AnnouncerTtsCredential { UserId, Region, EncryptedApiKey, KeyLast4, LastValidatedAt }`,
+  unique index `UserId`, migrace `20260904090409_AddAnnouncerTtsCredential`.
+- `AzureSpeechClient` – tenký wrapper: `GET {region}.tts.speech.microsoft.com/cognitiveservices/voices/list`
+  (validace klíče + seznam hlasů), `POST …/cognitiveservices/v1` s SSML +
+  `X-Microsoft-OutputFormat: audio-24khz-48kbitrate-mono-mp3` → MP3. Region je
+  striktně validovaný (`^[a-z0-9]{3,30}$`), protože jde do hostname.
+- `AnnouncerTtsController` `[Authorize]` `Route("announcer/tts")`:
+  `GET status`, `PUT key {region,apiKey}` (ověří přes voices/list), `DELETE key`,
+  `GET voices`, `POST speak {ssml}` – SSML se před odesláním ověří (`XDocument.Parse`,
+  kořen `<speak>`, ≤12 000 znaků) a proxuje na Azure; vrací `File(mp3, "audio/mpeg")`.
+- Klíč `IAzureSpeechClient` registrován v `AddAiServices`.
+- Test `AnnouncerTtsTests` – no-key brány (409), validace regionu (400), SSML kořen
+  (400), a přes stub `IHttpClientFactory` celý connect → status → voices → speak.
 
-**Cesta do FloTr** – FloTr už má **BYOK vrstvu** (`UserAiCredential`, šifrované
-klíče přes DataProtection, provider-resolver, consent, usage log) pro OpenAI/
-Gemini. Chybí jen:
+**Frontend**
 
-1. `POST /ai/announcer/tts` – vezme text + `voice`, resolvne uživatelův OpenAI
-   (nebo Gemini) klíč, zavolá `/v1/audio/speech`, streamuje MP3 zpět, zaloguje
-   užití. Značky `*…*` / `!…!` / `VELKÁ` se přeloží na `instructions`
-   („zdůrazni …, nadšeně …") nebo se rovnou pošle holý text a intonaci nechá na
-   modelu.
-2. FE: v `useAnnouncer` přepínač „Prémiový hlas (AI)" → místo `SpeechSynthesisUtterance`
-   se přehraje `<audio src=blob>`; seznam hlasů z poskytovatele (M/Ž rozlišené).
-3. Fallback: bez klíče / offline → současný Web Speech.
+- `announcerTtsApi` (status / saveKey / deleteKey / getVoices / speak→Blob).
+- `announcerSsml.ts` `buildSsml()` – z parsovaných segmentů staví SSML: `*důraz*`
+  → `<break/><prosody rate pitch><emphasis level="strong">…</emphasis></prosody><break/>`,
+  `!nadšení!` → `<prosody>…!</prosody>`, `VELKÁ` → `<prosody>` per slovo, `//` →
+  `<break>`. Tempo = vnější `<prosody rate>`, volitelně `<mstts:express-as style>`.
+  Posuvníky Dynamika/Tempo škálují procenta a délky pauz — na Azuru je to **skutečná
+  prozódie**, ne fake jako u Web Speech.
+- `useAnnouncer` má `engine: 'browser' | 'azure'` (ukládá se). Pro `azure` `speak()`
+  pošle SSML, přehraje výsledné MP3 přes `HTMLAudioElement` (+ `URL.createObjectURL`).
+  `stop()` pauzuje audio i `speechSynthesis`. Karaoke zvýraznění po segmentech je
+  jen pro browser engine (Azure nemá časování).
+- `AzureTtsPanel` v `AnnouncerPage`: když není připojeno → formulář region + klíč
+  („přihlášení") + odkaz do Azure portálu; když je → badge „Připojeno · region ·
+  …klíč", „Odpojit", výběr hlasu (cs-CZ první, ♀/♂) a stylu (pokud hlas má `StyleList`).
 
-Odhad: ~1 controller + 1 provider-metoda + ~1 den FE. Placené za znak, takže
-opt-in. **Doporučuju to jako samostatný PR** – je to hlavní páka na „lidský" zvuk,
-ale potřebuje potvrdit poskytovatele a mít u účtu klíč.
+**Proč Azure a ne ostatní:** cs-CZ neurální hlasy `cs-CZ-VlastaNeural` (Ž),
+`cs-CZ-AntoninNeural` (M) + „multilingual" hlasy; SSML `<prosody>`/`<emphasis>`/
+`<break>` respektované → dynamika je slyšet doslova; ~$16 / 1M znaků, free tier
+500k znaků/měsíc. (Alternativy: ElevenLabs – nejpřirozenější, dražší; OpenAI
+`gpt-4o-mini-tts` – `instructions` prompt; Google Chirp3-HD.)
 
-Bez backendu jde zatím jen: nechat uživatele vybrat **kterýkoli** nainstalovaný
-hlas (hotovo) – kdo má v OS „Microsoft … Online (Natural)" hlasy, uvidí je a jsou
-o dost lepší než klasické SAPI.
+**Fallback:** bez klíče / offline → engine „Hlas prohlížeče" funguje beze změny.

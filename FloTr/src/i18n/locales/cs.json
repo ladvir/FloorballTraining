@@ -2484,7 +2484,22 @@
       "stripDiacritics": "Odstranit diakritiku (á→a, č→c) z výběru nebo celého textu",
       "stripDiacriticsShort": "á→a"
     },
-    "aiNote": "Připravujeme: AI asistent, který text sám ozdobí značkami dynamiky, a prémiové hlasy přes AI poskytovatele."
+    "aiNote": "Neurální hlas (Azure) běží vedle hlasu prohlížeče — přepíná se přepínačem nahoře. Připravujeme ještě AI asistenta, který text sám ozdobí značkami dynamiky.",
+    "tts": {
+      "engineBrowser": "Hlas prohlížeče",
+      "engineAzure": "Azure (neurální)",
+      "connectTitle": "Připojit Azure AI Speech",
+      "regionPlaceholder": "region, např. westeurope",
+      "apiKeyPlaceholder": "klíč Azure Speech resource",
+      "connect": "Ověřit a připojit",
+      "connecting": "Ověřuji…",
+      "connected": "Připojeno",
+      "disconnect": "Odpojit",
+      "getKeyHint": "Vytvořit Speech resource v Azure portálu",
+      "azureVoice": "Hlas",
+      "azureStyle": "Styl",
+      "styleNone": "Bez stylu"
+    }
   },
   "notifications": {
     "title": "Oznámení",

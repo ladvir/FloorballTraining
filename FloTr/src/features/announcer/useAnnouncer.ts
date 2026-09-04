@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { announcerTtsApi } from '../../api'
 import { parseAnnouncement } from './announcerParse'
+import { buildSsml } from './announcerSsml'
 
 export interface VoiceOption {
   id: string
   label: string
 }
+
+export type AnnouncerEngine = 'browser' | 'azure'
 
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
 
@@ -19,6 +23,9 @@ const VARIANTS: readonly (readonly [string, number, number])[] = [
 const VOICE_KEY = 'flotr.announcer.voice'
 const TEMPO_KEY = 'flotr.announcer.tempo'
 const INTENSITY_KEY = 'flotr.announcer.intensity'
+const ENGINE_KEY = 'flotr.announcer.engine'
+const AZ_VOICE_KEY = 'flotr.announcer.azureVoice'
+const AZ_STYLE_KEY = 'flotr.announcer.azureStyle'
 
 /** Dynamics slider range: 1 = as authored, 3 = pushed hard. Default is already strong. */
 export const INTENSITY_MIN = 1
@@ -40,11 +47,20 @@ const writeLS = (k: string, v: string) => {
   }
 }
 
+const errText = (e: unknown): string => {
+  const r = (e as { response?: { data?: unknown } })?.response?.data
+  if (typeof r === 'string' && r) return r
+  return (e as Error)?.message || 'Chyba převodu textu na řeč.'
+}
+
+/** Locale (xml:lang) from an Azure voice ShortName, e.g. "cs-CZ-VlastaNeural" → "cs-CZ". */
+const localeOf = (shortName: string) => shortName.split('-').slice(0, 2).join('-') || 'cs-CZ'
+
 /**
- * Web Speech wrapper for the announcer page. Czech voices only (+ 3 pitch/rate
- * variants), a global tempo multiplier, a dynamics multiplier that widens the
- * per-segment rate/pitch/silence deltas, karaoke `activeIndex`, and the usual
- * Chrome workarounds (cancel-on-mount, 50 ms first-utterance delay, resume heartbeat).
+ * Playback for the announcer page, with two interchangeable engines:
+ *  - `browser`: Web Speech API — free, offline, marker dynamics faked via rate/pitch/silence.
+ *  - `azure`: our /announcer/tts proxy to Azure AI Speech — neural voices, real SSML prosody.
+ * The engine switch is the only thing that changes; every caller uses the same `speak()`.
  */
 export function useAnnouncer() {
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
@@ -54,9 +70,18 @@ export function useAnnouncer() {
   const [intensity, setIntensity] = useState<number>(
     () => Number(readLS(INTENSITY_KEY)) || INTENSITY_DEFAULT
   )
+  const [engine, setEngine] = useState<AnnouncerEngine>(() =>
+    readLS(ENGINE_KEY) === 'azure' ? 'azure' : 'browser'
+  )
+  const [azureVoice, setAzureVoice] = useState<string>(() => readLS(AZ_VOICE_KEY) ?? '')
+  const [azureStyle, setAzureStyle] = useState<string>(() => readLS(AZ_STYLE_KEY) ?? '')
+  const [azureError, setAzureError] = useState<string | null>(null)
+
   const [speaking, setSpeaking] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const genRef = useRef(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!synth) return
@@ -101,33 +126,56 @@ export function useAnnouncer() {
   useEffect(() => {
     writeLS(INTENSITY_KEY, String(intensity))
   }, [intensity])
+  useEffect(() => {
+    writeLS(ENGINE_KEY, engine)
+  }, [engine])
+  useEffect(() => {
+    writeLS(AZ_VOICE_KEY, azureVoice)
+  }, [azureVoice])
+  useEffect(() => {
+    writeLS(AZ_STYLE_KEY, azureStyle)
+  }, [azureStyle])
 
   // Chrome silently stops speech after ~15 s and sometimes never fires `onend`;
   // a periodic resume() while speaking is the standard workaround.
   useEffect(() => {
-    if (!synth || !speaking) return
+    if (!synth || !speaking || engine !== 'browser') return
     const id = window.setInterval(() => {
       if (synth.speaking) synth.resume()
     }, 8000)
     return () => window.clearInterval(id)
-  }, [synth, speaking])
+  }, [synth, speaking, engine])
+
+  const releaseAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+  }, [])
 
   // Clear any wedged state left by a previous page (Chrome bug) + on unmount.
   useEffect(() => {
     synth?.cancel()
-    return () => synth?.cancel()
-  }, [synth])
+    return () => {
+      synth?.cancel()
+      releaseAudio()
+    }
+  }, [synth, releaseAudio])
 
   const stop = useCallback(() => {
     genRef.current++
     synth?.cancel()
+    releaseAudio()
     setSpeaking(false)
     setActiveIndex(-1)
-  }, [synth])
+  }, [synth, releaseAudio])
 
-  /** Speak `text`, optionally starting from segment index `from` (for "play from here"). */
-  const speak = useCallback(
-    (text: string, from = 0) => {
+  const speakBrowser = useCallback(
+    (text: string, from: number) => {
       if (!synth) return
       const queue = parseAnnouncement(text)
       if (!queue.length) return
@@ -212,12 +260,85 @@ export function useAnnouncer() {
     [synth, voiceId, voices, tempo, intensity]
   )
 
+  const speakAzure = useCallback(
+    async (text: string) => {
+      if (!azureVoice) {
+        setAzureError('Vyberte hlas.')
+        return
+      }
+      const myGen = ++genRef.current
+      synth?.cancel()
+      releaseAudio()
+      setAzureError(null)
+      setActiveIndex(-1)
+      setSpeaking(true)
+
+      const ssml = buildSsml(text, {
+        voice: azureVoice,
+        locale: localeOf(azureVoice),
+        style: azureStyle || undefined,
+        tempo,
+        intensity,
+      })
+
+      try {
+        const blob = await announcerTtsApi.speak(ssml)
+        if (myGen !== genRef.current) return
+        const url = URL.createObjectURL(blob)
+        audioUrlRef.current = url
+        const a = audioRef.current ?? (audioRef.current = new Audio())
+        a.src = url
+        a.onended = () => {
+          if (myGen === genRef.current) setSpeaking(false)
+          releaseAudio()
+        }
+        a.onerror = () => {
+          if (myGen === genRef.current) {
+            setSpeaking(false)
+            setAzureError('Přehrávání se nezdařilo.')
+          }
+          releaseAudio()
+        }
+        await a.play()
+      } catch (e) {
+        if (myGen === genRef.current) {
+          setSpeaking(false)
+          setAzureError(errText(e))
+        }
+      }
+    },
+    [azureVoice, azureStyle, tempo, intensity, synth, releaseAudio]
+  )
+
+  /**
+   * Speak `text`. `from` (segment index, for "play from here") only applies to the browser
+   * engine — Azure renders the whole announcement in one request.
+   */
+  const speak = useCallback(
+    (text: string, from = 0) => {
+      if (engine === 'azure') void speakAzure(text)
+      else speakBrowser(text, from)
+    },
+    [engine, speakAzure, speakBrowser]
+  )
+
   return {
+    // engine
+    engine,
+    setEngine,
+    // browser engine
     supported: !!synth,
     hasCzechVoice: csVoices.length > 0,
     options,
     voiceId,
     setVoiceId,
+    // azure engine
+    azureVoice,
+    setAzureVoice,
+    azureStyle,
+    setAzureStyle,
+    azureError,
+    // shared
     tempo,
     setTempo,
     intensity,

@@ -265,6 +265,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAiCredentialResolver, AiCredentialResolver>();
         services.AddScoped<IAiUsageLogger, AiUsageLogger>();
 
+        // Azure AI Speech external TTS for the announcer (opt-in premium voice; BYOK
+        // region+key, encrypted with the same IAiCredentialProtector).
+        services.AddScoped<Services.Announcer.IAzureSpeechClient, Services.Announcer.AzureSpeechClient>();
+
         return services;
     }
 

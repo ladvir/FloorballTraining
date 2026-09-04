@@ -6,9 +6,18 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../utils/cn'
-import { announcerApi } from '../../api'
+import { announcerApi, announcerTtsApi } from '../../api'
+import type { AzureVoiceDto } from '../../types/domain.types'
 import { parseAnnouncement, type SegmentKind } from './announcerParse'
 import { useAnnouncer, INTENSITY_MIN, INTENSITY_MAX } from './useAnnouncer'
+
+const SELECT_CLASS =
+  'h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20'
+
+const errText = (e: unknown): string => {
+  const r = (e as { response?: { data?: unknown } })?.response?.data
+  return typeof r === 'string' && r ? r : (e as Error)?.message || 'Chyba.'
+}
 
 const LIB_KEY = 'flotr.announcer.lib' // legacy browser-only store — migrated to the server once
 const ROSTER_KEY = (team: 'home' | 'away') => `flotr.announcer.roster.${team}`
@@ -47,11 +56,18 @@ export function AnnouncerPage() {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const {
+    engine,
+    setEngine,
     supported,
     hasCzechVoice,
     options,
     voiceId,
     setVoiceId,
+    azureVoice,
+    setAzureVoice,
+    azureStyle,
+    setAzureStyle,
+    azureError,
     tempo,
     setTempo,
     intensity,
@@ -61,6 +77,8 @@ export function AnnouncerPage() {
     speak,
     stop,
   } = useAnnouncer()
+
+  const speakReady = engine === 'browser' ? supported : !!azureVoice
 
   const textRef = useRef<HTMLTextAreaElement>(null)
   const [text, setText] = useState('')
@@ -229,79 +247,109 @@ export function AnnouncerPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader title={t('announcer.title')} description={t('announcer.subtitle')} />
 
-      {!supported && (
+      {engine === 'browser' && !supported && (
         <Card className="mb-4 border-amber-200 bg-amber-50">
           <CardContent className="text-sm text-amber-800">{t('announcer.unsupported')}</CardContent>
         </Card>
       )}
-      {supported && !hasCzechVoice && (
+      {engine === 'browser' && supported && !hasCzechVoice && (
         <Card className="mb-4 border-amber-200 bg-amber-50">
           <CardContent className="text-sm text-amber-800">{t('announcer.noVoice')}</CardContent>
         </Card>
       )}
 
-      {/* Voice + tempo + dynamics */}
+      {/* Engine + voice + tempo + dynamics */}
       <Card className="mb-4">
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">{t('announcer.voice')}</span>
-            <select
-              value={voiceId}
-              onChange={(e) => setVoiceId(e.target.value)}
-              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            >
-              {options.length === 0 && <option value="">—</option>}
-              {options.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs text-gray-400">{t('announcer.voiceHint')}</span>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">
-              {t('announcer.tempo')} · {tempo.toFixed(2)}×
-            </span>
-            <input
-              type="range"
-              min={0.7}
-              max={1.4}
-              step={0.05}
-              value={tempo}
-              onChange={(e) => setTempo(Number(e.target.value))}
-              className="mt-2 w-full accent-sky-500"
+        <CardContent className="space-y-4">
+          {/* Engine toggle — both work side by side, this only picks which one speaks. */}
+          <div className="inline-flex rounded-lg border border-gray-300 p-0.5 text-sm">
+            {(['browser', 'azure'] as const).map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setEngine(e)}
+                className={cn(
+                  'rounded-md px-3 py-1 font-medium transition-colors',
+                  engine === e ? 'bg-sky-500 text-white' : 'text-gray-600 hover:bg-gray-100'
+                )}
+              >
+                {t(e === 'browser' ? 'announcer.tts.engineBrowser' : 'announcer.tts.engineAzure')}
+              </button>
+            ))}
+          </div>
+
+          {engine === 'browser' ? (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">{t('announcer.voice')}</span>
+              <select
+                value={voiceId}
+                onChange={(e) => setVoiceId(e.target.value)}
+                className={SELECT_CLASS}
+              >
+                {options.length === 0 && <option value="">—</option>}
+                {options.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-400">{t('announcer.voiceHint')}</span>
+            </label>
+          ) : (
+            <AzureTtsPanel
+              voice={azureVoice}
+              setVoice={setAzureVoice}
+              style={azureStyle}
+              setStyle={setAzureStyle}
             />
-            <span className="text-xs text-gray-400">{t('announcer.tempoHint')}</span>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">
-              {t('announcer.dynamics')} · {intensity.toFixed(1)}×
-            </span>
-            <input
-              type="range"
-              min={INTENSITY_MIN}
-              max={INTENSITY_MAX}
-              step={0.1}
-              value={intensity}
-              onChange={(e) => setIntensity(Number(e.target.value))}
-              className="mt-2 w-full accent-sky-500"
-            />
-            <span className="text-xs text-gray-400">{t('announcer.dynamicsHint')}</span>
-          </label>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">
+                {t('announcer.tempo')} · {tempo.toFixed(2)}×
+              </span>
+              <input
+                type="range"
+                min={0.7}
+                max={1.4}
+                step={0.05}
+                value={tempo}
+                onChange={(e) => setTempo(Number(e.target.value))}
+                className="mt-2 w-full accent-sky-500"
+              />
+              <span className="text-xs text-gray-400">{t('announcer.tempoHint')}</span>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">
+                {t('announcer.dynamics')} · {intensity.toFixed(1)}×
+              </span>
+              <input
+                type="range"
+                min={INTENSITY_MIN}
+                max={INTENSITY_MAX}
+                step={0.1}
+                value={intensity}
+                onChange={(e) => setIntensity(Number(e.target.value))}
+                className="mt-2 w-full accent-sky-500"
+              />
+              <span className="text-xs text-gray-400">{t('announcer.dynamicsHint')}</span>
+            </label>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <Button
           variant="outline"
           size="sm"
           onClick={() => speak(DEMO)}
-          disabled={!supported || speaking}
+          disabled={!speakReady || speaking}
         >
           <Volume2 className="h-4 w-4" />
           {t('announcer.testVoice')}
         </Button>
+        {azureError && <span className="text-xs text-red-500">{azureError}</span>}
       </div>
 
       {/* Help / legend */}
@@ -431,7 +479,7 @@ export function AnnouncerPage() {
 
       {/* Actions */}
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button onClick={readNow} disabled={!supported || speaking || !segments.length}>
+        <Button onClick={readNow} disabled={!speakReady || speaking || !segments.length}>
           <Play className="h-4 w-4" />
           {t('announcer.read')}
         </Button>
@@ -602,5 +650,172 @@ function RosterCard({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+/** ElevenLabs-style connect form + voice/style pickers for the Azure engine. */
+function AzureTtsPanel({
+  voice,
+  setVoice,
+  style,
+  setStyle,
+}: {
+  voice: string
+  setVoice: (v: string) => void
+  style: string
+  setStyle: (v: string) => void
+}) {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+
+  const { data: status, isLoading } = useQuery({
+    queryKey: ['announcer-tts-status'],
+    queryFn: announcerTtsApi.getStatus,
+  })
+  const configured = !!status?.configured
+
+  const { data: voices = [] } = useQuery({
+    queryKey: ['announcer-tts-voices'],
+    queryFn: announcerTtsApi.getVoices,
+    enabled: configured,
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const save = useMutation({
+    mutationFn: (v: { region: string; key: string }) => announcerTtsApi.saveKey(v.region, v.key),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['announcer-tts-status'] }),
+  })
+  const del = useMutation({
+    mutationFn: () => announcerTtsApi.deleteKey(),
+    onSuccess: () => {
+      setVoice('')
+      qc.invalidateQueries({ queryKey: ['announcer-tts-status'] })
+      qc.removeQueries({ queryKey: ['announcer-tts-voices'] })
+    },
+  })
+
+  const [region, setRegion] = useState('')
+  const [key, setKey] = useState('')
+
+  const sorted = useMemo(() => {
+    const rank = (v: AzureVoiceDto) =>
+      v.locale === 'cs-CZ' ? 0 : v.locale.startsWith('cs') ? 1 : 2
+    return [...voices].sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        a.locale.localeCompare(b.locale) ||
+        a.displayName.localeCompare(b.displayName)
+    )
+  }, [voices])
+
+  // Default to a Czech female voice once connected.
+  useEffect(() => {
+    if (!configured || !sorted.length) return
+    if (voice && sorted.some((v) => v.shortName === voice)) return
+    const pick =
+      sorted.find((v) => v.locale === 'cs-CZ' && v.gender === 'Female') ??
+      sorted.find((v) => v.locale === 'cs-CZ') ??
+      sorted[0]
+    setVoice(pick.shortName)
+  }, [configured, sorted, voice, setVoice])
+
+  const selected = voices.find((v) => v.shortName === voice)
+
+  if (isLoading) return <p className="text-sm text-gray-400">…</p>
+
+  if (!configured) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <p className="mb-2 text-sm font-medium text-gray-700">{t('announcer.tts.connectTitle')}</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            placeholder={t('announcer.tts.regionPlaceholder')}
+            className={SELECT_CLASS}
+            autoComplete="off"
+          />
+          <input
+            type="password"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder={t('announcer.tts.apiKeyPlaceholder')}
+            className={SELECT_CLASS}
+            autoComplete="off"
+          />
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <Button
+            size="sm"
+            disabled={!region.trim() || !key.trim() || save.isPending}
+            onClick={() => save.mutate({ region: region.trim(), key: key.trim() })}
+          >
+            {save.isPending ? t('announcer.tts.connecting') : t('announcer.tts.connect')}
+          </Button>
+          <a
+            href="https://portal.azure.com/#create/Microsoft.CognitiveServicesSpeechServices"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-sky-600 hover:underline"
+          >
+            {t('announcer.tts.getKeyHint')}
+          </a>
+        </div>
+        {save.isError && <p className="mt-1 text-xs text-red-500">{errText(save.error)}</p>}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          {t('announcer.tts.connected')}
+        </span>
+        <span>
+          {status?.region} · …{status?.keyLast4}
+        </span>
+        <button
+          type="button"
+          onClick={() => del.mutate()}
+          className="text-xs text-gray-400 hover:text-red-500"
+        >
+          {t('announcer.tts.disconnect')}
+        </button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-gray-700">{t('announcer.tts.azureVoice')}</span>
+          <select value={voice} onChange={(e) => setVoice(e.target.value)} className={SELECT_CLASS}>
+            {sorted.length === 0 && <option value="">—</option>}
+            {sorted.map((v) => (
+              <option key={v.shortName} value={v.shortName}>
+                {v.displayName} · {v.localeName}
+                {v.gender === 'Female' ? ' ♀' : v.gender === 'Male' ? ' ♂' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+        {selected && selected.styleList.length > 0 && (
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-gray-700">
+              {t('announcer.tts.azureStyle')}
+            </span>
+            <select
+              value={style}
+              onChange={(e) => setStyle(e.target.value)}
+              className={SELECT_CLASS}
+            >
+              <option value="">{t('announcer.tts.styleNone')}</option>
+              {selected.styleList.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+    </div>
   )
 }
