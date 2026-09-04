@@ -2425,7 +2425,12 @@
     "playerPlayer": "Player",
     "playerOpponent": "Opponent",
     "playerGoalkeeper": "Goalkeeper",
-    "playerCoach": "Coach"
+    "playerCoach": "Coach",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "lineStraight": "Straight",
+    "lineFreehand": "Freehand",
+    "lineFreehandRaw": "No smoothing"
   },
   "notifications": {
     "title": "Notifications",

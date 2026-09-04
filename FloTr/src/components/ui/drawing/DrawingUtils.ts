@@ -23,6 +23,16 @@ export function chaikinSmoothAggressive(
   return pts
 }
 
+/** Raw polyline through the given points — no smoothing. Mirrors pointsToSmoothPath's output shape. */
+export function pointsToPolylinePath(points: { x: number; y: number }[]) {
+  if (points.length < 2) return ''
+  let d = `M ${points[0].x},${points[0].y}`
+  for (let i = 1; i < points.length; i++) {
+    d += ` L ${points[i].x},${points[i].y}`
+  }
+  return d
+}
+
 export function pointsToSmoothPath(
   points: { x: number; y: number }[],
   iterations: number = 5,

@@ -2425,7 +2425,12 @@
     "playerPlayer": "Spieler",
     "playerOpponent": "Gegner",
     "playerGoalkeeper": "Torwart",
-    "playerCoach": "Trainer"
+    "playerCoach": "Trainer",
+    "fullscreen": "Vollbild",
+    "exitFullscreen": "Vollbild beenden",
+    "lineStraight": "Gerade",
+    "lineFreehand": "Freihand",
+    "lineFreehandRaw": "Ohne Glättung"
   },
   "notifications": {
     "title": "Benachrichtigungen",

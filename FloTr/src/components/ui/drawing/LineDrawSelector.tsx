@@ -8,6 +8,10 @@ export interface LineDrawConfig {
   dash: 'solid' | 'dotted' | 'dashed'
   thickness: number
   color: string
+  /** Draw the line freehand (follows the cursor) instead of a straight segment — used as a zone separator */
+  freehand: boolean
+  /** Freehand only: smooth the stroke (Chaikin). false = raw polyline through the sampled points. */
+  smooth: boolean
 }
 
 const DASH_OPTIONS: { id: LineDrawConfig['dash']; labelKey: string; dasharray: string }[] = [
@@ -34,12 +38,14 @@ export function configToMovementTool(config: LineDrawConfig): MovementTool {
   const dashObj = DASH_OPTIONS.find((d) => d.id === config.dash) ?? DASH_OPTIONS[0]
   return {
     category: 'movement',
-    toolId: `line-${config.dash}`,
+    // 'run-free' reuses the existing freehand draw/commit path in DrawingComponent
+    toolId: config.freehand ? 'run-free' : `line-${config.dash}`,
     label: `line`,
     stroke: config.color,
     strokeWidth: config.thickness,
     strokeDasharray: dashObj.dasharray,
     arrow: false,
+    smooth: config.smooth,
   }
 }
 
@@ -77,6 +83,8 @@ const LineDrawSelector: React.FC<Props> = ({
   const [dash, setDash] = useState<LineDrawConfig['dash']>(activeConfig?.dash ?? 'solid')
   const [thickness, setThickness] = useState(activeConfig?.thickness ?? 2)
   const [color, setColor] = useState(activeConfig?.color ?? '#000000')
+  const [freehand, setFreehand] = useState(activeConfig?.freehand ?? false)
+  const [smooth, setSmooth] = useState(activeConfig?.smooth ?? true)
 
   const clearOthers = useCallback(() => {
     setActivePlayerTool(null)
@@ -102,11 +110,13 @@ const LineDrawSelector: React.FC<Props> = ({
   ])
 
   const activate = useCallback(
-    (d: LineDrawConfig['dash'], th: number, c: string) => {
-      const config: LineDrawConfig = { dash: d, thickness: th, color: c }
+    (d: LineDrawConfig['dash'], th: number, c: string, fh: boolean, sm: boolean) => {
+      const config: LineDrawConfig = { dash: d, thickness: th, color: c, freehand: fh, smooth: sm }
       setDash(d)
       setThickness(th)
       setColor(c)
+      setFreehand(fh)
+      setSmooth(sm)
       clearOthers()
       setActiveSelectionTool(null)
       onActivate(config)
@@ -117,7 +127,7 @@ const LineDrawSelector: React.FC<Props> = ({
   // Auto-activate on mount (when dropdown opens)
   useEffect(() => {
     if (!activeConfig) {
-      activate(dash, thickness, color)
+      activate(dash, thickness, color, freehand, smooth)
     }
     // Only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +135,61 @@ const LineDrawSelector: React.FC<Props> = ({
 
   return (
     <div className="tool-group" style={{ minWidth: 200 }}>
+      {/* Straight vs freehand (separator) */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          display: 'flex',
+          gap: 4,
+          alignItems: 'center',
+          margin: '2px 0',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}
+      >
+        {[
+          { fh: false, sm: true, labelKey: 'drawing.lineStraight', d: 'M0 12 L40 0' },
+          {
+            fh: true,
+            sm: true,
+            labelKey: 'drawing.lineFreehand',
+            d: 'M1 10 Q 8 0, 15 7 T 30 4 T 39 9',
+          },
+          {
+            fh: true,
+            sm: false,
+            labelKey: 'drawing.lineFreehandRaw',
+            d: 'M1 10 L7 3 L13 9 L20 2 L27 10 L33 4 L39 9',
+          },
+        ].map((opt) => {
+          const active = freehand === opt.fh && (!opt.fh || smooth === opt.sm)
+          return (
+            <button
+              key={opt.labelKey}
+              className={active ? 'selected' : ''}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 8px',
+                borderRadius: 4,
+                cursor: 'pointer',
+                fontSize: 11,
+                border: active ? '2px solid #5c636a' : '1px solid #ccc',
+                background: active ? '#e0e0e0' : 'transparent',
+              }}
+              onClick={() => activate(dash, thickness, color, opt.fh, opt.sm)}
+              title={t(opt.labelKey)}
+            >
+              <svg width="40" height="12" viewBox="0 0 40 12">
+                <path d={opt.d} stroke="#333" strokeWidth={2} fill="none" />
+              </svg>
+              {t(opt.labelKey)}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Dash style */}
       <div
         onClick={(e) => e.stopPropagation()}
@@ -151,7 +216,7 @@ const LineDrawSelector: React.FC<Props> = ({
               border: dash === opt.id ? '2px solid #5c636a' : '1px solid #ccc',
               background: dash === opt.id ? '#e0e0e0' : 'transparent',
             }}
-            onClick={() => activate(opt.id, thickness, color)}
+            onClick={() => activate(opt.id, thickness, color, freehand, smooth)}
             title={t(opt.labelKey)}
           >
             <svg width="40" height="8" viewBox="0 0 40 8">
@@ -195,7 +260,7 @@ const LineDrawSelector: React.FC<Props> = ({
               background: thickness === th ? '#e0e0e0' : 'transparent',
               minWidth: 32,
             }}
-            onClick={() => activate(dash, th, color)}
+            onClick={() => activate(dash, th, color, freehand, smooth)}
             title={`${th}px`}
           >
             <svg width="32" height="12" viewBox="0 0 32 12">
@@ -232,7 +297,7 @@ const LineDrawSelector: React.FC<Props> = ({
               background: opt.color,
               padding: 0,
             }}
-            onClick={() => activate(dash, thickness, opt.color)}
+            onClick={() => activate(dash, thickness, opt.color, freehand, smooth)}
             title={t(opt.labelKey)}
           />
         ))}

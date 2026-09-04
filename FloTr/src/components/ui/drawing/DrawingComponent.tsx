@@ -29,7 +29,7 @@ import type {
   Frame,
   FramePositions,
 } from './DrawingTypes'
-import { pointsToSmoothPath } from './DrawingUtils'
+import { pointsToSmoothPath, pointsToPolylinePath } from './DrawingUtils'
 import PlayerLayer from './PlayerLayer'
 import EquipmentLayer from './EquipmentLayer'
 import LineLayer from './LineLayer'
@@ -146,6 +146,9 @@ const DrawingComponentInner = ({
     () => FieldOptions.find((f) => f.id === selectedFieldId),
     [selectedFieldId]
   )
+
+  // Fullscreen (CSS overlay — keeps portals/dropdowns working, unlike the native Fullscreen API)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // Drawing state
   const [drawing, setDrawing] = useState<boolean>(false)
@@ -1011,6 +1014,7 @@ const DrawingComponentInner = ({
           dash: activeDrawTool.strokeDasharray,
           strokeWidth: activeDrawTool.strokeWidth,
           arrow: activeDrawTool.arrow,
+          smooth: activeDrawTool.smooth,
         })
         setFreehandPoints([])
       } else if (activeDrawTool && startPoint) {
@@ -1333,6 +1337,16 @@ const DrawingComponentInner = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [textEditor])
 
+  // Escape leaves fullscreen (when not editing text — that Escape cancels the editor instead)
+  useEffect(() => {
+    if (!isFullscreen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !textEditor.editingText) setIsFullscreen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isFullscreen, textEditor.editingText])
+
   // Close text editor when switching to a different tool
   useEffect(() => {
     if (textEditor.editingText && !activeTextTool) {
@@ -1574,10 +1588,35 @@ const DrawingComponentInner = ({
   const displayLineDrawConfig = activeLineDrawConfig ?? lastLineDrawConfigRef.current
 
   return (
-    <div id="drawing-component">
+    <div id="drawing-component" className={isFullscreen ? 'fullscreen' : undefined}>
       {/* ===== TOP TOOLBAR ===== */}
       <div id="drawing-toolbar">
         <NewSelector onNew={handleNew} setActiveSelectionTool={setActiveSelectionTool} />
+        <div className="tool-item">
+          <button
+            className={isFullscreen ? 'selected' : ''}
+            onClick={() => setIsFullscreen((v) => !v)}
+            title={t(isFullscreen ? 'drawing.exitFullscreen' : 'drawing.fullscreen')}
+          >
+            <svg
+              width={32}
+              height={32}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {isFullscreen ? (
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3m8 0v-3a2 2 0 0 1 2-2h3" />
+              ) : (
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3" />
+              )}
+            </svg>
+          </button>
+          <span>{t(isFullscreen ? 'drawing.exitFullscreen' : 'drawing.fullscreen')}</span>
+        </div>
         {onSave && (
           <div className="tool-item">
             <button onClick={handleSaveToActivity} title={t('drawing.saveToActivity')}>
@@ -1713,7 +1752,11 @@ const DrawingComponentInner = ({
                 activeDrawTool.toolId === 'run-free' &&
                 freehandPoints.length > 1 && (
                   <path
-                    d={pointsToSmoothPath(freehandPoints, 5, 3)}
+                    d={
+                      activeDrawTool.smooth === false
+                        ? pointsToPolylinePath(freehandPoints)
+                        : pointsToSmoothPath(freehandPoints, 5, 3)
+                    }
                     fill="none"
                     stroke={activeDrawTool.stroke || 'black'}
                     strokeWidth={activeDrawTool.strokeWidth || 2}
@@ -2035,7 +2078,7 @@ const DrawingComponentInner = ({
       {previewSvg &&
         createPortal(
           <div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80"
+            className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80"
             onClick={() => setPreviewSvg(null)}
           >
             <button

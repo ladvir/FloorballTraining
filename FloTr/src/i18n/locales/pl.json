@@ -2425,7 +2425,12 @@
     "playerPlayer": "Zawodnik",
     "playerOpponent": "Przeciwnik",
     "playerGoalkeeper": "Bramkarz",
-    "playerCoach": "Trener"
+    "playerCoach": "Trener",
+    "fullscreen": "Pełny ekran",
+    "exitFullscreen": "Zamknij pełny ekran",
+    "lineStraight": "Prosto",
+    "lineFreehand": "Odręcznie",
+    "lineFreehandRaw": "Bez wygładzania"
   },
   "notifications": {
     "title": "Powiadomienia",

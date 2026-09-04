@@ -6,6 +6,8 @@ export type MovementTool = {
   strokeWidth: number
   strokeDasharray: string
   arrow: boolean
+  /** Freehand ('run-free') only: false = raw polyline, no Chaikin smoothing. undefined/true = smoothed. */
+  smooth?: boolean
 }
 
 const RUN_STROKE_DASH = '6,4'

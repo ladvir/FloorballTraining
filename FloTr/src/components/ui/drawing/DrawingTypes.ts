@@ -37,6 +37,8 @@ export type FreehandLine = {
   dash: string
   strokeWidth: number
   arrow: boolean
+  /** false = render as a raw polyline (no Chaikin smoothing). undefined/true = smoothed (default). */
+  smooth?: boolean
 }
 
 export type TextItem = {

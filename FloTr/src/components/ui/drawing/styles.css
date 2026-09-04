@@ -7,6 +7,15 @@
   overflow: hidden;
 }
 
+#drawing-component.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+}
+
 #drawing-canvas-wrapper {
   flex: 1 1 0;
   min-height: 0;

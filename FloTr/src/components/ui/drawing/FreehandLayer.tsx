@@ -1,6 +1,6 @@
 import React from 'react'
 import type { FreehandLine } from './DrawingTypes'
-import { pointsToSmoothPath } from './DrawingUtils'
+import { pointsToSmoothPath, pointsToPolylinePath } from './DrawingUtils'
 
 interface FreehandLayerProps {
   freehandLines: FreehandLine[]
@@ -37,7 +37,11 @@ const FreehandLayer: React.FC<FreehandLayerProps> = ({
             <path
               id={'line' + i}
               key={i}
-              d={pointsToSmoothPath(l.points, 5, 5)}
+              d={
+                l.smooth === false
+                  ? pointsToPolylinePath(l.points)
+                  : pointsToSmoothPath(l.points, 5, 5)
+              }
               fill="none"
               stroke={l.color || 'black'}
               strokeWidth={l.strokeWidth || 2}

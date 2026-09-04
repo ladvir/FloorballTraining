@@ -2426,7 +2426,12 @@
     "playerPlayer": "Hráč",
     "playerOpponent": "Protivník",
     "playerGoalkeeper": "Brankář",
-    "playerCoach": "Trenér"
+    "playerCoach": "Trenér",
+    "fullscreen": "Celá obrazovka",
+    "exitFullscreen": "Ukončit celou obrazovku",
+    "lineStraight": "Rovně",
+    "lineFreehand": "Volně",
+    "lineFreehandRaw": "Bez vyhlazení"
   },
   "notifications": {
     "title": "Oznámení",
