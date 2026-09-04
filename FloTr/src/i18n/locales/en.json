@@ -2440,6 +2440,8 @@
     "noVoice": "Install a Czech system voice (Windows: Settings → Time & language → Speech).",
     "voice": "Voice",
     "tempo": "Tempo",
+    "dynamics": "Dynamics",
+    "dynamicsHint": "How strong emphasis, excitement and chants are",
     "text": "Announcement text",
     "textPlaceholder": "Type the announcement…\n\n*emphasis*  !excited!  ALLCAPS = chant\n//  = pause\n[DOMÁCÍ]  [HOSTÉ] = read a roster",
     "read": "Read",
@@ -2462,13 +2464,13 @@
     "loadFile": "Load file",
     "helpTitle": "Dynamics & rosters",
     "help": {
-      "emphasis": "Emphasis — slower, higher",
-      "excited": "Excited — fast, very high",
-      "chant": "Chant — fast, high (3+ capital letters)",
+      "emphasis": "Emphasis — slow, walled off by silence",
+      "excited": "Excited — fast, high, forced exclamation",
+      "chant": "Chant — each word punched out (3+ capital letters)",
       "pause": "Pause",
       "home": "reads the whole home roster",
       "away": "reads the whole away roster",
-      "note": "Delivery is driven solely by these markers. Volume is always at maximum."
+      "note": "Delivery is driven by the markers and the Dynamics slider. Volume is at maximum (the body is ducked slightly so markers stand out)."
     },
     "toolbar": {
       "emphasis": "Emphasis (Ctrl/⌘+B)",

@@ -2440,6 +2440,8 @@
     "noVoice": "Installieren Sie eine tschechische Systemstimme (Windows: Einstellungen → Zeit und Sprache → Sprache).",
     "voice": "Stimme",
     "tempo": "Tempo",
+    "dynamics": "Dynamik",
+    "dynamicsHint": "Stärke von Betonung, Begeisterung und Sprechchor",
     "text": "Durchsagetext",
     "textPlaceholder": "Durchsage eingeben…\n\n*Betonung*  !Begeisterung!  GROSS = Sprechchor\n//  = Pause\n[DOMÁCÍ]  [HOSTÉ] = Aufstellung vorlesen",
     "read": "Vorlesen",
@@ -2462,13 +2464,13 @@
     "loadFile": "Datei laden",
     "helpTitle": "Dynamik & Aufstellungen",
     "help": {
-      "emphasis": "Betonung – langsamer, höher",
-      "excited": "Begeisterung – schnell, sehr hoch",
-      "chant": "Sprechchor – schnell, hoch (3+ Großbuchstaben)",
+      "emphasis": "Betonung – langsam, von Stille umrahmt",
+      "excited": "Begeisterung – schnell, hoch, mit Ausrufezeichen",
+      "chant": "Sprechchor – jedes Wort einzeln, abgehackt (3+ Großbuchstaben)",
       "pause": "Pause",
       "home": "liest die gesamte Heimaufstellung",
       "away": "liest die gesamte Gastaufstellung",
-      "note": "Die Dynamik steuern ausschließlich diese Markierungen. Die Lautstärke ist immer auf Maximum."
+      "note": "Die Dynamik steuern die Markierungen und der Regler „Dynamik“. Die Lautstärke ist auf Maximum (der Fließtext wird leicht abgesenkt, damit die Markierungen hervortreten)."
     },
     "toolbar": {
       "emphasis": "Betonung (Strg/⌘+B)",

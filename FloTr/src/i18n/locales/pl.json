@@ -2440,6 +2440,8 @@
     "noVoice": "Zainstaluj w systemie czeski głos (Windows: Ustawienia → Czas i język → Mowa).",
     "voice": "Głos",
     "tempo": "Tempo",
+    "dynamics": "Dynamika",
+    "dynamicsHint": "Siła nacisku, entuzjazmu i skandowania",
     "text": "Treść komunikatu",
     "textPlaceholder": "Wpisz komunikat…\n\n*nacisk*  !entuzjazm!  WIELKIE = skandowanie\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = odczytają skład",
     "read": "Odczytaj",
@@ -2462,13 +2464,13 @@
     "loadFile": "Wczytaj plik",
     "helpTitle": "Dynamika i składy",
     "help": {
-      "emphasis": "Nacisk – wolniej, wyżej",
-      "excited": "Entuzjazm – szybko, bardzo wysoko",
-      "chant": "Skandowanie – szybko, wysoko (3+ wielkie litery)",
+      "emphasis": "Nacisk – wolno, oddzielony ciszą",
+      "excited": "Entuzjazm – szybko, wysoko, z wykrzyknikiem",
+      "chant": "Skandowanie – każde słowo osobno, urywanie (3+ wielkie litery)",
       "pause": "Pauza",
       "home": "odczytuje cały skład gospodarzy",
       "away": "odczytuje cały skład gości",
-      "note": "Dynamiką sterują wyłącznie te znaczniki. Głośność jest zawsze maksymalna."
+      "note": "Dynamiką sterują znaczniki i suwak Dynamika. Głośność jest maksymalna (tło jest lekko ściszone, aby znaczniki się wybijały)."
     },
     "toolbar": {
       "emphasis": "Nacisk (Ctrl/⌘+B)",

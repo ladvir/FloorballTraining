@@ -18,6 +18,12 @@ const VARIANTS: readonly (readonly [string, number, number])[] = [
 
 const VOICE_KEY = 'flotr.announcer.voice'
 const TEMPO_KEY = 'flotr.announcer.tempo'
+const INTENSITY_KEY = 'flotr.announcer.intensity'
+
+/** Dynamics slider range: 1 = as authored, 3 = pushed hard. Default is already strong. */
+export const INTENSITY_MIN = 1
+export const INTENSITY_MAX = 3
+const INTENSITY_DEFAULT = 1.8
 
 const readLS = (k: string) => {
   try {
@@ -36,7 +42,8 @@ const writeLS = (k: string, v: string) => {
 
 /**
  * Web Speech wrapper for the announcer page. Czech voices only (+ 3 pitch/rate
- * variants), a global tempo multiplier, karaoke `activeIndex`, and the usual
+ * variants), a global tempo multiplier, a dynamics multiplier that widens the
+ * per-segment rate/pitch/silence deltas, karaoke `activeIndex`, and the usual
  * Chrome workarounds (cancel-on-mount, 50 ms first-utterance delay, resume heartbeat).
  */
 export function useAnnouncer() {
@@ -44,6 +51,9 @@ export function useAnnouncer() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [voiceId, setVoiceId] = useState<string>(() => readLS(VOICE_KEY) ?? '')
   const [tempo, setTempo] = useState<number>(() => Number(readLS(TEMPO_KEY)) || 1)
+  const [intensity, setIntensity] = useState<number>(
+    () => Number(readLS(INTENSITY_KEY)) || INTENSITY_DEFAULT
+  )
   const [speaking, setSpeaking] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const genRef = useRef(0)
@@ -86,6 +96,9 @@ export function useAnnouncer() {
   useEffect(() => {
     writeLS(TEMPO_KEY, String(tempo))
   }, [tempo])
+  useEffect(() => {
+    writeLS(INTENSITY_KEY, String(intensity))
+  }, [intensity])
 
   // Chrome silently stops speech after ~15 s and sometimes never fires `onend`;
   // a periodic resume() while speaking is the standard workaround.
@@ -125,6 +138,13 @@ export function useAnnouncer() {
       const pitchAdj = parseFloat(p) || 1
       const rateAdj = (parseFloat(r) || 1) * tempo
 
+      // The dynamics slider widens each segment's deviation from neutral.
+      const shape = (base: number) => 1 + (base - 1) * intensity
+      const gap = (ms: number | undefined) => Math.round((ms ?? 0) * intensity)
+      // Duck the body a touch so marked phrases pop louder (only when there's contrast to show).
+      const hasDynamics = queue.some((s) => s.kind !== 'plain' && s.kind !== 'pause')
+      const plainVolume = hasDynamics ? clamp(1 - 0.12 * intensity, 0.55, 1) : 1
+
       setSpeaking(true)
       let i = clamp(from, 0, queue.length - 1)
 
@@ -139,26 +159,38 @@ export function useAnnouncer() {
         const seg = queue[idx]
         setActiveIndex(idx)
         if (seg.kind === 'pause') {
-          window.setTimeout(next, seg.pauseMs ?? 500)
+          window.setTimeout(next, gap(seg.pauseMs ?? 500))
           return
         }
-        const u = new SpeechSynthesisUtterance(seg.text)
-        if (voice) {
-          u.voice = voice
-          u.lang = voice.lang
-        } else {
-          u.lang = 'cs-CZ'
+        const go = () => {
+          if (myGen !== genRef.current) return
+          const u = new SpeechSynthesisUtterance(seg.speak ?? seg.text)
+          if (voice) {
+            u.voice = voice
+            u.lang = voice.lang
+          } else {
+            u.lang = 'cs-CZ'
+          }
+          // Rate floor 0.5 keeps a heavily-slowed emphasis intelligible.
+          u.rate = clamp(rateAdj * shape(seg.rate), 0.5, 2.5)
+          u.pitch = clamp(pitchAdj * shape(seg.pitch), 0, 2)
+          u.volume = seg.kind === 'plain' ? plainVolume : 1
+          const after = () => {
+            const g = gap(seg.gapAfterMs)
+            if (g) window.setTimeout(next, g)
+            else next()
+          }
+          u.onend = after
+          u.onerror = after
+          synth.speak(u)
         }
-        u.rate = clamp(rateAdj * seg.rate, 0.1, 3)
-        u.pitch = clamp(pitchAdj * seg.pitch, 0, 2)
-        u.volume = 1 // Web Speech caps here
-        u.onend = next
-        u.onerror = next
-        synth.speak(u)
+        const before = gap(seg.gapBeforeMs)
+        if (before) window.setTimeout(go, before)
+        else go()
       }
       window.setTimeout(next, 50) // Chrome drops the first utterance right after cancel()
     },
-    [synth, voiceId, voices, tempo]
+    [synth, voiceId, voices, tempo, intensity]
   )
 
   return {
@@ -169,6 +201,8 @@ export function useAnnouncer() {
     setVoiceId,
     tempo,
     setTempo,
+    intensity,
+    setIntensity,
     speaking,
     activeIndex,
     speak,

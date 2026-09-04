@@ -38,4 +38,23 @@ describe('parseAnnouncement', () => {
     expect(seg.length).toBeGreaterThan(1)
     expect(seg.every((s) => s.text.length <= 220)).toBe(true)
   })
+
+  it('frames a marked phrase with silence and reshapes the spoken string', () => {
+    const [emph] = parseAnnouncement('*Pozor*')
+    expect(emph.gapBeforeMs).toBeGreaterThan(0)
+    expect(emph.gapAfterMs).toBeGreaterThan(0)
+    expect(emph.speak).toBe('Pozor,') // trailing comma -> engine slows & stresses
+
+    const [exc] = parseAnnouncement('!teď!')
+    expect(exc.speak).toBe('teď!') // forced exclamation
+    expect(exc.gapAfterMs).toBeGreaterThan(0)
+  })
+
+  it('breaks a chant into one punched-out segment per word', () => {
+    const seg = parseAnnouncement('HRAJEME HRAJEME')
+    expect(seg).toHaveLength(2)
+    expect(seg.every((s) => s.kind === 'chant' && s.speak === `${s.text}!`)).toBe(true)
+    expect(seg[0].text).toBe('hrajeme')
+    expect(seg[0].gapAfterMs).toBeGreaterThan(0)
+  })
 })

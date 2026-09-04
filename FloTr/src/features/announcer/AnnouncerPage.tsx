@@ -6,7 +6,7 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../utils/cn'
 import { parseAnnouncement, type SegmentKind } from './announcerParse'
-import { useAnnouncer } from './useAnnouncer'
+import { useAnnouncer, INTENSITY_MIN, INTENSITY_MAX } from './useAnnouncer'
 
 const LIB_KEY = 'flotr.announcer.lib'
 const ROSTER_KEY = (team: 'home' | 'away') => `flotr.announcer.roster.${team}`
@@ -38,12 +38,12 @@ const getLib = (): LibItem[] => {
   }
 }
 
-// Preview tint per dynamic — FloTr palette.
+// Preview tint per dynamic — FloTr palette, styled to hint at how it will sound.
 const KIND_CLASS: Record<SegmentKind, string> = {
   plain: 'text-gray-700',
-  emphasis: 'bg-sky-100 text-sky-800',
-  excited: 'bg-amber-100 text-amber-800',
-  chant: 'bg-violet-100 text-violet-800',
+  emphasis: 'bg-sky-100 text-sky-800 font-semibold tracking-wide',
+  excited: 'bg-amber-100 text-amber-800 font-bold italic',
+  chant: 'bg-violet-100 text-violet-800 font-bold uppercase tracking-tight',
   pause: 'bg-gray-100 text-gray-400',
 }
 
@@ -57,6 +57,8 @@ export function AnnouncerPage() {
     setVoiceId,
     tempo,
     setTempo,
+    intensity,
+    setIntensity,
     speaking,
     activeIndex,
     speak,
@@ -191,9 +193,9 @@ export function AnnouncerPage() {
         </Card>
       )}
 
-      {/* Voice + tempo */}
+      {/* Voice + tempo + dynamics */}
       <Card className="mb-4">
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid gap-4 sm:grid-cols-3">
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">{t('announcer.voice')}</span>
             <select
@@ -222,6 +224,21 @@ export function AnnouncerPage() {
               onChange={(e) => setTempo(Number(e.target.value))}
               className="mt-2 w-full accent-sky-500"
             />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-gray-700">
+              {t('announcer.dynamics')} · {intensity.toFixed(1)}×
+            </span>
+            <input
+              type="range"
+              min={INTENSITY_MIN}
+              max={INTENSITY_MAX}
+              step={0.1}
+              value={intensity}
+              onChange={(e) => setIntensity(Number(e.target.value))}
+              className="mt-2 w-full accent-sky-500"
+            />
+            <span className="text-xs text-gray-400">{t('announcer.dynamicsHint')}</span>
           </label>
         </CardContent>
       </Card>

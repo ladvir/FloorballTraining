@@ -2441,6 +2441,8 @@
     "noVoice": "Nainstalujte v systému český hlas (Windows: Nastavení → Čas a jazyk → Řeč).",
     "voice": "Hlas",
     "tempo": "Tempo",
+    "dynamics": "Dynamika",
+    "dynamicsHint": "Síla důrazů, nadšení a skandování",
     "text": "Text hlášení",
     "textPlaceholder": "Napište hlášení…\n\n*důraz*  !nadšení!  VELKÁ = skandování\n//  = pauza\n[DOMÁCÍ]  [HOSTÉ] = přečtou soupisku",
     "read": "Přečíst",
@@ -2463,13 +2465,13 @@
     "loadFile": "Načíst soubor",
     "helpTitle": "Dynamika a soupisky",
     "help": {
-      "emphasis": "Důraz – pomalu, výš",
-      "excited": "Nadšení – rychle, hodně vysoko",
-      "chant": "Skandování – rychle, vysoko (3+ velkých písmen)",
+      "emphasis": "Důraz – pomalu, oddělené tichem",
+      "excited": "Nadšení – rychle, vysoko, s vykřičníkem",
+      "chant": "Skandování – každé slovo zvlášť, úsečně (3+ velkých písmen)",
       "pause": "Pauza",
       "home": "přečte celou soupisku domácích",
       "away": "přečte celou soupisku hostů",
-      "note": "Dynamiku řídí výhradně tyto značky. Hlasitost je vždy na maximu."
+      "note": "Dynamiku řídí značky a posuvník Dynamika. Hlasitost je na maximu (pozadí je mírně ztlumené, aby značky vynikly)."
     },
     "toolbar": {
       "emphasis": "Důraz (Ctrl/⌘+B)",

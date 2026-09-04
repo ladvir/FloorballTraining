@@ -12,15 +12,15 @@ bez backendu, bez rolí – dostupné každému přihlášenému uživateli.
 
 ## Analýza původní aplikace
 
-| Část | Původní (`hlasatel/`) | Ve FloTr |
-|---|---|---|
-| Engine | `speechSynthesis` (Web Speech API) | beze změny |
-| Značky dynamiky | `*důraz*`, `!nadšení!`, `VELKÁ` (3+) | beze změny + nově `//` pauza |
-| Soupisky | 2× localStorage, `[DOMÁCÍ]` / `[HOSTÉ]` expanze | beze změny |
-| Knihovna hlášení | localStorage | beze změny (klíče `flotr.announcer.*`) |
-| Hlasy | jen české + 3 varianty (základ / vyšší / nižší) | beze změny |
-| PWA (`sw.js`, manifest, ikona) | vlastní | zahozeno – FloTr má vlastní |
-| Design | tmavé jednoduché CSS | přepsáno na FloTr (`PageHeader`, `Card`, `Button`, Tailwind, světlý motiv) |
+| Část                           | Původní (`hlasatel/`)                           | Ve FloTr                                                                   |
+| ------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| Engine                         | `speechSynthesis` (Web Speech API)              | beze změny                                                                 |
+| Značky dynamiky                | `*důraz*`, `!nadšení!`, `VELKÁ` (3+)            | výrazně zesíleno (viz níže) + nově `//` pauza                              |
+| Soupisky                       | 2× localStorage, `[DOMÁCÍ]` / `[HOSTÉ]` expanze | beze změny                                                                 |
+| Knihovna hlášení               | localStorage                                    | beze změny (klíče `flotr.announcer.*`)                                     |
+| Hlasy                          | jen české + 3 varianty (základ / vyšší / nižší) | beze změny                                                                 |
+| PWA (`sw.js`, manifest, ikona) | vlastní                                         | zahozeno – FloTr má vlastní                                                |
+| Design                         | tmavé jednoduché CSS                            | přepsáno na FloTr (`PageHeader`, `Card`, `Button`, Tailwind, světlý motiv) |
 
 ## Jak číst text lépe (implementováno)
 
@@ -34,18 +34,38 @@ bez backendu, bez rolí – dostupné každému přihlášenému uživateli.
 4. **Explicitní pauza** – `//` (nebo `[pauza]` / `[pause]`) vloží 550 ms ticha;
    užitečné mezi jmény v soupisce a před vyvrcholením hlášení.
 
+### Skutečně znatelná dynamika
+
+Web Speech `pitch` **spousta neuronových hlasů ignoruje** a `rate` ořezává do
+úzkého pásma → jemné násobení pitch/rate bylo neslyšet. Nový přístup dělá
+dynamiku slyšitelnou **nezávisle na hlase**:
+
+- **Velký kontrast `rate`** – důraz 0,55 vs. nadšení 1,7 vs. skandování 1,5
+  (dřív 0,82 vs. 1,35). Podlaha 0,5 drží srozumitelnost.
+- **Ostrůvky ticha** – každá značka je z obou stran orámovaná skutečnou pauzou
+  (`gapBeforeMs` / `gapAfterMs`), škálovanou posuvníkem Dynamika. „Všechno
+  ztichne → pomalé slovo → ticho → tok pokračuje" = slyšitelný důraz.
+- **Přetvarování textu** – důraz dostane koncovou `,` (engine sám zpomalí a
+  zdůrazní), nadšení `!`, skandování se rozseká na jednotlivá slova, každé
+  s `!` a krátkou mezerou → úsečné „ská-!-lo-!-vá-!-ní".
+- **Ztlumení pozadí** – běžný text jede na ~0,78 hlasitosti, značky na 1,0
+  → značky „vyskočí" (jen když v hlášení nějaké značky jsou).
+- **Posuvník Dynamika** (`useAnnouncer` `intensity`, 1–3×, default 1,8) roztahuje
+  odchylky rate/pitch i délku ticha. `pitch` se pořád nastavuje jako bonus pro
+  hlasy, které ho respektují.
+
 ## Podbarvení čteného textu (implementováno)
 
 Pod textovým polem je **náhled ve stylu karaoke**: text se vykreslí jako řetěz
 segmentů, každý s tónem podle dynamiky –
 
-| kind | význam | třída |
-|---|---|---|
-| `plain` | běžný text | `text-gray-700` |
-| `emphasis` (`*…*`) | pomalu, výš | `bg-sky-100 text-sky-800` |
-| `excited` (`!…!`) | rychle, hodně vysoko | `bg-amber-100 text-amber-800` |
-| `chant` (VELKÁ) | skandování | `bg-violet-100 text-violet-800` |
-| `pause` (`//`) | ticho | `bg-gray-100 text-gray-400`, značka `‖` |
+| kind               | význam               | třída                                   |
+| ------------------ | -------------------- | --------------------------------------- |
+| `plain`            | běžný text           | `text-gray-700`                         |
+| `emphasis` (`*…*`) | pomalu, výš          | `bg-sky-100 text-sky-800`               |
+| `excited` (`!…!`)  | rychle, hodně vysoko | `bg-amber-100 text-amber-800`           |
+| `chant` (VELKÁ)    | skandování           | `bg-violet-100 text-violet-800`         |
+| `pause` (`//`)     | ticho                | `bg-gray-100 text-gray-400`, značka `‖` |
 
 Právě čtený segment má `ring-2 ring-sky-500`. Klik na segment spustí čtení
 **od tohoto místa** (`speak(text, fromIndex)`).

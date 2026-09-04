@@ -3,30 +3,45 @@
 // Authoring markers control delivery. Wrap a phrase in a matched pair; the inner
 // text may not start or end with a space, so a lone "!" as sentence punctuation
 // is NOT a marker.
-//   *emphasis*    -> slower, higher pitch
-//   !excited!     -> faster, much higher pitch
-//   ALLCAPS (3+)  -> chant: fast, high pitch, lowercased
+//   *emphasis*    -> slow + isolated by silence, said deliberately
+//   !excited!     -> fast + higher, "!" forced so the engine adds excitement
+//   ALLCAPS (3+)  -> chant: each word punched out staccato, "!" per word, lowercased
 //   //            -> explicit pause (also [pauza] / [pause])
-// Volume is always max — the Web Speech API caps it at 1.0.
+//
+// Web Speech honours `rate` on almost every voice but many neural voices ignore
+// `pitch` and clamp `rate` to a narrow band — so the *audible* dynamics come from
+// (a) big rate contrast, (b) real silence framing each marked phrase, and
+// (c) reshaping the spoken string (trailing "," / "!", per-word chant) so the
+// engine's own prosody model does the work. `pitch` is still set as a bonus.
 
 export type SegmentKind = 'plain' | 'emphasis' | 'excited' | 'chant' | 'pause'
 
 export interface Segment {
-  /** Text handed to the synthesizer (already lowercased for a chant). Empty for a pause. */
+  /** Text shown in the preview. */
   text: string
+  /** String actually handed to the synthesizer, when it differs from `text`. */
+  speak?: string
   kind: SegmentKind
   rate: number
   pitch: number
   /** kind === 'pause' only: silent gap in milliseconds. */
   pauseMs?: number
+  /** Silence inserted before / after this segment (scaled by the Dynamics slider). */
+  gapBeforeMs?: number
+  gapAfterMs?: number
 }
 
 /** Delivery profiles — the single place to tune the dynamics. */
-export const DYNAMICS: Record<'emphasis' | 'excited' | 'chant', { rate: number; pitch: number }> = {
-  emphasis: { rate: 0.82, pitch: 1.45 },
-  excited: { rate: 1.35, pitch: 1.75 },
-  chant: { rate: 1.25, pitch: 1.55 },
+export const DYNAMICS: Record<
+  'emphasis' | 'excited' | 'chant',
+  { rate: number; pitch: number; gapBeforeMs: number; gapAfterMs: number }
+> = {
+  emphasis: { rate: 0.55, pitch: 1.6, gapBeforeMs: 420, gapAfterMs: 420 },
+  excited: { rate: 1.7, pitch: 1.9, gapBeforeMs: 120, gapAfterMs: 240 },
+  chant: { rate: 1.5, pitch: 1.75, gapBeforeMs: 220, gapAfterMs: 260 },
 }
+/** Gap between the words of a chant. */
+const CHANT_WORD_GAP = 140
 
 const PAUSE_MS = 550
 /** Split anything longer than this so Chrome's ~15 s TTS cutoff can't truncate a segment. */
@@ -79,6 +94,50 @@ function pushPlain(text: string, out: Segment[]): void {
   }
 }
 
+function pushEmphasis(inner: string, out: Segment[]): void {
+  const d = DYNAMICS.emphasis
+  out.push({
+    text: inner,
+    speak: /[.,;:!?…]$/.test(inner) ? inner : `${inner},`, // trailing comma → the engine slows & stresses
+    kind: 'emphasis',
+    rate: d.rate,
+    pitch: d.pitch,
+    gapBeforeMs: d.gapBeforeMs,
+    gapAfterMs: d.gapAfterMs,
+  })
+}
+
+function pushExcited(inner: string, out: Segment[]): void {
+  const d = DYNAMICS.excited
+  out.push({
+    text: inner,
+    speak: /[!?…]$/.test(inner) ? inner : `${inner}!`,
+    kind: 'excited',
+    rate: d.rate,
+    pitch: d.pitch,
+    gapBeforeMs: d.gapBeforeMs,
+    gapAfterMs: d.gapAfterMs,
+  })
+}
+
+function pushChant(raw: string, out: Segment[]): void {
+  const d = DYNAMICS.chant
+  const words = raw.replace(/\s+/g, ' ').trim().toLowerCase().split(' ').filter(Boolean)
+  words.forEach((w, i) => {
+    out.push({
+      text: w,
+      speak: `${w}!`, // punched out, one word at a time
+      kind: 'chant',
+      rate: d.rate,
+      pitch: d.pitch,
+      // Only the leading edge carries the block gap; inner words are spaced by the
+      // previous word's gapAfter alone (no double-count between words).
+      gapBeforeMs: i === 0 ? d.gapBeforeMs : 0,
+      gapAfterMs: i === words.length - 1 ? d.gapAfterMs : CHANT_WORD_GAP,
+    })
+  })
+}
+
 function parseChunk(input: string, out: Segment[]): void {
   let last = 0
   let m: RegExpExecArray | null
@@ -86,14 +145,9 @@ function parseChunk(input: string, out: Segment[]): void {
   while ((m = TOKEN.exec(input))) {
     if (m.index > last) pushPlain(input.slice(last, m.index), out)
     const s = m[0]
-    if (s[0] === '*') out.push({ text: s.slice(1, -1), kind: 'emphasis', ...DYNAMICS.emphasis })
-    else if (s[0] === '!') out.push({ text: s.slice(1, -1), kind: 'excited', ...DYNAMICS.excited })
-    else
-      out.push({
-        text: s.replace(/\s+/g, ' ').trim().toLowerCase(),
-        kind: 'chant',
-        ...DYNAMICS.chant,
-      })
+    if (s[0] === '*') pushEmphasis(s.slice(1, -1), out)
+    else if (s[0] === '!') pushExcited(s.slice(1, -1), out)
+    else pushChant(s, out)
     last = m.index + s.length
   }
   if (last < input.length) pushPlain(input.slice(last), out)
