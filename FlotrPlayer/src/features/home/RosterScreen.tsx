@@ -9,6 +9,7 @@ import { Icon } from '../../components/Icon'
 import { PickerModal } from '../../components/PickerModal'
 import { Screen } from '../../components/Screen'
 import { EmptyState, ErrorState, LoadingState } from '../../components/StatusView'
+import { TeamLeaderboardCard } from '../../components/TeamLeaderboardCard'
 import { playerSkillsApi, xpApi } from '../../api'
 import { t, type StringKey } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
@@ -164,6 +165,9 @@ export function RosterScreen() {
             <Text style={styles.potmXp}>{t('leaderboard.recentXp', { xp: String(potm.recentXp) })}</Text>
           </GlassCard>
         )}
+
+        {/* Team-vs-team leaderboard (#156) — collapsible, doesn't disturb the player list. */}
+        <TeamLeaderboardCard />
 
         <View style={styles.searchRow}>
           <Icon name="search-outline" size={18} color={colors.textMuted} />

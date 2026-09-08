@@ -9,6 +9,7 @@ import { Icon } from '../../components/Icon'
 import { RatingWidget } from '../../components/RatingWidget'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
+import { TeamChallengesSection } from '../../components/TeamChallengesSection'
 import { VideoPlayer } from '../../components/VideoPlayer'
 import { appointmentsApi, playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
@@ -60,6 +61,17 @@ export function EventsScreen() {
             onPress={() => (navigation as any).navigate('HomeTraining', { memberId })}
           />
         )}
+
+        {/* Read-only team-challenge board(s) for the teams the player has upcoming events with (#156). */}
+        {[
+          ...new Set(
+            (eventsQuery.data ?? [])
+              .map((a) => a.teamId)
+              .filter((id): id is number => id != null),
+          ),
+        ].map((teamId) => (
+          <TeamChallengesSection key={teamId} teamId={teamId} />
+        ))}
 
         <Text style={styles.sectionTitle}>{t('events.upcoming')}</Text>
 
@@ -195,6 +207,18 @@ function EventRow({
         <Pressable style={styles.awardButton} onPress={openAwards}>
           <Icon name="trophy-outline" size={14} color={colors.accent} />
           <Text style={styles.awardButtonText}>{t('coachAwards.title')}</Text>
+        </Pressable>
+      )}
+
+      {canAward && (
+        <Pressable
+          style={styles.awardButton}
+          onPress={() =>
+            (navigation as any).navigate('TeamChallenges', { teamId: appointment.teamId })
+          }
+        >
+          <Icon name="flag-outline" size={14} color={colors.accent} />
+          <Text style={styles.awardButtonText}>{t('teamChallenge.manage')}</Text>
         </Pressable>
       )}
 

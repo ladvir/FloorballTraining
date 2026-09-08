@@ -314,6 +314,69 @@ export interface ChallengesDto {
   recentlyCompleted: ChallengeDto[]
 }
 
+/** A coach-authored team challenge (#156) with live current-window progress. Name/desc are free text. */
+export interface TeamChallengeDto {
+  id: number
+  teamId: number
+  name: string
+  description: string | null
+  isManual: boolean
+  /** ChallengeMetric name, or null for a manual challenge. */
+  metric: string | null
+  target: number
+  /** "Week" | "Month" | "Season" | "Custom". */
+  window: string
+  startsOn: string | null
+  endsOn: string | null
+  rewardXp: number
+  isActive: boolean
+  periodKey: string | null
+  current: number
+  progress: number
+  completed: boolean
+  completedAt: string | null
+  completedMembers: number
+  canManage: boolean
+}
+
+export interface SaveTeamChallengeDto {
+  teamId: number
+  name: string
+  description: string | null
+  isManual: boolean
+  metric: string | null
+  target: number
+  window: string
+  startsOn: string | null
+  endsOn: string | null
+  rewardXp: number
+  isActive: boolean
+}
+
+export interface TeamChallengeListDto {
+  canManage: boolean
+  challenges: TeamChallengeDto[]
+}
+
+/** GET /xp/leaderboard/teams — team-vs-team ranking within the caller's club (#156). */
+export interface TeamLeaderboardDto {
+  seasonId: number | null
+  /** "avg" | "total" | "challenges". */
+  sort: string
+  rows: TeamLeaderboardRowDto[]
+}
+
+export interface TeamLeaderboardRowDto {
+  position: number
+  teamId: number
+  name: string
+  playerCount: number
+  seasonXp: number
+  lifetimeXp: number
+  avgXp: number
+  challengesCompleted: number
+}
+
 /** An individual/home training from the catalog (GET /trainings/individual) — #104. */
 export interface IndividualTrainingDto {
   id: number

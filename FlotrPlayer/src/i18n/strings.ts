@@ -374,6 +374,53 @@ export type StringKey =
   | 'challenge.ImproveSkill.desc'
   | 'challenge.TestRecord.title'
   | 'challenge.TestRecord.desc'
+  | 'challenge.metric.TrainingAttendance'
+  | 'challenge.metric.MatchGoal'
+  | 'challenge.metric.HomeTraining'
+  | 'challenge.metric.SkillImprovement'
+  | 'challenge.metric.TestPersonalRecord'
+  | 'teamChallenge.section'
+  | 'teamChallenge.manage'
+  | 'teamChallenge.title'
+  | 'teamChallenge.subtitle'
+  | 'teamChallenge.new'
+  | 'teamChallenge.edit'
+  | 'teamChallenge.empty'
+  | 'teamChallenge.emptyCoach'
+  | 'teamChallenge.manual'
+  | 'teamChallenge.isManual'
+  | 'teamChallenge.derived'
+  | 'teamChallenge.metric'
+  | 'teamChallenge.target'
+  | 'teamChallenge.windowLabel'
+  | 'teamChallenge.window.Week'
+  | 'teamChallenge.window.Month'
+  | 'teamChallenge.window.Season'
+  | 'teamChallenge.window.Custom'
+  | 'teamChallenge.startsOn'
+  | 'teamChallenge.endsOn'
+  | 'teamChallenge.rewardXp'
+  | 'teamChallenge.name'
+  | 'teamChallenge.description'
+  | 'teamChallenge.active'
+  | 'teamChallenge.markDone'
+  | 'teamChallenge.undo'
+  | 'teamChallenge.delete'
+  | 'teamChallenge.deleteConfirm'
+  | 'teamChallenge.completedMembers'
+  | 'teamChallenge.inProgress'
+  | 'teamChallenge.save'
+  | 'teamChallenge.cancel'
+  | 'teamChallenge.saveError'
+  | 'teamLeaderboard.title'
+  | 'teamLeaderboard.sortAvg'
+  | 'teamLeaderboard.sortTotal'
+  | 'teamLeaderboard.sortChallenges'
+  | 'teamLeaderboard.team'
+  | 'teamLeaderboard.avg'
+  | 'teamLeaderboard.total'
+  | 'teamLeaderboard.challenges'
+  | 'teamLeaderboard.empty'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -752,6 +799,53 @@ const cs: Record<StringKey, string> = {
   'challenge.ImproveSkill.desc': 'Zlepši známku v jedné dovednosti.',
   'challenge.TestRecord.title': 'Osobní rekord',
   'challenge.TestRecord.desc': 'Vytvoř osobní rekord v testu.',
+  'challenge.metric.TrainingAttendance': 'Účast na tréninku',
+  'challenge.metric.MatchGoal': 'Góly v zápase',
+  'challenge.metric.HomeTraining': 'Domácí trénink',
+  'challenge.metric.SkillImprovement': 'Zlepšení dovednosti',
+  'challenge.metric.TestPersonalRecord': 'Osobní rekord v testu',
+  'teamChallenge.section': 'Týmové výzvy',
+  'teamChallenge.manage': 'Spravovat týmové výzvy',
+  'teamChallenge.title': 'Týmové výzvy',
+  'teamChallenge.subtitle': 'Výzvy pro celý tým',
+  'teamChallenge.new': 'Nová výzva',
+  'teamChallenge.edit': 'Upravit výzvu',
+  'teamChallenge.empty': 'Tvůj tým zatím nemá žádné výzvy.',
+  'teamChallenge.emptyCoach': 'Zatím žádné výzvy. Vytvoř první.',
+  'teamChallenge.manual': 'Ruční',
+  'teamChallenge.isManual': 'Ruční (splnění označíš ty)',
+  'teamChallenge.derived': 'Odvozená',
+  'teamChallenge.metric': 'Metrika',
+  'teamChallenge.target': 'Cíl (součet týmu)',
+  'teamChallenge.windowLabel': 'Období',
+  'teamChallenge.window.Week': 'Týden',
+  'teamChallenge.window.Month': 'Měsíc',
+  'teamChallenge.window.Season': 'Sezóna',
+  'teamChallenge.window.Custom': 'Vlastní rozsah',
+  'teamChallenge.startsOn': 'Od (RRRR-MM-DD)',
+  'teamChallenge.endsOn': 'Do (RRRR-MM-DD)',
+  'teamChallenge.rewardXp': 'Odměna XP',
+  'teamChallenge.name': 'Název',
+  'teamChallenge.description': 'Popis',
+  'teamChallenge.active': 'Aktivní',
+  'teamChallenge.markDone': 'Označit splněno',
+  'teamChallenge.undo': 'Vrátit',
+  'teamChallenge.delete': 'Smazat',
+  'teamChallenge.deleteConfirm': 'Smazat tuto výzvu?',
+  'teamChallenge.completedMembers': 'Splněno ({count} hráčů)',
+  'teamChallenge.inProgress': 'Probíhá',
+  'teamChallenge.save': 'Uložit',
+  'teamChallenge.cancel': 'Zrušit',
+  'teamChallenge.saveError': 'Uložení se nezdařilo',
+  'teamLeaderboard.title': 'Žebříček týmů',
+  'teamLeaderboard.sortAvg': 'Průměr',
+  'teamLeaderboard.sortTotal': 'Celkem',
+  'teamLeaderboard.sortChallenges': 'Výzvy',
+  'teamLeaderboard.team': 'Tým',
+  'teamLeaderboard.avg': 'Ø/hráč',
+  'teamLeaderboard.total': 'Celkem',
+  'teamLeaderboard.challenges': 'Výzvy',
+  'teamLeaderboard.empty': 'Zatím žádná data.',
 }
 
 const locales = { cs }

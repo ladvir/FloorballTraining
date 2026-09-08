@@ -4,6 +4,10 @@ import type {
   ChallengesDto,
   CreateXpAwardDto,
   LeaderboardDto,
+  SaveTeamChallengeDto,
+  TeamChallengeDto,
+  TeamChallengeListDto,
+  TeamLeaderboardDto,
   XpAwardDto,
   XpRuleCatalogItemDto,
   XpSummaryDto,
@@ -22,6 +26,27 @@ export const xpApi = {
   // Club-scoped for the caller by the API; teamId narrows to one team, sort toggles seasonal/career.
   getLeaderboard: (params?: { sort?: 'season' | 'career'; teamId?: number; seasonId?: number }) =>
     apiClient.get<LeaderboardDto>('/xp/leaderboard', { params }).then((r) => r.data),
+  // Team-vs-team leaderboard within the caller's club (#156). sort = "avg" | "total" | "challenges".
+  getTeamLeaderboard: (params?: { sort?: 'avg' | 'total' | 'challenges'; seasonId?: number }) =>
+    apiClient.get<TeamLeaderboardDto>('/xp/leaderboard/teams', { params }).then((r) => r.data),
+
+  // ── Team challenges (#156) ─────────────────────────────────────────────
+  // Read-only board for the player/guardian view (active challenges only).
+  getTeamChallenges: (teamId: number) =>
+    apiClient.get<TeamChallengeListDto>(`/team-challenges/team/${teamId}`).then((r) => r.data),
+  // Coach board (all challenges + CanManage).
+  listTeamChallenges: (teamId: number) =>
+    apiClient
+      .get<TeamChallengeListDto>('/team-challenges', { params: { teamId } })
+      .then((r) => r.data),
+  createTeamChallenge: (dto: SaveTeamChallengeDto) =>
+    apiClient.post<TeamChallengeDto>('/team-challenges', dto).then((r) => r.data),
+  updateTeamChallenge: (id: number, dto: SaveTeamChallengeDto) =>
+    apiClient.put<TeamChallengeDto>(`/team-challenges/${id}`, dto).then((r) => r.data),
+  deleteTeamChallenge: (id: number) => apiClient.delete(`/team-challenges/${id}`),
+  completeTeamChallenge: (id: number) =>
+    apiClient.post(`/team-challenges/${id}/complete`).then((r) => r.data),
+  uncompleteTeamChallenge: (id: number) => apiClient.delete(`/team-challenges/${id}/complete`),
 
   // ── Layer B: coach 1-click bonuses (#100/#110) ──────────────────────────
   listAwards: (appointmentId: number) =>

@@ -11,6 +11,7 @@ import { HomeTrainingScreen } from './src/features/home/HomeTrainingScreen'
 import { LiveTrainingScreen } from './src/features/live/LiveTrainingScreen'
 import { CardDetailScreen } from './src/features/roster/CardDetailScreen'
 import { CoachAwardsScreen } from './src/features/coach/CoachAwardsScreen'
+import { TeamChallengesScreen } from './src/features/coach/TeamChallengesScreen'
 import { RecommendationsScreen } from './src/features/skills/RecommendationsScreen'
 import { SkillDetailScreen } from './src/features/skills/SkillDetailScreen'
 import { HowToEarnXpScreen } from './src/features/gamification/HowToEarnXpScreen'
@@ -56,6 +57,7 @@ export default function App() {
                   <Stack.Screen name="LiveTraining" component={LiveTrainingScreen} />
                   <Stack.Screen name="CardDetail" component={CardDetailScreen} />
                   <Stack.Screen name="CoachAwards" component={CoachAwardsScreen} />
+                  <Stack.Screen name="TeamChallenges" component={TeamChallengesScreen} />
                   <Stack.Screen name="SkillDetail" component={SkillDetailScreen} />
                   <Stack.Screen name="Recommendations" component={RecommendationsScreen} />
                   <Stack.Screen name="HowToEarnXp" component={HowToEarnXpScreen} />
