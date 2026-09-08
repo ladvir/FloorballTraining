@@ -14,5 +14,7 @@ public enum XpSourceKind
     /// <summary>Layer C — a confirmed self-reported <see cref="FloorballTraining.CoreBusiness.HomeTrainingLog"/> (#104).</summary>
     HomeTraining,
     /// <summary>Etapa 6 — a derived <see cref="FloorballTraining.CoreBusiness.ChallengeCompletion"/> (#108).</summary>
-    Challenge
+    Challenge,
+    /// <summary>#156 — a derived <see cref="FloorballTraining.CoreBusiness.TeamChallengeCompletion"/>.</summary>
+    TeamChallenge
 }

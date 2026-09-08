@@ -50,6 +50,8 @@ public static class XpRules
         // Challenge rewards carry their amount per-challenge (ChallengeCatalog.RewardXp); the ledger prices
         // them as units(=rewardXp) × 1, so the per-type rate is 1. Not club-configurable (#108 MVP).
         XpEventType.ChallengeReward => 1,
+        // Team challenge rewards likewise carry their amount per-challenge (TeamChallenge.RewardXp) × 1 (#156).
+        XpEventType.TeamChallengeReward => 1,
         _ => 0
     };
 

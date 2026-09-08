@@ -18,5 +18,7 @@ public enum XpEventType
     // Layer C — capped self-report (#104), derived from a confirmed HomeTrainingLog.
     HomeTraining,
     // Etapa 6 — self-completable challenge bonus (#108), derived from a ChallengeCompletion.
-    ChallengeReward
+    ChallengeReward,
+    // #156 — team challenge bonus, derived from a TeamChallengeCompletion (one per rostered player).
+    TeamChallengeReward
 }

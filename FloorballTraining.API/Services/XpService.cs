@@ -102,6 +102,7 @@ public class XpService(FloorballTrainingContext context)
         DeriveFamilySupport(coachAwards, await LoadFanCheckInsAsync(ct), Add);
         DeriveHomeTraining(await LoadHomeTrainingLogsAsync(ct), Add);
         DeriveChallenges(await LoadChallengeCompletionsAsync(ct), Add);
+        DeriveTeamChallenges(await LoadTeamChallengeCompletionsAsync(ct), Add);
 
         // Prune orphans: an existing event whose SourceKind this derivation owns but whose source no
         // longer produces it — the record was deleted or downgraded (e.g. attendance Present -> Absent).
@@ -110,7 +111,7 @@ public class XpService(FloorballTrainingContext context)
         {
             XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
             XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward, XpSourceKind.FanCheckIn,
-            XpSourceKind.HomeTraining, XpSourceKind.Challenge
+            XpSourceKind.HomeTraining, XpSourceKind.Challenge, XpSourceKind.TeamChallenge
         };
         var orphanIds = existingEvents
             .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
@@ -315,6 +316,24 @@ public class XpService(FloorballTrainingContext context)
         {
             if (!ChallengeCatalog.ByCode.TryGetValue(c.Code, out var def)) continue; // retired code → XP pruned
             add(c.MemberId, XpEventType.ChallengeReward, def.RewardXp, null, XpSourceKind.Challenge, c.Id, c.CompletedAt);
+        }
+    }
+
+    // --- #156: team challenges. TeamChallengeService writes one completion per rostered player; here each
+    //     earns the challenge's RewardXp. units = RewardXp × PointsFor()=1, so editing a challenge's reward
+    //     re-prices existing events in place. teamId carried so a #106 team override could apply later.
+    private Task<List<TeamChallengeCompletion>> LoadTeamChallengeCompletionsAsync(CancellationToken ct) =>
+        context.TeamChallengeCompletions.AsNoTracking()
+            .Include(c => c.TeamChallenge)
+            .ToListAsync(ct);
+
+    private static void DeriveTeamChallenges(List<TeamChallengeCompletion> completions, AddXp add)
+    {
+        foreach (var c in completions)
+        {
+            if (c.TeamChallenge == null) continue; // challenge deleted → completion cascades away, XP pruned
+            add(c.MemberId, XpEventType.TeamChallengeReward, c.TeamChallenge.RewardXp, c.TeamChallenge.TeamId,
+                XpSourceKind.TeamChallenge, c.Id, c.CompletedAt);
         }
     }
 

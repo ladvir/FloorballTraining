@@ -4,6 +4,7 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.EntityFrameworkCore;
+using Contribution = FloorballTraining.API.Services.ChallengeContributions.Contribution;
 
 namespace FloorballTraining.API.Services;
 
@@ -15,15 +16,13 @@ namespace FloorballTraining.API.Services;
 /// bonus XP via the existing ledger (<see cref="XpService"/> derives it). Mirrors <see cref="BadgeService"/>.
 /// ponytail: full-history rescan per run (idempotent, cheap at club scale) — same as XP/badges.
 /// </summary>
-public class ChallengeService(FloorballTrainingContext context)
+public class ChallengeService(FloorballTrainingContext context, ChallengeContributions contributions)
 {
-    private record Contribution(int MemberId, DateTime When, int Amount);
-
     /// <summary>Recompute completions for every member. Returns the number of newly completed challenges.</summary>
     public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
     {
         var season = await LoadSeasonResolverAsync(ct);
-        var contribs = await LoadContributionsAsync(ct);
+        var contribs = await contributions.LoadAsync(ct);
 
         var existing = (await context.ChallengeCompletions
                 .Select(c => new { c.MemberId, c.Code, c.PeriodKey })
@@ -58,7 +57,7 @@ public class ChallengeService(FloorballTrainingContext context)
     {
         var asOf = now ?? DateTime.UtcNow;
         var season = await LoadSeasonResolverAsync(ct);
-        var contribs = await LoadContributionsAsync(ct, memberId);
+        var contribs = await contributions.LoadAsync(ct, new[] { memberId });
 
         var completed = (await context.ChallengeCompletions.AsNoTracking()
                 .Where(c => c.MemberId == memberId)
@@ -124,102 +123,6 @@ public class ChallengeService(FloorballTrainingContext context)
         foreach (var g in groups)
             if (g.Sum(x => x.Amount) >= def.Target)
                 yield return (g.Key.MemberId, g.Key.Period, g.Max(x => x.When));
-    }
-
-    // --- Contribution loaders: each metric → (member, when, amount) events, same source data as XpService ---
-
-    private async Task<Dictionary<ChallengeMetric, List<Contribution>>> LoadContributionsAsync(CancellationToken ct, int? memberId = null)
-    {
-        return new Dictionary<ChallengeMetric, List<Contribution>>
-        {
-            [ChallengeMetric.TrainingAttendance] = await LoadTrainingAttendanceAsync(ct, memberId),
-            [ChallengeMetric.MatchGoal] = await LoadGoalsAsync(ct, memberId),
-            [ChallengeMetric.HomeTraining] = await LoadHomeTrainingAsync(ct, memberId),
-            [ChallengeMetric.SkillImprovement] = await LoadSkillImprovementsAsync(ct, memberId),
-            [ChallengeMetric.TestPersonalRecord] = await LoadTestRecordsAsync(ct, memberId),
-        };
-    }
-
-    private async Task<List<Contribution>> LoadTrainingAttendanceAsync(CancellationToken ct, int? memberId)
-    {
-        var rows = await context.AppointmentAttendances.AsNoTracking()
-            .Where(a => a.Status == 1)
-            .Where(a => memberId == null || a.MemberId == memberId)
-            .Include(a => a.Appointment)
-            .ToListAsync(ct);
-        return rows
-            .Where(a => a.Appointment?.AppointmentType == AppointmentType.Training)
-            .Select(a => new Contribution(a.MemberId, a.Appointment?.Start ?? a.RecordedAt, 1))
-            .ToList();
-    }
-
-    private async Task<List<Contribution>> LoadGoalsAsync(CancellationToken ct, int? memberId)
-    {
-        var rows = await context.StatTrackerEntries.AsNoTracking()
-            .Where(e => e.Kind == 0 && e.StatTrackerParticipantId != null && e.StatTrackerMetricId != null)
-            .Where(e => e.Metric!.Code == "goals")
-            .Where(e => memberId == null || e.Participant!.MemberId == memberId)
-            .Include(e => e.Participant)
-            .Include(e => e.Metric)
-            .ToListAsync(ct);
-        return rows
-            .Where(e => e.Participant != null)
-            .Select(e => new Contribution(e.Participant!.MemberId, e.CreatedAt, e.Delta)) // Delta signed: undo cancels
-            .ToList();
-    }
-
-    private async Task<List<Contribution>> LoadHomeTrainingAsync(CancellationToken ct, int? memberId)
-    {
-        var rows = await context.HomeTrainingLogs.AsNoTracking()
-            .Where(l => l.ConfirmedAt != null && l.RejectedAt == null)
-            .Where(l => memberId == null || l.MemberId == memberId)
-            .Select(l => new { l.MemberId, l.LoggedAt })
-            .ToListAsync(ct);
-        return rows.Select(l => new Contribution(l.MemberId, l.LoggedAt, 1)).ToList();
-    }
-
-    private async Task<List<Contribution>> LoadSkillImprovementsAsync(CancellationToken ct, int? memberId)
-    {
-        var ratings = await context.PlayerSkillRatings.AsNoTracking()
-            .Where(r => memberId == null || r.MemberId == memberId)
-            .OrderBy(r => r.MemberId).ThenBy(r => r.SkillId).ThenBy(r => r.RatedAt).ThenBy(r => r.Id)
-            .ToListAsync(ct);
-        var result = new List<Contribution>();
-        foreach (var group in ratings.GroupBy(r => new { r.MemberId, r.SkillId }))
-        {
-            int? prev = null;
-            foreach (var r in group)
-            {
-                if (prev != null && r.Grade < prev) // grade 1 = best, lower is better
-                    result.Add(new Contribution(r.MemberId, r.RatedAt, 1));
-                prev = r.Grade;
-            }
-        }
-        return result;
-    }
-
-    private async Task<List<Contribution>> LoadTestRecordsAsync(CancellationToken ct, int? memberId)
-    {
-        var results = await context.TestResults.AsNoTracking()
-            .Where(t => t.NumericValue != null)
-            .Where(t => memberId == null || t.MemberId == memberId)
-            .Include(t => t.TestDefinition)
-            .OrderBy(t => t.MemberId).ThenBy(t => t.TestDefinitionId).ThenBy(t => t.TestDate).ThenBy(t => t.Id)
-            .ToListAsync(ct);
-        var contribs = new List<Contribution>();
-        foreach (var group in results.GroupBy(t => new { t.MemberId, t.TestDefinitionId }))
-        {
-            double? best = null;
-            foreach (var t in group)
-            {
-                var value = t.NumericValue!.Value;
-                var higherIsBetter = t.TestDefinition?.HigherIsBetter ?? true;
-                if (best != null && (higherIsBetter ? value > best : value < best))
-                    contribs.Add(new Contribution(t.MemberId, t.TestDate, 1));
-                best = best == null ? value : (higherIsBetter ? Math.Max(best.Value, value) : Math.Min(best.Value, value));
-            }
-        }
-        return contribs;
     }
 
     // --- Window → PeriodKey (ISO week / calendar month / resolved season), same season model as XpService ---

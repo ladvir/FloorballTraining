@@ -32,12 +32,14 @@ public sealed class GamificationRecomputeInterceptor : SaveChangesInterceptor
     /// <summary>
     /// Entity types whose write should trigger a gamification recompute. XP source records drive XP/badges;
     /// <see cref="ClubReward"/> is here so creating/editing/deactivating a reward re-evaluates claims (#105);
-    /// <see cref="XpRuleConfig"/> so changing a club/team point value re-prices the ledger (#106).
-    /// The recompute only writes XpEvent/MemberBadge/MemberRewardClaim (none of these types) → no loop.
+    /// <see cref="XpRuleConfig"/> so changing a club/team point value re-prices the ledger (#106);
+    /// <see cref="TeamChallenge"/> so creating/editing/deactivating a team challenge re-derives completions (#156).
+    /// The recompute only writes XpEvent/MemberBadge/MemberRewardClaim/*ChallengeCompletion (none of these
+    /// types — TeamChallengeCompletion is deliberately excluded) → no loop.
     /// (Public for testing.)
     /// </summary>
     public static bool IsXpSource(object entity) =>
-        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult or XpCoachAward or FanCheckIn or HomeTrainingLog or ClubReward or XpRuleConfig;
+        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult or XpCoachAward or FanCheckIn or HomeTrainingLog or ClubReward or XpRuleConfig or TeamChallenge;
 
     private void Detect(DbContext? context)
     {
