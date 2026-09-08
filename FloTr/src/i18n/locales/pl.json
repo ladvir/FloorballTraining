@@ -42,7 +42,8 @@
     "xpRules": "Punkty XP",
     "howToEarnXp": "Jak zdobyć XP",
     "announcer": "Spiker",
-    "myCard": "Moja karta"
+    "myCard": "Moja karta",
+    "teamChallenges": "Wyzwania zespołowe"
   },
   "auth": {
     "email": "E-mail",
@@ -3431,6 +3432,13 @@
     "TestRecord": {
       "title": "Rekord życiowy",
       "desc": "Ustanów rekord życiowy w teście."
+    },
+    "metric": {
+      "TrainingAttendance": "Obecność na treningu",
+      "MatchGoal": "Gole w meczu",
+      "HomeTraining": "Trening domowy",
+      "SkillImprovement": "Poprawa umiejętności",
+      "TestPersonalRecord": "Rekord życiowy w teście"
     }
   },
   "rewards": {
@@ -3604,5 +3612,49 @@
     "noGoalsShort": "brak celów",
     "clubEmpty": "Brak drużyn w tym sezonie",
     "clubEmptyHint": "Wybierz sezon, w którym grają drużyny klubu."
+  },
+  "teamChallenge": {
+    "title": "Wyzwania zespołowe",
+    "subtitle": "Tworzenie i zarządzanie wyzwaniami dla całego zespołu",
+    "new": "Nowe wyzwanie",
+    "edit": "Edytuj wyzwanie",
+    "empty": "Brak wyzwań",
+    "emptyDesc": "Utwórz pierwsze wyzwanie zespołowe.",
+    "noPermission": "Możesz przeglądać wyzwania tego zespołu, ale nie możesz ich edytować.",
+    "deleteConfirm": "Usunąć wyzwanie „{{name}}”?",
+    "isManual": "Wyzwanie ręczne (trener oznacza wykonanie)",
+    "manual": "Ręczne",
+    "metric": "Metryka",
+    "target": "Cel (suma zespołu)",
+    "windowLabel": "Okres",
+    "window": {
+      "Week": "Tydzień",
+      "Month": "Miesiąc",
+      "Season": "Sezon",
+      "Custom": "Własny zakres"
+    },
+    "startsOn": "Od",
+    "endsOn": "Do",
+    "active": "Aktywne",
+    "markDone": "Oznacz jako wykonane",
+    "undo": "Cofnij",
+    "completedMembers": "Ukończono ({{count}} zawodników)",
+    "inProgress": "W toku",
+    "saved": "Wyzwanie zapisane",
+    "saveError": "Zapis nie powiódł się",
+    "deleted": "Wyzwanie usunięte",
+    "updated": "Wyzwanie zaktualizowane"
+  },
+  "teamLeaderboard": {
+    "title": "Ranking zespołów",
+    "team": "Zespół",
+    "avg": "Śr. / zawodnik",
+    "total": "Razem",
+    "challenges": "Wyzwania",
+    "sort": {
+      "avg": "Średnia",
+      "total": "Razem",
+      "challenges": "Wyzwania"
+    }
   }
 }

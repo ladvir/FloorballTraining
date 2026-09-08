@@ -1732,6 +1732,68 @@ export interface ChallengesDto {
   recentlyCompleted: ChallengeDto[]
 }
 
+/** Coach-authored team challenge (#156) with live current-window progress. Name/Description are free text. */
+export interface TeamChallengeDto {
+  id: number
+  teamId: number
+  name: string
+  description?: string | null
+  isManual: boolean
+  /** ChallengeMetric name, or null for a manual challenge. */
+  metric?: string | null
+  target: number
+  /** "Week" | "Month" | "Season" | "Custom". */
+  window: string
+  startsOn?: string | null
+  endsOn?: string | null
+  rewardXp: number
+  isActive: boolean
+  periodKey?: string | null
+  current: number
+  progress: number
+  completed: boolean
+  completedAt?: string | null
+  completedMembers: number
+  canManage: boolean
+}
+
+export interface SaveTeamChallengeDto {
+  teamId: number
+  name: string
+  description?: string | null
+  isManual: boolean
+  metric?: string | null
+  target: number
+  window: string
+  startsOn?: string | null
+  endsOn?: string | null
+  rewardXp: number
+  isActive: boolean
+}
+
+export interface TeamChallengeListDto {
+  canManage: boolean
+  challenges: TeamChallengeDto[]
+}
+
+export interface TeamLeaderboardRowDto {
+  position: number
+  teamId: number
+  name: string
+  playerCount: number
+  seasonXp: number
+  lifetimeXp: number
+  avgXp: number
+  challengesCompleted: number
+}
+
+export interface TeamLeaderboardDto {
+  seasonId?: number | null
+  /** "avg" (default) | "total" | "challenges". */
+  sort: string
+  rows: TeamLeaderboardRowDto[]
+}
+
 /** Admin-only XP reset cutoff (per club) — source records older than this are ignored by recompute. */
 export interface XpCountFromDto {
   clubId: number

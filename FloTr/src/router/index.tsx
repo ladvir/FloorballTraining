@@ -55,6 +55,11 @@ const XpRulesPage = lazy(() =>
 const HowToEarnXpPage = lazy(() =>
   import('../features/gamification/HowToEarnXpPage').then((m) => ({ default: m.HowToEarnXpPage }))
 )
+const TeamChallengesPage = lazy(() =>
+  import('../features/gamification/TeamChallengesPage').then((m) => ({
+    default: m.TeamChallengesPage,
+  }))
+)
 const MemberDetailPage = lazy(() =>
   import('../features/members/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage }))
 )
@@ -370,6 +375,8 @@ export const router = createBrowserRouter(
                     // Configurable XP values (#106): team's Coach+ edits team scope; the page + server
                     // gate club-wide editing to HeadCoach+.
                     { path: '/xp-rules', element: <XpRulesPage /> },
+                    // Team challenges (#156): a team's Coach+ creates/manages challenges; server gates by team.
+                    { path: '/team-challenges', element: <TeamChallengesPage /> },
                     // Video editor / analýza (epic #133): pick a system or local video, draw over it.
                     { path: '/video-editor', element: <VideoEditorPage /> },
                   ],

@@ -42,7 +42,8 @@
     "xpRules": "XP-Punkte",
     "howToEarnXp": "Wie man XP verdient",
     "announcer": "Stadionsprecher",
-    "myCard": "Meine Karte"
+    "myCard": "Meine Karte",
+    "teamChallenges": "Team-Challenges"
   },
   "auth": {
     "email": "E-Mail",
@@ -3436,6 +3437,13 @@
     "TestRecord": {
       "title": "Persönlicher Rekord",
       "desc": "Stelle einen persönlichen Rekord in einem Test auf."
+    },
+    "metric": {
+      "TrainingAttendance": "Trainingsteilnahme",
+      "MatchGoal": "Spieltore",
+      "HomeTraining": "Heimtraining",
+      "SkillImprovement": "Verbesserung einer Fähigkeit",
+      "TestPersonalRecord": "Persönlicher Testrekord"
     }
   },
   "rewards": {
@@ -3609,5 +3617,49 @@
     "noGoalsShort": "keine Ziele",
     "clubEmpty": "Keine Teams in dieser Saison",
     "clubEmptyHint": "Wähle eine Saison, in der die Vereinsteams spielen."
+  },
+  "teamChallenge": {
+    "title": "Team-Challenges",
+    "subtitle": "Challenges für das gesamte Team erstellen und verwalten",
+    "new": "Neue Challenge",
+    "edit": "Challenge bearbeiten",
+    "empty": "Noch keine Challenges",
+    "emptyDesc": "Erstelle die erste Team-Challenge.",
+    "noPermission": "Du kannst die Challenges dieses Teams ansehen, aber nicht bearbeiten.",
+    "deleteConfirm": "Challenge „{{name}}“ löschen?",
+    "isManual": "Manuelle Challenge (Trainer markiert sie als erfüllt)",
+    "manual": "Manuell",
+    "metric": "Metrik",
+    "target": "Ziel (Team-Summe)",
+    "windowLabel": "Zeitraum",
+    "window": {
+      "Week": "Woche",
+      "Month": "Monat",
+      "Season": "Saison",
+      "Custom": "Eigener Zeitraum"
+    },
+    "startsOn": "Von",
+    "endsOn": "Bis",
+    "active": "Aktiv",
+    "markDone": "Als erfüllt markieren",
+    "undo": "Zurücknehmen",
+    "completedMembers": "Erfüllt ({{count}} Spieler)",
+    "inProgress": "Läuft",
+    "saved": "Challenge gespeichert",
+    "saveError": "Speichern fehlgeschlagen",
+    "deleted": "Challenge gelöscht",
+    "updated": "Challenge aktualisiert"
+  },
+  "teamLeaderboard": {
+    "title": "Team-Rangliste",
+    "team": "Team",
+    "avg": "Ø / Spieler",
+    "total": "Gesamt",
+    "challenges": "Challenges",
+    "sort": {
+      "avg": "Durchschnitt",
+      "total": "Gesamt",
+      "challenges": "Challenges"
+    }
   }
 }

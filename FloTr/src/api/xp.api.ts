@@ -4,6 +4,7 @@ import type {
   ChallengesDto,
   CreateXpAwardDto,
   LeaderboardDto,
+  TeamLeaderboardDto,
   UpdateXpRulesRequest,
   XpAwardDto,
   XpCountFromDto,
@@ -32,6 +33,13 @@ export const xpApi = {
     seasonId?: number | null
     sort?: 'season' | 'career'
   }) => apiClient.get<LeaderboardDto>('/xp/leaderboard', { params }).then((r) => r.data),
+
+  /** Team-vs-team leaderboard within the caller's club (#156). sort = "avg" (default) | "total" | "challenges". */
+  getTeamLeaderboard: (params: {
+    clubId?: number | null
+    seasonId?: number | null
+    sort?: 'avg' | 'total' | 'challenges'
+  }) => apiClient.get<TeamLeaderboardDto>('/xp/leaderboard/teams', { params }).then((r) => r.data),
 
   /** Admin: manually enqueue the (idempotent) XP + badge recompute. */
   recompute: () => apiClient.post('/xp/recompute').then((r) => r.data),

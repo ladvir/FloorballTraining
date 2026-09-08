@@ -32,6 +32,7 @@ import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { refreshAppointments } from '../appointments/refreshAppointments'
 import { RewardsPage } from '../rewards/RewardsPage'
+import { TeamLeaderboardCard } from '../gamification/TeamLeaderboardCard'
 import { LineupsListPage } from '../lineups/LineupsListPage'
 import { AddTeamMemberModal } from './AddTeamMemberModal'
 import { TeamSettingsModal } from './TeamSettingsModal'
@@ -258,6 +259,8 @@ export function TeamDetailPage() {
       {/* Roster tab */}
       {activeTab === 'roster' && (
         <>
+          {/* Team-vs-team leaderboard (#156), this team highlighted. */}
+          <TeamLeaderboardCard clubId={team.clubId} highlightTeamId={team.id} defaultOpen />
           {/* Coaches */}
           {coaches.length > 0 && (
             <Card className="mb-4">

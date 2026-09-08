@@ -42,7 +42,8 @@
     "xpRules": "XP body",
     "howToEarnXp": "Jak získat XP",
     "announcer": "Hlasatel",
-    "myCard": "Moje karta"
+    "myCard": "Moje karta",
+    "teamChallenges": "Týmové výzvy"
   },
   "auth": {
     "email": "Email",
@@ -3431,6 +3432,13 @@
     "TestRecord": {
       "title": "Osobní rekord",
       "desc": "Vytvoř osobní rekord v testu."
+    },
+    "metric": {
+      "TrainingAttendance": "Účast na tréninku",
+      "MatchGoal": "Góly v zápase",
+      "HomeTraining": "Domácí trénink",
+      "SkillImprovement": "Zlepšení dovednosti",
+      "TestPersonalRecord": "Osobní rekord v testu"
     }
   },
   "rewards": {
@@ -3604,5 +3612,49 @@
     "noGoalsShort": "bez cílů",
     "clubEmpty": "Žádné týmy v této sezóně",
     "clubEmptyHint": "Vyberte sezónu, ve které týmy klubu hrají."
+  },
+  "teamChallenge": {
+    "title": "Týmové výzvy",
+    "subtitle": "Vytváření a správa výzev pro celý tým",
+    "new": "Nová výzva",
+    "edit": "Upravit výzvu",
+    "empty": "Zatím žádné výzvy",
+    "emptyDesc": "Vytvoř první týmovou výzvu.",
+    "noPermission": "Výzvy tohoto týmu můžeš prohlížet, ale ne upravovat.",
+    "deleteConfirm": "Smazat výzvu „{{name}}“?",
+    "isManual": "Ruční výzva (splnění označí trenér)",
+    "manual": "Ruční",
+    "metric": "Metrika",
+    "target": "Cíl (součet týmu)",
+    "windowLabel": "Období",
+    "window": {
+      "Week": "Týden",
+      "Month": "Měsíc",
+      "Season": "Sezóna",
+      "Custom": "Vlastní rozsah"
+    },
+    "startsOn": "Od",
+    "endsOn": "Do",
+    "active": "Aktivní",
+    "markDone": "Označit splněno",
+    "undo": "Vrátit",
+    "completedMembers": "Splněno ({{count}} hráčů)",
+    "inProgress": "Probíhá",
+    "saved": "Výzva uložena",
+    "saveError": "Uložení se nezdařilo",
+    "deleted": "Výzva smazána",
+    "updated": "Výzva aktualizována"
+  },
+  "teamLeaderboard": {
+    "title": "Žebříček týmů",
+    "team": "Tým",
+    "avg": "Ø / hráč",
+    "total": "Celkem",
+    "challenges": "Výzvy",
+    "sort": {
+      "avg": "Průměr",
+      "total": "Celkem",
+      "challenges": "Výzvy"
+    }
   }
 }

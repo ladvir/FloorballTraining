@@ -42,7 +42,8 @@
     "xpRules": "XP body",
     "howToEarnXp": "Ako získať XP",
     "announcer": "Hlásateľ",
-    "myCard": "Moja karta"
+    "myCard": "Moja karta",
+    "teamChallenges": "Tímové výzvy"
   },
   "auth": {
     "email": "Email",
@@ -3430,6 +3431,13 @@
     "TestRecord": {
       "title": "Osobný rekord",
       "desc": "Vytvor osobný rekord v teste."
+    },
+    "metric": {
+      "TrainingAttendance": "Účasť na tréningu",
+      "MatchGoal": "Góly v zápase",
+      "HomeTraining": "Domáci tréning",
+      "SkillImprovement": "Zlepšenie zručnosti",
+      "TestPersonalRecord": "Osobný rekord v teste"
     }
   },
   "rewards": {
@@ -3603,5 +3611,49 @@
     "noGoalsShort": "bez cieľov",
     "clubEmpty": "Žiadne tímy v tejto sezóne",
     "clubEmptyHint": "Vyberte sezónu, v ktorej tímy klubu hrajú."
+  },
+  "teamChallenge": {
+    "title": "Tímové výzvy",
+    "subtitle": "Vytváranie a správa výziev pre celý tím",
+    "new": "Nová výzva",
+    "edit": "Upraviť výzvu",
+    "empty": "Zatiaľ žiadne výzvy",
+    "emptyDesc": "Vytvor prvú tímovú výzvu.",
+    "noPermission": "Výzvy tohto tímu môžeš zobraziť, ale nie upravovať.",
+    "deleteConfirm": "Vymazať výzvu „{{name}}“?",
+    "isManual": "Ručná výzva (splnenie označí tréner)",
+    "manual": "Ručná",
+    "metric": "Metrika",
+    "target": "Cieľ (súčet tímu)",
+    "windowLabel": "Obdobie",
+    "window": {
+      "Week": "Týždeň",
+      "Month": "Mesiac",
+      "Season": "Sezóna",
+      "Custom": "Vlastný rozsah"
+    },
+    "startsOn": "Od",
+    "endsOn": "Do",
+    "active": "Aktívna",
+    "markDone": "Označiť ako splnené",
+    "undo": "Vrátiť",
+    "completedMembers": "Splnené ({{count}} hráčov)",
+    "inProgress": "Prebieha",
+    "saved": "Výzva uložená",
+    "saveError": "Uloženie zlyhalo",
+    "deleted": "Výzva vymazaná",
+    "updated": "Výzva aktualizovaná"
+  },
+  "teamLeaderboard": {
+    "title": "Rebríček tímov",
+    "team": "Tím",
+    "avg": "Ø / hráč",
+    "total": "Spolu",
+    "challenges": "Výzvy",
+    "sort": {
+      "avg": "Priemer",
+      "total": "Spolu",
+      "challenges": "Výzvy"
+    }
   }
 }

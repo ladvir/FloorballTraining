@@ -26,6 +26,7 @@ import { membersApi, clubsApi, teamsApi, xpApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { cn } from '../../utils/cn'
 import { AccountLinkSection } from './AccountLinkSection'
+import { TeamLeaderboardCard } from '../gamification/TeamLeaderboardCard'
 import type { MemberDto, ClubDto, TeamDto, LeaderboardRowDto } from '../../types/domain.types'
 
 // XP/ranking merged into the Hráči page (2026-08-04): the season/career toggle + player-of-month +
@@ -310,6 +311,9 @@ export function MembersPage() {
           </div>
         )}
       </div>
+
+      {/* Team-vs-team leaderboard (#156) — collapsible, doesn't disturb the members table. */}
+      <TeamLeaderboardCard clubId={activeClubId ?? undefined} />
 
       {!filtered?.length ? (
         <EmptyState

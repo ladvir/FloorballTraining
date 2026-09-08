@@ -42,7 +42,8 @@
     "xpRules": "XP points",
     "howToEarnXp": "How to earn XP",
     "announcer": "Announcer",
-    "myCard": "My card"
+    "myCard": "My card",
+    "teamChallenges": "Team challenges"
   },
   "auth": {
     "email": "Email",
@@ -3427,6 +3428,13 @@
     "TestRecord": {
       "title": "Personal record",
       "desc": "Set a personal record in a test."
+    },
+    "metric": {
+      "TrainingAttendance": "Training attendance",
+      "MatchGoal": "Match goals",
+      "HomeTraining": "Home training",
+      "SkillImprovement": "Skill improvement",
+      "TestPersonalRecord": "Test personal record"
     }
   },
   "rewards": {
@@ -3600,5 +3608,49 @@
     "noGoalsShort": "no goals",
     "clubEmpty": "No teams in this season",
     "clubEmptyHint": "Pick a season the club teams play in."
+  },
+  "teamChallenge": {
+    "title": "Team challenges",
+    "subtitle": "Create and manage challenges for the whole team",
+    "new": "New challenge",
+    "edit": "Edit challenge",
+    "empty": "No challenges yet",
+    "emptyDesc": "Create the first team challenge.",
+    "noPermission": "You can view this team’s challenges but not edit them.",
+    "deleteConfirm": "Delete the challenge “{{name}}”?",
+    "isManual": "Manual challenge (coach marks it done)",
+    "manual": "Manual",
+    "metric": "Metric",
+    "target": "Target (team total)",
+    "windowLabel": "Period",
+    "window": {
+      "Week": "Week",
+      "Month": "Month",
+      "Season": "Season",
+      "Custom": "Custom range"
+    },
+    "startsOn": "From",
+    "endsOn": "To",
+    "active": "Active",
+    "markDone": "Mark done",
+    "undo": "Undo",
+    "completedMembers": "Completed ({{count}} players)",
+    "inProgress": "In progress",
+    "saved": "Challenge saved",
+    "saveError": "Save failed",
+    "deleted": "Challenge deleted",
+    "updated": "Challenge updated"
+  },
+  "teamLeaderboard": {
+    "title": "Team leaderboard",
+    "team": "Team",
+    "avg": "Avg / player",
+    "total": "Total",
+    "challenges": "Challenges",
+    "sort": {
+      "avg": "Average",
+      "total": "Total",
+      "challenges": "Challenges"
+    }
   }
 }
