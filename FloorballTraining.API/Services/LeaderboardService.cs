@@ -76,6 +76,81 @@ public class LeaderboardService(FloorballTrainingContext context)
         };
     }
 
+    /// <summary>
+    /// Team-vs-team leaderboard for one club (#156). Aggregates the same <see cref="XpEvent"/> ledger by
+    /// the player's team, so team-challenge bonus XP (already in each player's ledger) rolls up for free.
+    /// Default sort is average XP per active player; a player counts for a team via an active
+    /// <see cref="TeamMember"/> with <c>IsPlayer</c> (a player on two teams contributes to both).
+    /// </summary>
+    public async Task<TeamLeaderboardDto> GetTeamsAsync(int clubId, int? seasonId, string sort, CancellationToken ct = default)
+    {
+        sort = sort is "total" or "challenges" ? sort : "avg";
+        seasonId ??= await ResolveCurrentSeasonAsync(clubId, ct);
+
+        var teams = await context.Teams.AsNoTracking()
+            .Where(t => t.ClubId == clubId)
+            .Select(t => new { t.Id, t.Name })
+            .ToListAsync(ct);
+        if (teams.Count == 0) return new TeamLeaderboardDto { SeasonId = seasonId, Sort = sort };
+
+        var teamIds = teams.Select(t => t.Id).ToList();
+
+        // (team, member) pairs for active players of these teams.
+        var roster = await context.TeamMembers.AsNoTracking()
+            .Where(tm => tm.IsPlayer && tm.TeamId != null && teamIds.Contains(tm.TeamId.Value) && tm.Member!.IsActive)
+            .Select(tm => new { TeamId = tm.TeamId!.Value, tm.MemberId })
+            .ToListAsync(ct);
+
+        var memberIds = roster.Select(r => r.MemberId).Distinct().ToList();
+        var xpByMember = (await context.XpEvents.AsNoTracking()
+                .Where(e => memberIds.Contains(e.MemberId))
+                .GroupBy(e => e.MemberId)
+                .Select(g => new
+                {
+                    MemberId = g.Key,
+                    Lifetime = g.Sum(x => x.Points),
+                    Season = g.Where(x => x.SeasonId == seasonId).Sum(x => x.Points),
+                })
+                .ToListAsync(ct))
+            .ToDictionary(x => x.MemberId);
+
+        var challengesByTeam = (await context.TeamChallengeCompletions.AsNoTracking()
+                .Where(c => teamIds.Contains(c.TeamChallenge!.TeamId))
+                .Select(c => new { c.TeamChallenge!.TeamId, c.TeamChallengeId, c.PeriodKey })
+                .Distinct()
+                .ToListAsync(ct))
+            .GroupBy(x => x.TeamId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var rows = teams.Select(t =>
+        {
+            var players = roster.Where(r => r.TeamId == t.Id).Select(r => r.MemberId).ToList();
+            var season = players.Sum(m => xpByMember.TryGetValue(m, out var x) ? x.Season : 0);
+            var lifetime = players.Sum(m => xpByMember.TryGetValue(m, out var x) ? x.Lifetime : 0);
+            return new TeamLeaderboardRowDto
+            {
+                TeamId = t.Id,
+                Name = t.Name,
+                PlayerCount = players.Count,
+                SeasonXp = season,
+                LifetimeXp = lifetime,
+                AvgXp = players.Count == 0 ? 0 : (int)Math.Round(season / (double)players.Count),
+                ChallengesCompleted = challengesByTeam.GetValueOrDefault(t.Id),
+            };
+        }).ToList();
+
+        var sorted = (sort switch
+            {
+                "total" => rows.OrderByDescending(r => r.SeasonXp).ThenBy(r => r.Name),
+                "challenges" => rows.OrderByDescending(r => r.ChallengesCompleted).ThenByDescending(r => r.AvgXp).ThenBy(r => r.Name),
+                _ => rows.OrderByDescending(r => r.AvgXp).ThenByDescending(r => r.SeasonXp).ThenBy(r => r.Name),
+            })
+            .ToList();
+        for (var i = 0; i < sorted.Count; i++) sorted[i].Position = i + 1;
+
+        return new TeamLeaderboardDto { SeasonId = seasonId, Sort = sort, Rows = sorted };
+    }
+
     private async Task<LeaderboardRowDto?> PlayerOfMonthAsync(HashSet<int> ids, List<LeaderboardRowDto> rows, CancellationToken ct)
     {
         var since = DateTime.UtcNow.AddDays(-PlayerOfMonthDays);

@@ -127,6 +127,23 @@ public class XpController(
     }
 
     /// <summary>
+    /// GET /xp/leaderboard/teams — team-vs-team leaderboard within one club (#156). Same club scoping and
+    /// guardian block as the member leaderboard. sort=avg (default) | total | challenges.
+    /// </summary>
+    [HttpGet("leaderboard/teams")]
+    public async Task<IActionResult> TeamLeaderboard(int? clubId, int? seasonId, string sort = "avg", CancellationToken ct = default)
+    {
+        if (!User.IsInRole("Admin") && await context.IsGuardianAsync(UserId, ct)) return Forbid();
+
+        int? scopeClub = User.IsInRole("Admin")
+            ? clubId
+            : (await clubRoleService.GetUserClubRoleAsync(UserId)).ClubId;
+
+        if (scopeClub == null) return BadRequest("clubId is required.");
+        return Ok(await leaderboard.GetTeamsAsync(scopeClub.Value, seasonId, sort, ct));
+    }
+
+    /// <summary>
     /// GET /xp/rules — the member-facing "How to earn XP" catalog (#107): every earnable event with its
     /// effective club point value (#106 override, else default), reward layer and who triggers it.
     /// Available to any signed-in member; the club is resolved from the caller (admin may pass ?clubId).
