@@ -22,6 +22,9 @@ namespace FloorballTraining.API.Services;
 /// </summary>
 public class TeamChallengeService(FloorballTrainingContext context, ChallengeContributions contributions)
 {
+    /// <summary>Window key for a manual challenge's completion rows — it has no rolling window.</summary>
+    public const string ManualPeriodKey = "MANUAL";
+
     /// <summary>Reconcile derived completions for every active derived challenge. Returns rows added.</summary>
     public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
     {
@@ -113,11 +116,12 @@ public class TeamChallengeService(FloorballTrainingContext context, ChallengeCon
         var dtos = challenges.Select(c =>
         {
             var dto = ToDto(c);
-            var period = CurrentPeriod(c, asOf, season);
-            dto.PeriodKey = period;
+            // Manual challenges have no rolling window — "completed" = any completion row exists.
+            var period = c.IsManual ? null : CurrentPeriod(c, asOf, season);
+            dto.PeriodKey = c.IsManual ? ManualPeriodKey : period;
 
             var rows = completions
-                .Where(x => x.TeamChallengeId == c.Id && (period == null || x.PeriodKey == period))
+                .Where(x => x.TeamChallengeId == c.Id && (c.IsManual || period == null || x.PeriodKey == period))
                 .ToList();
             dto.Completed = rows.Count > 0;
             dto.CompletedMembers = rows.Select(x => x.MemberId).Distinct().Count();

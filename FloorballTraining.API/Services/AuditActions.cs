@@ -52,6 +52,12 @@ public static class AuditActions
     public const string ReportWeightsUpdated = "ReportWeights.Updated";
     public const string XpRulesUpdated = "XpRules.Updated";
 
+    public const string TeamChallengeCreated = "TeamChallenge.Created";
+    public const string TeamChallengeUpdated = "TeamChallenge.Updated";
+    public const string TeamChallengeDeleted = "TeamChallenge.Deleted";
+    public const string TeamChallengeCompleted = "TeamChallenge.Completed";
+    public const string TeamChallengeUncompleted = "TeamChallenge.Uncompleted";
+
     public const string PlayerSkillCardViewed = "PlayerSkillCard.Viewed";
     public const string PlayerSkillCardUpdated = "PlayerSkillCard.Updated";
     public const string MemberSkillPositionUpdated = "MemberSkillPosition.Updated";
