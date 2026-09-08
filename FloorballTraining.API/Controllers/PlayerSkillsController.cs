@@ -401,6 +401,11 @@ public class PlayerSkillsController(
                 .Select(tm => tm.Team!.Name)
                 .Distinct()
                 .ToList(),
+            TeamIds = member.TeamMembers
+                .Where(tm => tm.TeamId != null)
+                .Select(tm => tm.TeamId!.Value)
+                .Distinct()
+                .ToList(),
             Categories = categoryDtos,
         };
     }

@@ -62,14 +62,18 @@ export function EventsScreen() {
           />
         )}
 
-        {/* Read-only team-challenge board(s) for the teams the player has upcoming events with (#156). */}
-        {[
-          ...new Set(
-            (eventsQuery.data ?? [])
-              .map((a) => a.teamId)
-              .filter((id): id is number => id != null),
-          ),
-        ].map((teamId) => (
+        {/* Read-only team-challenge board(s) for every team the player belongs to (#156). Falls back
+            to the teams of upcoming events if the card hasn't loaded its teamIds yet. */}
+        {(cardQuery.data?.teamIds?.length
+          ? cardQuery.data.teamIds
+          : [
+              ...new Set(
+                (eventsQuery.data ?? [])
+                  .map((a) => a.teamId)
+                  .filter((id): id is number => id != null),
+              ),
+            ]
+        ).map((teamId) => (
           <TeamChallengesSection key={teamId} teamId={teamId} />
         ))}
 

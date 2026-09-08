@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios'
 import { ScrollView, StyleSheet, Text } from 'react-native'
 import { BadgesSection } from '../../components/BadgesSection'
 import { ChallengesSection } from '../../components/ChallengesSection'
+import { TeamChallengesSection } from '../../components/TeamChallengesSection'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
@@ -51,6 +52,10 @@ export function PlayerCardScreen() {
         <PlayerSkillCard card={card} showSkills={false} />
         {/* Self-completable challenges surfaced at login (#109). */}
         <ChallengesSection memberId={card.memberId} />
+        {/* Coach-authored team challenges for every team the player belongs to (#156). */}
+        {(card.teamIds ?? []).map((teamId) => (
+          <TeamChallengesSection key={teamId} teamId={teamId} />
+        ))}
         {/* Milestone badges (#97) - the API only returns badges this player has already earned. */}
         <BadgesSection memberId={card.memberId} />
       </ScrollView>

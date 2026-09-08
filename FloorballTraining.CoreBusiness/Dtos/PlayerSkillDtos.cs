@@ -48,6 +48,9 @@ public class PlayerSkillCardDto
     public string ClubName { get; set; } = string.Empty;
     public int BirthYear { get; set; }
     public List<string> Teams { get; set; } = [];
+    /// <summary>Ids of the teams the member belongs to — lets the mobile app fetch team challenges (#156)
+    /// / other team-scoped data without a name→id lookup.</summary>
+    public List<int> TeamIds { get; set; } = [];
     public List<PlayerSkillCategoryDto> Categories { get; set; } = [];
 }
 

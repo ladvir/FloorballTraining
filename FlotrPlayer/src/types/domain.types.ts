@@ -64,6 +64,8 @@ export interface PlayerSkillCardDto {
   clubName: string
   birthYear: number
   teams: string[]
+  /** Ids of the member's teams — used to fetch team challenges (#156). */
+  teamIds: number[]
   categories: PlayerSkillCategoryDto[]
 }
 
