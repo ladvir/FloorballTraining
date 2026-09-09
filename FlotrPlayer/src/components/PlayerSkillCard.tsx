@@ -9,7 +9,7 @@ import { RadarChart } from './RadarChart'
 import { XpPanel } from './XpPanel'
 import { t } from '../i18n/strings'
 import { useAuthStore } from '../store/authStore'
-import { colors, glass, goalkeeperAccent, radius, spacing, typography } from '../theme/tokens'
+import { colors, glass, goalkeeperAccent, layout, radius, spacing, typography } from '../theme/tokens'
 import { categoryIcon } from '../utils/categoryIcon'
 import { formatGivenName, formatSurname } from '../utils/name'
 import { positionIcon, positionLabel } from '../utils/position'
@@ -143,7 +143,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.xxl + 2,
     padding: 2,
     width: '100%',
-    maxWidth: 360,
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
     shadowColor: colors.accent,
     shadowOpacity: 0.45,
     shadowRadius: 24,

@@ -312,6 +312,17 @@ public class RatingsController(
 
         var raterType = await ResolveRaterType(userId, appointment);
 
+        // A player may only rate a team event they were marked present for in attendance (docházka).
+        // Personal events (no TeamId) aren't attendance-tracked and stay self-rateable. Status 1 = Present.
+        if (raterType == RaterType.Player && appointment.TeamId != null)
+        {
+            var member = await context.Members.FirstOrDefaultAsync(m => m.AppUserId == userId);
+            var wasPresent = member != null && await context.AppointmentAttendances
+                .AnyAsync(a => a.AppointmentId == appointment.Id && a.MemberId == member.Id && a.Status == 1);
+            if (!wasPresent)
+                return BadRequest(new { message = "Hodnotit lze jen události, na kterých jste byli podle docházky přítomni." });
+        }
+
         var rating = new AppointmentRating
         {
             AppointmentId = dto.AppointmentId,

@@ -33,8 +33,16 @@ export function ErrorState({ message, onRetry, retrying, inline }: ErrorStatePro
   )
 }
 
-export function EmptyState({ message }: { message: string }) {
-  return <Text style={styles.empty}>{message}</Text>
+// Fills and vertically centers in whatever space it's given (parent must be flex / the
+// ScrollView's contentContainerStyle must have flexGrow:1) so "nothing here" screens use the
+// free room instead of hugging the top. `inline` keeps the old bare top-anchored text.
+export function EmptyState({ message, inline }: { message: string; inline?: boolean }) {
+  if (inline) return <Text style={styles.empty}>{message}</Text>
+  return (
+    <View style={styles.centered}>
+      <Text style={styles.message}>{message}</Text>
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({

@@ -127,7 +127,7 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
             )}
           </>
         }
-        ListEmptyComponent={<EmptyState message={t(totalSkills === 0 ? 'skills.empty' : 'skills.noResults')} />}
+        ListEmptyComponent={<EmptyState inline message={t(totalSkills === 0 ? 'skills.empty' : 'skills.noResults')} />}
         stickySectionHeadersEnabled={false}
         keyboardShouldPersistTaps="handled"
       />

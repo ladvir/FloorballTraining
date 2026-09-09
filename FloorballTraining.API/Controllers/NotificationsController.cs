@@ -102,6 +102,48 @@ namespace FloorballTraining.API.Controllers
             return NoContent();
         }
 
+        /// <summary>FlotrPlayer registers its Expo push token here after login (and on token refresh).</summary>
+        [HttpPost("register-device")]
+        public async Task<IActionResult> RegisterDevice(ExpoDeviceRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(request.Token)) return BadRequest();
+
+            var existing = await context.ExpoPushTokens
+                .FirstOrDefaultAsync(t => t.Token == request.Token);
+
+            if (existing != null)
+            {
+                existing.UserId = userId; // device handed to another account → re-point it
+            }
+            else
+            {
+                context.ExpoPushTokens.Add(new Plugins.EFCoreSqlServer.Models.ExpoPushToken
+                {
+                    UserId = userId,
+                    Token = request.Token,
+                });
+            }
+
+            await context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        /// <summary>Called on logout so a shared device stops receiving the previous user's pushes.</summary>
+        [HttpDelete("unregister-device")]
+        public async Task<IActionResult> UnregisterDevice(ExpoDeviceRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            await context.ExpoPushTokens
+                .Where(t => t.Token == request.Token && t.UserId == userId)
+                .ExecuteDeleteAsync();
+
+            return NoContent();
+        }
+
         /// <summary>
         /// Development-only: creates a notification for the current user and pushes it via SignalR.
         /// Used by E2E tests to verify real-time notification delivery without side effects.

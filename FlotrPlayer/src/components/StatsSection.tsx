@@ -26,7 +26,7 @@ export function StatsSection({ categories, memberId }: StatsSectionProps) {
   const { overallAverage, categoryAverages, bestSkills, skillsToImprove } = summarizeStats(categories)
 
   if (overallAverage == null) {
-    return <EmptyState message={t('stats.empty')} />
+    return <EmptyState inline message={t('stats.empty')} />
   }
 
   const openSkill = (skill: PlayerSkillDto) => {

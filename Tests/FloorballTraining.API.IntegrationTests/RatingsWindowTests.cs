@@ -15,7 +15,8 @@ namespace FloorballTraining.API.IntegrationTests;
 
 /// <summary>
 /// Player self-rating of a past event (FlotrPlayer) may only be created/edited/deleted within
-/// RatingsController.RatingWindowDays (3 days) after the event's End.
+/// RatingsController.RatingWindowDays (3 days) after the event's End, and only for a team event
+/// the player was marked present at (docházka).
 /// </summary>
 [Collection("Api")]
 public class RatingsWindowTests : IAsyncLifetime
@@ -25,7 +26,8 @@ public class RatingsWindowTests : IAsyncLifetime
     private readonly string _playerEmail = $"rw-player-{Guid.NewGuid():N}@test.example";
 
     private string _playerUserId = string.Empty;
-    private int _recentAppointmentId; // ended 1 day ago - inside the 3-day window
+    private int _recentAppointmentId; // ended 1 day ago, player marked present - inside the 3-day window
+    private int _recentUnattendedAppointmentId; // ended 1 day ago, no attendance record
     private int _oldAppointmentId; // ended 5 days ago - outside the window
 
     public RatingsWindowTests(CustomWebApplicationFactory factory) => _factory = factory;
@@ -50,14 +52,20 @@ public class RatingsWindowTests : IAsyncLifetime
             AppointmentType = AppointmentType.Training, TeamId = team.Id, LocationId = 1,
             Start = now.AddDays(-1).AddHours(-1), End = now.AddDays(-1)
         };
+        var recentUnattended = new Appointment
+        {
+            AppointmentType = AppointmentType.Training, TeamId = team.Id, LocationId = 1,
+            Start = now.AddDays(-1).AddHours(-1), End = now.AddDays(-1)
+        };
         var old = new Appointment
         {
             AppointmentType = AppointmentType.Training, TeamId = team.Id, LocationId = 1,
             Start = now.AddDays(-5).AddHours(-1), End = now.AddDays(-5)
         };
-        db.Appointments.AddRange(recent, old);
+        db.Appointments.AddRange(recent, recentUnattended, old);
         await db.SaveChangesAsync();
         _recentAppointmentId = recent.Id;
+        _recentUnattendedAppointmentId = recentUnattended.Id;
         _oldAppointmentId = old.Id;
 
         var player = new AppUser { UserName = _playerEmail, Email = _playerEmail, FirstName = "Rw", LastName = "Player", DefaultClubId = club.Id };
@@ -67,6 +75,8 @@ public class RatingsWindowTests : IAsyncLifetime
         db.Members.Add(member);
         await db.SaveChangesAsync();
         db.TeamMembers.Add(new TeamMember { TeamId = team.Id, MemberId = member.Id, IsPlayer = true });
+        // Present at the "recent" event only (Status 1 = Present) - "recentUnattended" has no record.
+        db.AppointmentAttendances.Add(new AppointmentAttendance { AppointmentId = recent.Id, MemberId = member.Id, Status = 1 });
         await db.SaveChangesAsync();
     }
 
@@ -110,6 +120,15 @@ public class RatingsWindowTests : IAsyncLifetime
         var player = await PlayerClientAsync();
         var resp = await player.PostAsJsonAsync("/ratings",
             new AppointmentRatingDto { AppointmentId = _oldAppointmentId, Grade = 2 });
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Create_WhenNotMarkedPresent_IsRejected()
+    {
+        var player = await PlayerClientAsync();
+        var resp = await player.PostAsJsonAsync("/ratings",
+            new AppointmentRatingDto { AppointmentId = _recentUnattendedAppointmentId, Grade = 2 });
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 

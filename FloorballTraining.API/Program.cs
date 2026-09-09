@@ -136,6 +136,12 @@ RecurringJob.AddOrUpdate<AiUsageRetentionJob>(
     Cron.Daily(2, 30),
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // 02:30 UTC
 
+RecurringJob.AddOrUpdate<EventRsvpReminderJob>(
+    "event-rsvp-reminder",
+    job => job.ExecuteAsync(CancellationToken.None),
+    "*/15 * * * *",
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // every 15 min
+
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 

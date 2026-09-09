@@ -5,7 +5,7 @@ import { Icon } from './Icon'
 import { xpApi } from '../api'
 import { t, type StringKey } from '../i18n/strings'
 import type { ChallengeDto } from '../types/domain.types'
-import { colors, glass, gradeColors, radius, spacing, typography } from '../theme/tokens'
+import { colors, glass, gradeColors, layout, radius, spacing, typography } from '../theme/tokens'
 
 const DONE_COLOR = gradeColors[1] // green
 
@@ -96,7 +96,8 @@ function ChallengeRow({ c, onStart }: { c: ChallengeDto; onStart: () => void }) 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    maxWidth: 360, // align with PlayerSkillCard's capped width
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
     gap: spacing.sm,
     marginTop: spacing.md,
     backgroundColor: glass.fill,

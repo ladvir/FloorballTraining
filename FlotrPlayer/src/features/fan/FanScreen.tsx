@@ -135,6 +135,7 @@ function MatchRow({ match, onCheckIn, pending }: { match: FanMatchDto; onCheckIn
 
 const styles = StyleSheet.create({
   content: {
+    flexGrow: 1,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
     gap: spacing.md,

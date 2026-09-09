@@ -16,6 +16,7 @@ import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { attendanceApi } from '../../api/attendance.api'
+import { rsvpApi } from '../../api/rsvp.api'
 import { teamsApi, xpApi } from '../../api/index'
 import { reduceAwards, type AwardAction } from './attendanceUtils'
 import type {
@@ -85,6 +86,33 @@ function buildBaseRows(
 
 const MATCH_TYPE = 3 // AppointmentType.Match — gates the "family cheered" bonus
 
+// A member's self-RSVP ("Jdu / Nejdu"), shown read-only next to their name so the coach can see
+// who pre-registered before recording actual attendance. RSVP status: 1=going, 2=not, 3=maybe.
+function RsvpPill({ status }: { status?: number }) {
+  const { t } = useTranslation()
+  if (!status || status === 0) return null
+  const cls =
+    status === 1
+      ? 'bg-green-50 text-green-600'
+      : status === 2
+        ? 'bg-red-50 text-red-500'
+        : 'bg-amber-50 text-amber-600'
+  const label =
+    status === 1
+      ? t('attendance.rsvpGoing')
+      : status === 2
+        ? t('attendance.rsvpNotGoing')
+        : t('attendance.rsvpMaybe')
+  return (
+    <span
+      title={t('attendance.rsvpHeading')}
+      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${cls}`}
+    >
+      {label}
+    </span>
+  )
+}
+
 function AwardPill({
   active,
   icon,
@@ -140,6 +168,19 @@ export function AttendanceModal({
     queryKey: ['attendance', 'appointment', appointmentId],
     queryFn: () => attendanceApi.getByAppointment(appointmentId),
   })
+
+  // Who pre-registered ("Jdu / Nejdu") — shown read-only, useful before the event when there's
+  // no attendance to record yet. `all` is populated for coach roles (see AppointmentsController).
+  const { data: rsvp } = useQuery({
+    queryKey: ['rsvp', appointmentId],
+    queryFn: () => rsvpApi.get(appointmentId),
+  })
+  const rsvpByMember = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const r of rsvp?.all ?? []) m.set(r.memberId, r.status)
+    return m
+  }, [rsvp])
+  const rsvpTotal = rsvp ? rsvp.countYes + rsvp.countNo + rsvp.countMaybe : 0
 
   const { data: team, isLoading: loadingTeam } = useQuery({
     queryKey: ['team', teamId],
@@ -289,6 +330,16 @@ export function AttendanceModal({
             </div>
           )}
 
+          {rsvpTotal > 0 && (
+            <div className="mb-4 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-800">
+              {t('attendance.rsvpSummary', {
+                going: rsvp!.countYes,
+                notGoing: rsvp!.countNo,
+                maybe: rsvp!.countMaybe,
+              })}
+            </div>
+          )}
+
           {/* Bulk actions */}
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
             <span className="text-xs text-gray-500 mr-1">{t('common.all')}:</span>
@@ -327,6 +378,7 @@ export function AttendanceModal({
                     <span className="flex-1 text-sm text-gray-800">
                       {row.memberLastName} {row.memberFirstName}
                     </span>
+                    <RsvpPill status={rsvpByMember.get(row.memberId)} />
                     <div className="flex gap-1">
                       {([1, 2, 3, 0] as AttendanceStatus[]).map((s) => (
                         <button

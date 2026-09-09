@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Button } from '../../components/Button'
@@ -11,11 +11,11 @@ import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
 import { TeamChallengesSection } from '../../components/TeamChallengesSection'
 import { VideoPlayer } from '../../components/VideoPlayer'
-import { appointmentsApi, playerSkillsApi } from '../../api'
+import { appointmentsApi, playerSkillsApi, rsvpApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 import { useLiveTrainingStore } from '../../store/liveTrainingStore'
-import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
+import { colors, glass, gradeColors, radius, spacing, typography } from '../../theme/tokens'
 import type { AppointmentDto } from '../../types/domain.types'
 
 // Admin / club admin / head coach / coach — the roles that get the coach-only event actions
@@ -122,17 +122,21 @@ export function EventsScreen() {
 }
 
 // One event row; tapping it toggles its video list, fetched lazily on first expand (#131).
-function EventRow({
+// Also reused on the player's home screen (PlayerCardScreen) for the "this week" list.
+export function EventRow({
   appointment,
   expanded,
   onToggle,
   showRating,
+  onSkipRating,
 }: {
   appointment: AppointmentDto
   expanded: boolean
   onToggle: () => void
   /** Renders the player's own rate/view/edit/delete widget below the row (recently-ended events only). */
   showRating?: boolean
+  /** Passed to RatingWidget as onSkip — shows a "rate / don't want to" choice; picking the latter fires this. */
+  onSkipRating?: () => void
 }) {
   const navigation = useNavigation()
   const effectiveRole = useAuthStore((s) => s.user?.effectiveRole)
@@ -149,6 +153,22 @@ function EventRow({
   const hasVideos = videos.length > 0
 
   const isCoach = COACH_ROLES.includes(effectiveRole ?? '')
+  // "Jdu / Nejdu" self-RSVP for upcoming events — players only, not the past "K ohodnocení" rows.
+  // ponytail: one rsvp GET per visible row (N+1), same trade-off as videosQuery above — fine for a
+  // player's short week list; fold `myRsvp` into the appointment list DTO if it ever grows.
+  const showRsvp = !isCoach && !showRating
+  const queryClient = useQueryClient()
+  const rsvpQuery = useQuery({
+    queryKey: ['rsvp', appointment.id],
+    queryFn: () => rsvpApi.get(appointment.id),
+    enabled: showRsvp,
+  })
+  const rsvpMutation = useMutation({
+    mutationFn: (status: number) => rsvpApi.upsert(appointment.id, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rsvp', appointment.id] }),
+  })
+  const myRsvp = rsvpQuery.data?.myStatus ?? 0
+
   const canRunLive = isCoach && appointment.appointmentType === 0 && appointment.trainingId != null
   // Coach bonuses live here now (pick event → pick player), not under every player's card.
   const canAward = isCoach && appointment.teamId != null
@@ -198,6 +218,25 @@ function EventRow({
         )}
       </Pressable>
 
+      {showRsvp && (
+        <View style={styles.rsvpRow}>
+          <Pressable
+            style={[styles.rsvpPill, myRsvp === 1 && styles.rsvpPillYes]}
+            onPress={() => rsvpMutation.mutate(1)}
+            disabled={rsvpMutation.isPending}
+          >
+            <Text style={[styles.rsvpText, myRsvp === 1 && styles.rsvpTextYes]}>{t('events.rsvpGoing')}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.rsvpPill, myRsvp === 2 && styles.rsvpPillNo]}
+            onPress={() => rsvpMutation.mutate(2)}
+            disabled={rsvpMutation.isPending}
+          >
+            <Text style={[styles.rsvpText, myRsvp === 2 && styles.rsvpTextNo]}>{t('events.rsvpNotGoing')}</Text>
+          </Pressable>
+        </View>
+      )}
+
       {canRunLive && (
         <Pressable style={styles.liveButton} onPress={launchLive}>
           <Icon name="play" size={14} color={colors.textPrimary} />
@@ -226,7 +265,7 @@ function EventRow({
         </Pressable>
       )}
 
-      {showRating && <RatingWidget appointmentId={appointment.id} />}
+      {showRating && <RatingWidget appointmentId={appointment.id} onSkip={onSkipRating} />}
 
       {expanded && hasVideos && (
         <View style={styles.videos}>
@@ -240,7 +279,7 @@ function EventRow({
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.xl, gap: spacing.md },
+  content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md },
   title: {
     color: colors.textPrimary,
     fontSize: typography.title.fontSize,
@@ -267,6 +306,20 @@ const styles = StyleSheet.create({
   rowTitle: { color: colors.textPrimary, fontSize: typography.bodyBold.fontSize, fontWeight: '600' },
   rowMeta: { color: colors.textMuted, fontSize: typography.caption.fontSize, marginTop: 2 },
   rowType: { color: colors.textSecondary, fontSize: typography.caption.fontSize },
+  rsvpRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md },
+  rsvpPill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: glass.border,
+    backgroundColor: glass.fill,
+  },
+  rsvpPillYes: { borderColor: gradeColors[1], backgroundColor: 'rgba(34,197,94,0.15)' },
+  rsvpPillNo: { borderColor: colors.danger, backgroundColor: 'rgba(239,68,68,0.15)' },
+  rsvpText: { color: colors.textSecondary, fontSize: typography.caption.fontSize, fontWeight: '700' },
+  rsvpTextYes: { color: gradeColors[1] },
+  rsvpTextNo: { color: colors.danger },
   videos: { gap: spacing.md, padding: spacing.md, paddingTop: 0 },
   liveButton: {
     flexDirection: 'row',

@@ -21,7 +21,8 @@ namespace FloorballTraining.API.Services
         FloorballTrainingContext context,
         UserManager<AppUser> userManager,
         IHubContext<NotificationHub> hubContext,
-        IWebPushService webPushService) : INotificationService
+        IWebPushService webPushService,
+        IExpoPushService expoPushService) : INotificationService
     {
         public async Task CreateForAdminsAsync(string type, string title, string message)
         {
@@ -129,6 +130,16 @@ namespace FloorballTraining.API.Services
             catch
             {
                 // Best-effort, same as the SignalR push above.
+            }
+
+            try
+            {
+                // Mobile push for FlotrPlayer installs, same fire-and-forget contract.
+                await expoPushService.EnqueuePushToUserAsync(userId, title, message);
+            }
+            catch
+            {
+                // Best-effort.
             }
         }
     }

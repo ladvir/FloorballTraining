@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur'
 import { Platform, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/Icon'
+import { ChallengesScreen } from '../features/challenges/ChallengesScreen'
 import { ChildrenScreen } from '../features/guardian/ChildrenScreen'
 import { FanScreen } from '../features/fan/FanScreen'
 import { EventsScreen } from '../features/home/EventsScreen'
@@ -133,10 +134,11 @@ export function MainTabs() {
         component={PlayerCardScreen}
         options={{ title: t('nav.home'), tabBarIcon: tabIcon('home-outline') }}
       />
+      {/* Events moved onto Home as a "this week" list (2026-09-09); challenges got their own tab. */}
       <Tab.Screen
-        name="Events"
-        component={EventsScreen}
-        options={{ title: t('nav.events'), tabBarIcon: tabIcon('calendar-outline') }}
+        name="Challenges"
+        component={ChallengesScreen}
+        options={{ title: t('nav.challenges'), tabBarIcon: tabIcon('flag-outline') }}
       />
       <Tab.Screen
         name="Skills"

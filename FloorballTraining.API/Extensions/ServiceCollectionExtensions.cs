@@ -459,6 +459,7 @@ public static class ServiceCollectionExtensions
             return client;
         });
         services.AddScoped<IWebPushService, WebPushService>();
+        services.AddScoped<IExpoPushService, ExpoPushService>();
 
         // Video file storage (#126) — saves under wwwroot/videos, served by the UseStaticFiles() below.
         services.AddScoped<IVideoFileStorage, VideoFileStorage>();
@@ -604,6 +605,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AiUsageRetentionJob>();
         services.AddScoped<GamificationRecomputeJob>();
         services.AddScoped<VideoAnnotationExportJob>();
+        services.AddScoped<EventRsvpReminderJob>();
 
         return services;
     }

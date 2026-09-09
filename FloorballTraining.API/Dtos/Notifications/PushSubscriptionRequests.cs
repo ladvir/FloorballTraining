@@ -12,4 +12,10 @@ namespace FloorballTraining.API.Dtos.Notifications
     {
         public required string Endpoint { get; set; }
     }
+
+    /// <summary>Expo push token from a FlotrPlayer install (register on login, unregister on logout).</summary>
+    public class ExpoDeviceRequest
+    {
+        public required string Token { get; set; }
+    }
 }

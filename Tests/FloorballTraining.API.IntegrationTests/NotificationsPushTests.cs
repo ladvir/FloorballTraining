@@ -16,6 +16,7 @@ public class NotificationsPushTests : IAsyncLifetime
 {
     private readonly CustomWebApplicationFactory _factory;
     private readonly List<string> _endpointsToDelete = new();
+    private readonly List<string> _tokensToDelete = new();
 
     public NotificationsPushTests(CustomWebApplicationFactory factory) => _factory = factory;
 
@@ -28,6 +29,8 @@ public class NotificationsPushTests : IAsyncLifetime
         await using var db = await dbFactory.CreateDbContextAsync();
         var stray = await db.PushSubscriptions.Where(s => _endpointsToDelete.Contains(s.Endpoint)).ToListAsync();
         db.PushSubscriptions.RemoveRange(stray);
+        var strayTokens = await db.ExpoPushTokens.Where(t => _tokensToDelete.Contains(t.Token)).ToListAsync();
+        db.ExpoPushTokens.RemoveRange(strayTokens);
         await db.SaveChangesAsync();
     }
 
@@ -102,6 +105,54 @@ public class NotificationsPushTests : IAsyncLifetime
         var rows = await db.PushSubscriptions.Where(s => s.Endpoint == endpoint).ToListAsync();
         rows.Should().ContainSingle();
         rows[0].P256dh.Should().Be("new-key");
+    }
+
+    [Fact]
+    public async Task RegisterDevice_then_Unregister_roundtrips()
+    {
+        var expoToken = $"ExponentPushToken[{Guid.NewGuid():N}]";
+        _tokensToDelete.Add(expoToken);
+        var client = await AdminClientAsync();
+
+        var register = await client.PostAsJsonAsync("/notifications/register-device", new { Token = expoToken });
+        register.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            (await db.ExpoPushTokens.SingleOrDefaultAsync(t => t.Token == expoToken)).Should().NotBeNull();
+        }
+
+        var unregister = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "/notifications/unregister-device")
+        {
+            Content = JsonContent.Create(new { Token = expoToken }),
+        });
+        unregister.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            (await db.ExpoPushTokens.AnyAsync(t => t.Token == expoToken)).Should().BeFalse();
+        }
+    }
+
+    [Fact]
+    public async Task RegisterDevice_upserts_by_token_instead_of_duplicating()
+    {
+        var expoToken = $"ExponentPushToken[{Guid.NewGuid():N}]";
+        _tokensToDelete.Add(expoToken);
+        var client = await AdminClientAsync();
+
+        await client.PostAsJsonAsync("/notifications/register-device", new { Token = expoToken });
+        var second = await client.PostAsJsonAsync("/notifications/register-device", new { Token = expoToken });
+        second.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+        await using var db = await dbFactory.CreateDbContextAsync();
+        (await db.ExpoPushTokens.Where(t => t.Token == expoToken).ToListAsync()).Should().ContainSingle();
     }
 
     [Fact]

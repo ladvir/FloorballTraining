@@ -3,6 +3,7 @@ import { authApi } from '../api'
 import { onSessionExpired } from '../api/authEvents'
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../api/token'
 import { t } from '../i18n/strings'
+import { unregisterPushTokenAsync } from '../utils/pushNotifications'
 import type { AccountType, AuthResponse, LoginRequest } from '../types/domain.types'
 
 interface AuthState {
@@ -58,6 +59,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     const refreshToken = await getRefreshToken()
+    // Drop this device's push registration while the token still authenticates the request.
+    await unregisterPushTokenAsync()
     try {
       await authApi.logout(refreshToken)
     } catch {

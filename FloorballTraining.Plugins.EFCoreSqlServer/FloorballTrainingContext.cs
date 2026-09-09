@@ -62,6 +62,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
 
+        public DbSet<ExpoPushToken> ExpoPushTokens { get; set; } = null!;
+
         public DbSet<Video> Videos { get; set; } = null!;
 
         public DbSet<VideoAnnotation> VideoAnnotations { get; set; } = null!;

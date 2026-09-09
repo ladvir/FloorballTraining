@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, View } from 'react-native'
 import { API_BASE_URL, xpApi } from '../api'
 import { t, type StringKey } from '../i18n/strings'
 import type { BadgeStatusDto } from '../types/domain.types'
-import { colors, glass, radius, spacing, typography } from '../theme/tokens'
+import { colors, glass, layout, radius, spacing, typography } from '../theme/tokens'
 
 // Collectible milestone badges (#97). Only ever shows *earned* badges - a Player is sent only those
 // anyway; a Coach's response also carries locked ones (with progress) but they're filtered out here,
@@ -45,7 +45,8 @@ function BadgeTile({ badge }: { badge: BadgeStatusDto }) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
     gap: spacing.sm,
     marginTop: spacing.md,
     backgroundColor: glass.fill,

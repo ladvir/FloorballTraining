@@ -282,6 +282,7 @@ export type StringKey =
   | 'homeTraining.confirm'
   | 'homeTraining.reject'
   | 'nav.events'
+  | 'nav.challenges'
   | 'events.title'
   | 'events.upcoming'
   | 'events.empty'
@@ -291,6 +292,10 @@ export type StringKey =
   | 'events.typeMatch'
   | 'events.typeOther'
   | 'events.toRate'
+  | 'events.weekTitle'
+  | 'events.weekEmpty'
+  | 'events.rsvpGoing'
+  | 'events.rsvpNotGoing'
   | 'liveTraining.launch'
   | 'liveTraining.allParts'
   | 'liveTraining.endEarly'
@@ -324,6 +329,9 @@ export type StringKey =
   | 'ratings.delete'
   | 'ratings.deleteConfirmTitle'
   | 'ratings.saveError'
+  | 'ratings.prompt'
+  | 'ratings.rateCta'
+  | 'ratings.skip'
   | 'videos.openVideo'
   | 'coachAwards.title'
   | 'coachAwards.noPlayers'
@@ -366,6 +374,7 @@ export type StringKey =
   | 'xpHowto.desc.FamilyCheered'
   | 'xpHowto.desc.HomeTraining'
   | 'challenge.section'
+  | 'challenge.pageHint'
   | 'challenge.rewardXp'
   | 'challenge.done'
   | 'challenge.progress'
@@ -715,6 +724,7 @@ const cs: Record<StringKey, string> = {
   'homeTraining.confirm': 'Potvrdit',
   'homeTraining.reject': 'Zamítnout',
   'nav.events': 'Události',
+  'nav.challenges': 'Výzvy',
   'events.title': 'Události',
   'events.upcoming': 'Nadcházející',
   'events.empty': 'Žádné nadcházející události.',
@@ -724,6 +734,10 @@ const cs: Record<StringKey, string> = {
   'events.typeMatch': 'Zápas',
   'events.typeOther': 'Událost',
   'events.toRate': 'K ohodnocení',
+  'events.weekTitle': 'Tento týden',
+  'events.weekEmpty': 'Tento týden a pár dní zpět nemáš žádné události.',
+  'events.rsvpGoing': 'Jdu',
+  'events.rsvpNotGoing': 'Nejdu',
   'liveTraining.launch': 'Spustit živě',
   'liveTraining.allParts': 'Všechny části',
   'liveTraining.endEarly': 'Ukončit',
@@ -757,6 +771,9 @@ const cs: Record<StringKey, string> = {
   'ratings.delete': 'Smazat',
   'ratings.deleteConfirmTitle': 'Smazat hodnocení?',
   'ratings.saveError': 'Hodnocení se nepodařilo uložit.',
+  'ratings.prompt': 'Ohodnotit tuto událost?',
+  'ratings.rateCta': 'Chci hodnotit',
+  'ratings.skip': 'Nechci hodnotit',
   'videos.openVideo': 'Otevřít video',
   'coachAwards.title': 'Trenérské bonusy',
   'coachAwards.noPlayers': 'Žádní hráči k ocenění.',
@@ -799,6 +816,7 @@ const cs: Record<StringKey, string> = {
   'xpHowto.desc.FamilyCheered': 'Tvoje rodina přijde fandit na zápas.',
   'xpHowto.desc.HomeTraining': 'Zapiš potvrzený domácí trénink (se stropem).',
   'challenge.section': 'Tvoje výzvy',
+  'challenge.pageHint': 'Výzvy se plní samy z tréninků, docházky a zápasů. Sleduj svůj postup.',
   'challenge.rewardXp': '+{xp} XP',
   'challenge.done': 'Splněno! +{xp} XP',
   'challenge.progress': '{current}/{target}',

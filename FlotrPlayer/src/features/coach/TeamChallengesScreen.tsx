@@ -422,7 +422,7 @@ function Chips({
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.xl, gap: spacing.md },
+  content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md },
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
   backText: { color: colors.accent, fontSize: typography.body.fontSize - 1, fontWeight: '600' },
   title: {

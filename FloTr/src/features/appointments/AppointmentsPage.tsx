@@ -11,6 +11,7 @@ import {
   isSameMonth,
   isSameDay,
   isAfter,
+  startOfDay,
   addMonths,
   subMonths,
 } from 'date-fns'
@@ -316,7 +317,10 @@ export function AppointmentsPage() {
     const now = new Date()
     let items = [...teamFiltered]
     if (!showPast) {
-      items = items.filter((a) => isAfter(parseISO(a.end), now))
+      // Show every event from today onward regardless of time of day — an event that already
+      // started (or ended) earlier today still belongs in the list; "showPast" reveals earlier days.
+      const todayStart = startOfDay(now)
+      items = items.filter((a) => parseISO(a.end) >= todayStart)
     }
     items.sort((a, b) => {
       let cmp = 0

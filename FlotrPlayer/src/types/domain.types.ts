@@ -486,6 +486,27 @@ export interface RateAppointmentRequest {
   comment?: string | null
 }
 
+/** GET /members/{id}/attendance — status: 0=Unknown, 1=Present, 2=Absent, 3=Excused. */
+export interface MemberAttendanceRecordDto {
+  id: number
+  appointmentId: number
+  appointmentName: string | null
+  appointmentStart: string
+  status: number
+  note: string | null
+}
+
+export interface MemberAttendanceSummaryDto {
+  memberId: number
+  totalEvents: number
+  present: number
+  absent: number
+  excused: number
+  unknown: number
+  attendanceRate: number
+  recentRecords: MemberAttendanceRecordDto[]
+}
+
 // ── Training detail (GET /trainings/{id}) — only the fields the live runner needs. ────────────
 export interface TrainingGroupDto {
   id: number

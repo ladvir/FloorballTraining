@@ -56,6 +56,13 @@ export const radius = {
   pill: 999,
 } as const
 
+/** Shared cap for the stacked content column on the player screens (collector card, challenge
+ * boards, badges, the "this week" list). Every block uses this so they line up as one column on
+ * wide viewports instead of some spanning full width and some sitting as a narrow strip. */
+export const layout = {
+  contentMaxWidth: 360,
+} as const
+
 /** design/images/01-design-system.png's "Typography" panel: Display Bold 48 / Heading Bold 32 /
  * Body Regular 16 / Caption Medium 12. */
 export const typography = {

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { Icon } from './Icon'
 import { xpApi } from '../api'
 import { t, type StringKey } from '../i18n/strings'
-import { colors, glass, gradeColors, radius, spacing, typography } from '../theme/tokens'
+import { colors, glass, gradeColors, layout, radius, spacing, typography } from '../theme/tokens'
 import type { TeamChallengeDto } from '../types/domain.types'
 
 const DONE_COLOR = gradeColors[1] // green
@@ -92,6 +92,8 @@ function ChallengeRow({ c }: { c: TeamChallengeDto }) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
     gap: spacing.sm,
     marginTop: spacing.md,
     backgroundColor: glass.fill,

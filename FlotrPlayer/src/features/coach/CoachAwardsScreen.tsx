@@ -206,6 +206,7 @@ function AwardPill({
 
 const styles = StyleSheet.create({
   content: {
+    flexGrow: 1,
     padding: spacing.xl,
     gap: spacing.md,
   },
