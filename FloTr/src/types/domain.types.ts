@@ -1711,6 +1711,22 @@ export interface BadgeStatusDto {
   progress: number
 }
 
+/** One recent gamification milestone for the coach+ dashboard feed: a badge earned, or a career
+ *  level / rank crossed, within the requested window. */
+export interface RecentAchievementDto {
+  memberId: number
+  memberName: string
+  /** "badge" | "level" | "rank". */
+  kind: 'badge' | 'level' | 'rank'
+  at: string
+  badgeCode?: string | null
+  badgeIcon?: string | null
+  fromLevel?: number | null
+  toLevel?: number | null
+  fromRankIndex?: number | null
+  toRankIndex?: number | null
+}
+
 /** Self-completable challenge (#108). code/metric/window are i18n key material — no text over the wire. */
 export interface ChallengeDto {
   code: string

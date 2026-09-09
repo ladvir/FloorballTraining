@@ -63,6 +63,103 @@ public class XpController(
         return Ok(await challenges.GetChallengesAsync(memberId, ct: ct));
     }
 
+    /// <summary>
+    /// GET /xp/recent-achievements?days=14 — coach+ dashboard feed: who earned a badge, or crossed a
+    /// career level / rank, within the window. Scoped to the caller's accessible teams (Coach → own
+    /// team(s), HeadCoach/ClubAdmin → whole club, Admin → all or ?clubId). Level/rank moves are derived
+    /// from the XP ledger (total now vs. total before the window) — the ledger has no per-level timestamp.
+    /// </summary>
+    [HttpGet("recent-achievements")]
+    public async Task<IActionResult> RecentAchievements(int days = 14, int? clubId = null, CancellationToken ct = default)
+    {
+        days = Math.Clamp(days, 1, 60);
+        var role = await clubRoleService.GetUserClubRoleAsync(UserId);
+        if (role.EffectiveRole is not ("Admin" or "ClubAdmin" or "HeadCoach" or "Coach")) return Forbid();
+
+        var teamIds = await AccessibleTeamIdsAsync(role, clubId, ct);
+        var members = (await context.TeamMembers.AsNoTracking()
+                .Where(tm => tm.IsPlayer && tm.TeamId != null && teamIds.Contains(tm.TeamId.Value) && tm.Member!.IsActive)
+                .Select(tm => new { tm.MemberId, tm.Member!.FirstName, tm.Member.LastName })
+                .Distinct()
+                .ToListAsync(ct))
+            .GroupBy(m => m.MemberId)
+            .ToDictionary(g => g.Key, g => $"{g.First().FirstName} {g.First().LastName}".Trim());
+        if (members.Count == 0) return Ok(new List<RecentAchievementDto>());
+
+        var memberIds = members.Keys.ToList();
+        var cutoff = DateTime.UtcNow.AddDays(-days);
+        var feed = new List<RecentAchievementDto>();
+
+        var iconByCode = BadgeCatalog.All.ToDictionary(d => d.Code, d => d.Icon);
+        var recentBadges = await context.MemberBadges.AsNoTracking()
+            .Where(b => memberIds.Contains(b.MemberId) && b.EarnedAt >= cutoff)
+            .Select(b => new { b.MemberId, b.Code, b.EarnedAt })
+            .ToListAsync(ct);
+        foreach (var b in recentBadges)
+            feed.Add(new RecentAchievementDto
+            {
+                MemberId = b.MemberId, MemberName = members[b.MemberId], Kind = "badge", At = b.EarnedAt,
+                BadgeCode = b.Code.ToString(), BadgeIcon = iconByCode.GetValueOrDefault(b.Code),
+            });
+
+        var xpAgg = await context.XpEvents.AsNoTracking()
+            .Where(e => memberIds.Contains(e.MemberId))
+            .GroupBy(e => e.MemberId)
+            .Select(g => new
+            {
+                MemberId = g.Key,
+                Total = g.Sum(x => x.Points),
+                Before = g.Where(x => x.OccurredAt < cutoff).Sum(x => x.Points),
+            })
+            .ToListAsync(ct);
+        foreach (var a in xpAgg)
+        {
+            if (a.Total <= a.Before) continue; // no XP gained in the window
+            var before = XpProgression.Career(a.Before);
+            var now = XpProgression.Career(a.Total);
+            if (now.RankIndex > before.RankIndex)
+                feed.Add(new RecentAchievementDto
+                {
+                    MemberId = a.MemberId, MemberName = members[a.MemberId], Kind = "rank", At = DateTime.UtcNow,
+                    FromRankIndex = before.RankIndex, ToRankIndex = now.RankIndex,
+                    FromLevel = before.Level, ToLevel = now.Level,
+                });
+            else if (now.Level > before.Level)
+                feed.Add(new RecentAchievementDto
+                {
+                    MemberId = a.MemberId, MemberName = members[a.MemberId], Kind = "level", At = DateTime.UtcNow,
+                    FromLevel = before.Level, ToLevel = now.Level,
+                    FromRankIndex = before.RankIndex, ToRankIndex = now.RankIndex,
+                });
+        }
+
+        return Ok(feed.OrderByDescending(r => r.At).ThenBy(r => r.MemberName).Take(30).ToList());
+    }
+
+    /// <summary>Team ids the caller may see achievements for. Mirrors PlayerSkillsController's helper,
+    /// plus an admin ?clubId narrow.</summary>
+    private async Task<List<int>> AccessibleTeamIdsAsync(ClubRoleInfo role, int? clubId, CancellationToken ct)
+    {
+        if (role.EffectiveRole == "Admin")
+            return await (clubId == null
+                    ? context.Teams
+                    : context.Teams.Where(t => t.ClubId == clubId))
+                .Select(t => t.Id).ToListAsync(ct);
+
+        if (role.EffectiveRole is "ClubAdmin" or "HeadCoach" && role.ClubId != null)
+            return await context.Teams.Where(t => t.ClubId == role.ClubId).Select(t => t.Id).ToListAsync(ct);
+
+        if (role.EffectiveRole == "Coach")
+        {
+            var ids = role.CoachTeamIds.ToList();
+            if (ids.Count == 0 && role.ClubId != null) // same "no explicit coach teams → club-wide" quirk as elsewhere
+                ids = await context.Teams.Where(t => t.ClubId == role.ClubId).Select(t => t.Id).ToListAsync(ct);
+            return ids;
+        }
+
+        return [];
+    }
+
     /// <summary>POST /xp/badges/recompute — admin trigger; enqueues the combined XP+badge recompute job (#97).</summary>
     [HttpPost("badges/recompute")]
     [Authorize(Roles = "Admin")]

@@ -39,7 +39,15 @@ public enum ChallengeCode
 /// </summary>
 public static class ChallengeCatalog
 {
-    public record Def(ChallengeCode Code, ChallengeMetric Metric, int Target, ChallengeWindow Window, int RewardXp);
+    /// <param name="Repeatable">Whether re-offering it after completion is meaningful. A repeatable
+    /// challenge returns to a player's board once they've completed <c>RepeatCooldownCompletions</c>
+    /// other challenges; a non-repeatable one is offered only until its first-ever completion.</param>
+    public record Def(ChallengeCode Code, ChallengeMetric Metric, int Target, ChallengeWindow Window, int RewardXp,
+        bool Repeatable = true);
+
+    /// <summary>How many other challenges a player must complete before a finished one is offered again.
+    /// Capped to catalog size − 1 at use so a small catalog can't deadlock (nothing left to offer).</summary>
+    public const int RepeatCooldownCompletions = 5;
 
     public static readonly IReadOnlyList<Def> All =
     [

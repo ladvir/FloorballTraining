@@ -38,6 +38,7 @@ import { useLiveTrainingStore } from '../../store/liveTrainingStore'
 import { primeAudio } from '../../utils/sound'
 import { XpCareerCard } from '../members/XpCareerCard'
 import { ChallengesCard } from '../members/ChallengesCard'
+import { RecentAchievementsCard } from './RecentAchievementsCard'
 import { PendingRewardsCard } from '../members/RewardsCard'
 import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
@@ -441,6 +442,13 @@ export function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Players' recent badges & level/rank-ups — Coach and above */}
+      {isCoach && (
+        <div className="mb-6 lg:w-1/2">
+          <RecentAchievementsCard clubId={activeClubId} />
+        </div>
+      )}
 
       {/* Recent logins widget — Admin only */}
       {isAdmin && (

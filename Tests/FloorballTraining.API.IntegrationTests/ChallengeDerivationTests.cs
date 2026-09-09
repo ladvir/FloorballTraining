@@ -137,15 +137,35 @@ public class ChallengeDerivationTests(CustomWebApplicationFactory factory) : IAs
         train3.Completed.Should().BeFalse();
         board.RecentlyCompleted.Should().NotContain(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
 
-        // Reach the target and recompute → now completed and listed as recently earned.
+        // Reach the target and recompute → completed challenges drop off the active board (rotation)
+        // and surface only under RecentlyCompleted.
         await AddTrainingsAsync(_now.Date.AddDays(2), 1);
         await challenges.RecomputeAllAsync();
 
         var after = await challenges.GetChallengesAsync(_memberId, now: _now);
-        var done = after.Active.Single(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
-        done.Completed.Should().BeTrue();
-        done.Progress.Should().Be(1.0);
+        after.Active.Should().NotContain(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
         after.RecentlyCompleted.Should().Contain(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
+    }
+
+    [Fact]
+    public async Task GetChallenges_HidesCompleted_AndKeepsItOnCooldownNextWindow_WhileStillOfferingOthers()
+    {
+        await AddTrainingsAsync(_now.Date.AddDays(-1), 3); // week A → Train3PerWeek complete
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var challenges = scope.ServiceProvider.GetRequiredService<ChallengeService>();
+        await challenges.RecomputeAllAsync();
+
+        // Same window it was completed in → not offered.
+        var weekA = await challenges.GetChallengesAsync(_memberId, now: _now);
+        weekA.Active.Should().NotContain(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
+
+        // Next window → still withheld (repeat-cooldown: 0 other challenges completed since),
+        // but every other never-completed challenge is still on the board.
+        var weekB = await challenges.GetChallengesAsync(_memberId, now: _now.AddDays(7));
+        weekB.Active.Should().NotContain(c => c.Code == nameof(ChallengeCode.Train3PerWeek));
+        weekB.Active.Should().Contain(c => c.Code == nameof(ChallengeCode.ScoreInMatch));
+        weekB.Active.Should().Contain(c => c.Code == nameof(ChallengeCode.TwoHomeTrainings));
     }
 
     [Fact]

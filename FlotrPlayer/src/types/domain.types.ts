@@ -287,6 +287,8 @@ export interface BadgeStatusDto {
   earnedAt: string | null
   /** 0..1 progress toward the threshold (1.0 when earned). */
   progress: number
+  /** Players sharing a team with this member who hold this badge (member included). */
+  teamHolders: number
 }
 
 /** One self-completable challenge's live progress for a member (#108/#109). Title/desc come from

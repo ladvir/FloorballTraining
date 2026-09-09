@@ -3,6 +3,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { isAxiosError } from 'axios'
 import { ScrollView, StyleSheet, Text } from 'react-native'
 import { BadgesSection } from '../../components/BadgesSection'
+import { CelebrationOverlay } from '../../components/CelebrationOverlay'
 import { ChallengesSection } from '../../components/ChallengesSection'
 import { TeamChallengesSection } from '../../components/TeamChallengesSection'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
@@ -59,6 +60,8 @@ export function PlayerCardScreen() {
         {/* Milestone badges (#97) - the API only returns badges this player has already earned. */}
         <BadgesSection memberId={card.memberId} />
       </ScrollView>
+      {/* Congratulates the player for any badge / level earned since their last login. */}
+      <CelebrationOverlay memberId={card.memberId} teamId={card.teamIds?.[0]} />
     </Screen>
   )
 }

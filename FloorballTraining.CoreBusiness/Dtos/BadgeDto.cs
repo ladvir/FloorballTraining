@@ -12,4 +12,7 @@ public class BadgeStatusDto
     public DateTime? EarnedAt { get; set; }
     /// <summary>0..1 progress toward the threshold (1.0 when earned).</summary>
     public double Progress { get; set; }
+    /// <summary>How many players sharing a team with this member hold this badge (this member included).
+    /// Powers the FlotrPlayer "X in your team have this" line on the login celebration.</summary>
+    public int TeamHolders { get; set; }
 }

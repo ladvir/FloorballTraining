@@ -64,7 +64,25 @@ public class ChallengeService(FloorballTrainingContext context, ChallengeContrib
                 .ToListAsync(ct))
             .ToDictionary(c => (c.Code, c.PeriodKey), c => c.CompletedAt);
 
-        var active = new List<ChallengeDto>();
+        // Rotation (per user request): a player is only offered challenges they have NOT finished in the
+        // current window and that are NOT on repeat-cooldown — a finished challenge stays off the board
+        // until they've completed RepeatCooldownCompletions others (capped to catalog size − 1 so a small
+        // catalog can't leave the board empty forever). Non-repeatable challenges never come back.
+        var lastDoneByCode = completed
+            .GroupBy(kv => kv.Key.Code)
+            .ToDictionary(g => g.Key, g => g.Max(kv => kv.Value));
+        var allCompletionTimes = completed.Values.OrderBy(t => t).ToList();
+        var cooldown = Math.Min(ChallengeCatalog.RepeatCooldownCompletions, ChallengeCatalog.All.Count - 1);
+
+        bool OnCooldown(ChallengeCatalog.Def def)
+        {
+            if (!lastDoneByCode.TryGetValue(def.Code.ToString(), out var lastDone)) return false; // never done
+            if (!def.Repeatable) return true; // one-off: done once, gone for good
+            var completedSince = allCompletionTimes.Count(t => t > lastDone);
+            return completedSince < cooldown;
+        }
+
+        var board = new List<(ChallengeCatalog.Def Def, ChallengeDto Dto, bool DoneThisWindow)>();
         foreach (var def in ChallengeCatalog.All)
         {
             var period = season.PeriodKey(memberId, asOf, def.Window);
@@ -73,23 +91,28 @@ public class ChallengeService(FloorballTrainingContext context, ChallengeContrib
             var count = contribs[def.Metric]
                 .Where(c => c.MemberId == memberId && season.PeriodKey(memberId, c.When, def.Window) == period)
                 .Sum(c => c.Amount);
-            var current = Math.Clamp(count, 0, def.Target);
             var isDone = completed.TryGetValue((def.Code.ToString(), period), out var doneAt);
 
-            active.Add(new ChallengeDto
+            board.Add((def, new ChallengeDto
             {
                 Code = def.Code.ToString(),
                 Metric = def.Metric.ToString(),
                 Window = def.Window.ToString(),
                 PeriodKey = period,
                 Target = def.Target,
-                Current = isDone ? def.Target : current,
+                Current = isDone ? def.Target : Math.Clamp(count, 0, def.Target),
                 Progress = isDone ? 1.0 : Math.Min(1.0, def.Target == 0 ? 1 : count / (double)def.Target),
                 RewardXp = def.RewardXp,
                 Completed = isDone,
                 CompletedAt = isDone ? doneAt : null,
-            });
+            }, isDone));
         }
+
+        // Offer only challenges not finished this window; drop those on repeat-cooldown too — unless that
+        // leaves nothing, in which case keep every not-done one so the board is never needlessly empty.
+        var notDone = board.Where(b => !b.DoneThisWindow).ToList();
+        var fresh = notDone.Where(b => !OnCooldown(b.Def)).ToList();
+        var active = (fresh.Count > 0 ? fresh : notDone).Select(b => b.Dto).ToList();
 
         var recent = completed
             .OrderByDescending(kv => kv.Value)

@@ -4,6 +4,7 @@ import type {
   ChallengesDto,
   CreateXpAwardDto,
   LeaderboardDto,
+  RecentAchievementDto,
   TeamLeaderboardDto,
   UpdateXpRulesRequest,
   XpAwardDto,
@@ -24,6 +25,13 @@ export const xpApi = {
   /** Active + recently completed self-completable challenges (#108). */
   getChallenges: (memberId: number) =>
     apiClient.get<ChallengesDto>(`/xp/challenges/${memberId}`).then((r) => r.data),
+
+  /** Coach+ dashboard feed: badges earned + career level/rank crossed in the last `days`,
+   *  scoped server-side to the caller's teams (admins may pass clubId). */
+  getRecentAchievements: (params?: { days?: number; clubId?: number | null }) =>
+    apiClient
+      .get<RecentAchievementDto[]>('/xp/recent-achievements', { params })
+      .then((r) => r.data),
 
   /** Club (or team) leaderboard. Non-admins are scoped to their own club server-side;
    *  admins must pass clubId. sort = "season" (default) | "career". */

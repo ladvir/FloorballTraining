@@ -228,7 +228,11 @@
     "myProgress": "Mein Fortschritt",
     "recomputeXp": "XP neu berechnen",
     "recomputeXpStarted": "XP-Neuberechnung gestartet",
-    "recomputeXpHint": "Berechnet XP und Abzeichen aus erfassten Daten neu (wiederholbar)"
+    "recomputeXpHint": "Berechnet XP und Abzeichen aus erfassten Daten neu (wiederholbar)",
+    "recentAchievements": "Neue Erfolge der Spieler",
+    "recentAchievementsNone": "In den letzten {{days}} Tagen keine Abzeichen oder Stufenaufstiege.",
+    "achievementLevelUp": "Level {{from}} → {{to}}",
+    "achievementRankUp": "{{from}} → {{to}}"
   },
   "appointments": {
     "title": "Ereignisse",

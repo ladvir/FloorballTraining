@@ -194,6 +194,63 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
     }
 
     [Fact]
+    public async Task GetBadges_TeamHolders_CountsTeammatesWithTheSameBadge()
+    {
+        int mateId, lonerId;
+        int teamId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var club = new Club { Name = $"HoldersClub-{Guid.NewGuid():N}" };
+            db.Clubs.Add(club);
+            await db.SaveChangesAsync();
+            var team = new Team { Name = $"HoldersTeam-{Guid.NewGuid():N}", ClubId = club.Id, AgeGroupId = 1 };
+            db.Teams.Add(team);
+            var mate = new Member { FirstName = "Team", LastName = "Mate", BirthYear = 2011, ClubId = club.Id };
+            var loner = new Member { FirstName = "Solo", LastName = "Player", BirthYear = 2011, ClubId = club.Id };
+            db.Members.AddRange(mate, loner);
+            await db.SaveChangesAsync();
+            teamId = team.Id;
+            mateId = mate.Id;
+            lonerId = loner.Id;
+            db.TeamMembers.AddRange(
+                new TeamMember { TeamId = team.Id, MemberId = mate.Id, IsPlayer = true },
+                new TeamMember { TeamId = team.Id, MemberId = loner.Id, IsPlayer = true });
+            // Both cross Attendance10; only the loner also gets a hattrick.
+            await AddTrainingsAsync(db, team.Id, mate.Id, count: 10, present: 10);
+            await AddTrainingsAsync(db, team.Id, loner.Id, count: 10, present: 10);
+
+            var tracker = new StatTracker { EventCategory = 0, TeamId = team.Id, CreatedAt = _now, UpdatedAt = _now };
+            db.StatTrackers.Add(tracker);
+            await db.SaveChangesAsync();
+            var participant = new StatTrackerParticipant { StatTrackerId = tracker.Id, MemberId = loner.Id };
+            var goals = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "goals", Name = "Góly" };
+            db.StatTrackerParticipants.Add(participant);
+            db.StatTrackerMetrics.Add(goals);
+            await db.SaveChangesAsync();
+            for (var i = 0; i < 3; i++)
+                db.StatTrackerEntries.Add(new StatTrackerEntry
+                {
+                    StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id,
+                    StatTrackerMetricId = goals.Id, Delta = 1, CreatedAt = _now
+                });
+            await db.SaveChangesAsync();
+        }
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<BadgeService>().RecomputeAllAsync();
+
+        await using var readScope = factory.Services.CreateAsyncScope();
+        var badges = await readScope.ServiceProvider.GetRequiredService<BadgeService>().GetBadgesAsync(lonerId);
+
+        // Attendance10 is held by both team players → 2; the hattrick only by the loner → 1.
+        badges.Single(b => b.Code == nameof(BadgeCode.Attendance10)).TeamHolders.Should().Be(2);
+        badges.Single(b => b.Code == nameof(BadgeCode.Hattrick)).TeamHolders.Should().Be(1);
+        // A badge nobody on the team has → 0.
+        badges.Single(b => b.Code == nameof(BadgeCode.Goals50)).TeamHolders.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Recompute_DerivesCareerExpansionMetrics_MatchesPointsHomeTrainingAndXp()
     {
         await using (var scope = factory.Services.CreateAsyncScope())

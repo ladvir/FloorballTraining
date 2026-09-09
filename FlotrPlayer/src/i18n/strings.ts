@@ -122,6 +122,14 @@ export type StringKey =
   | 'xp.rank4'
   | 'xp.rank5'
   | 'xp.rank6'
+  | 'celebration.badgeTitle'
+  | 'celebration.rankTitle'
+  | 'celebration.levelTitle'
+  | 'celebration.congrats'
+  | 'celebration.badgeCriteria'
+  | 'celebration.teamHoldersBadge'
+  | 'celebration.teamHoldersRank'
+  | 'celebration.dismiss'
   | 'badge.section'
   | 'badge.Attendance10.name'
   | 'badge.Attendance10.desc'
@@ -546,6 +554,14 @@ const cs: Record<StringKey, string> = {
   'xp.rank4': 'Lídr',
   'xp.rank5': 'Kapitán',
   'xp.rank6': 'Legenda',
+  'celebration.badgeTitle': 'Nový odznak!',
+  'celebration.rankTitle': 'Nová hodnost!',
+  'celebration.levelTitle': 'Nový level!',
+  'celebration.congrats': 'Gratulujeme! Skvělá práce.',
+  'celebration.badgeCriteria': 'Za co je odznak: {criteria}',
+  'celebration.teamHoldersBadge': 'Hráčů v týmu s tímto odznakem: {count}',
+  'celebration.teamHoldersRank': 'Hráčů v týmu s hodností {rank}: {count}',
+  'celebration.dismiss': 'Paráda!',
   'badge.section': 'Odznaky',
   'badge.Attendance10.name': 'Docházka I',
   'badge.Attendance10.desc': '10 tréninků',

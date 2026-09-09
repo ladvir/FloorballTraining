@@ -229,7 +229,11 @@
     "myProgress": "Můj postup",
     "recomputeXp": "Přepočítat XP",
     "recomputeXpStarted": "Přepočet XP spuštěn",
-    "recomputeXpHint": "Dopočítá XP a odznaky ze zaznamenaných dat (bezpečné opakovat)"
+    "recomputeXpHint": "Dopočítá XP a odznaky ze zaznamenaných dat (bezpečné opakovat)",
+    "recentAchievements": "Nedávné úspěchy hráčů",
+    "recentAchievementsNone": "Za posledních {{days}} dní nikdo nezískal odznak ani nepostoupil.",
+    "achievementLevelUp": "Level {{from}} → {{to}}",
+    "achievementRankUp": "{{from}} → {{to}}"
   },
   "appointments": {
     "title": "Události",

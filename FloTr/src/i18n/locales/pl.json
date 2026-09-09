@@ -228,7 +228,11 @@
     "myProgress": "Mój postęp",
     "recomputeXp": "Przelicz XP",
     "recomputeXpStarted": "Przeliczanie XP uruchomione",
-    "recomputeXpHint": "Przelicza XP i odznaki z zapisanych danych (można powtarzać)"
+    "recomputeXpHint": "Przelicza XP i odznaki z zapisanych danych (można powtarzać)",
+    "recentAchievements": "Ostatnie osiągnięcia zawodników",
+    "recentAchievementsNone": "W ostatnich {{days}} dniach nikt nie zdobył odznaki ani nie awansował.",
+    "achievementLevelUp": "Poziom {{from}} → {{to}}",
+    "achievementRankUp": "{{from}} → {{to}}"
   },
   "appointments": {
     "title": "Wydarzenia",

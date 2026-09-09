@@ -60,6 +60,22 @@ public class BadgeService(FloorballTrainingContext context)
             .Select(b => new { b.Code, b.EarnedAt })
             .ToListAsync(ct);
 
+        // Per-badge count of players who share a team with this member and hold it (member included).
+        // ponytail: one join, no Member.IsActive filter on peers — a retired teammate keeping a badge
+        // barely moves the number; add the filter only if it ever misleads.
+        var holdersByCode = (await (
+                from myTm in context.TeamMembers.AsNoTracking()
+                where myTm.MemberId == memberId && myTm.IsPlayer && myTm.TeamId != null
+                join peerTm in context.TeamMembers.AsNoTracking() on myTm.TeamId equals peerTm.TeamId
+                where peerTm.IsPlayer
+                join badge in context.MemberBadges.AsNoTracking() on peerTm.MemberId equals badge.MemberId
+                select new { badge.Code, badge.MemberId })
+            .Distinct()
+            .GroupBy(x => x.Code)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToListAsync(ct))
+            .ToDictionary(x => x.Key, x => x.Count);
+
         var stats = (await ComputeStatsAsync(ct, memberId)).GetValueOrDefault(memberId)
                     ?? new MemberStats { MemberId = memberId };
 
@@ -78,7 +94,8 @@ public class BadgeService(FloorballTrainingContext context)
                 Earned = earnedAt != null,
                 EarnedAt = earnedAt,
                 Progress = earnedAt != null ? 1.0
-                    : Math.Min(1.0, def.Threshold == 0 ? 1 : current / (double)def.Threshold)
+                    : Math.Min(1.0, def.Threshold == 0 ? 1 : current / (double)def.Threshold),
+                TeamHolders = holdersByCode.GetValueOrDefault(def.Code, 0)
             };
         }).ToList();
     }

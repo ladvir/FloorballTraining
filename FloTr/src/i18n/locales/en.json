@@ -228,7 +228,11 @@
     "myProgress": "My progress",
     "recomputeXp": "Recompute XP",
     "recomputeXpStarted": "XP recompute started",
-    "recomputeXpHint": "Recomputes XP and badges from recorded data (safe to repeat)"
+    "recomputeXpHint": "Recomputes XP and badges from recorded data (safe to repeat)",
+    "recentAchievements": "Players' recent achievements",
+    "recentAchievementsNone": "No badges earned or level-ups in the last {{days}} days.",
+    "achievementLevelUp": "Level {{from}} → {{to}}",
+    "achievementRankUp": "{{from}} → {{to}}"
   },
   "appointments": {
     "title": "Events",
