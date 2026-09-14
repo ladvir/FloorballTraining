@@ -420,9 +420,14 @@ export function LandingPage() {
           <span>
             © {t('landing.title')}. {t('landing.subtitle')}
           </span>
-          <Link to="/privacy" className="hover:text-slate-700 hover:underline">
-            {t('privacy.title')}
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/privacy" className="hover:text-slate-700 hover:underline">
+              {t('privacy.title')}
+            </Link>
+            <Link to="/delete-account" className="hover:text-slate-700 hover:underline">
+              {t('deleteAccountPage.title')}
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

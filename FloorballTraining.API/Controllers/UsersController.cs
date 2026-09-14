@@ -720,6 +720,10 @@ namespace FloorballTraining.API.Controllers
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
+            var targetRoles = await userManager.GetRolesAsync(user);
+            if (targetRoles.Contains("Admin"))
+                return BadRequest(new { message = "Účet správce nelze smazat." });
+
             var deletedEmail = user.Email;
             var result = await userManager.DeleteAsync(user);
             if (!result.Succeeded)

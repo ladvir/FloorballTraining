@@ -1380,7 +1380,14 @@
     "pushActive": "Aktiv",
     "pushUnsupported": "Ihr Browser unterstützt keine Push-Benachrichtigungen.",
     "pushPermissionDenied": "Die Benachrichtigungsberechtigung wurde abgelehnt. Erlauben Sie sie in den Browser-Einstellungen.",
-    "pushError": "Push-Benachrichtigungen konnten nicht aktiviert werden."
+    "pushError": "Push-Benachrichtigungen konnten nicht aktiviert werden.",
+    "dangerZone": "Gefahrenzone",
+    "deleteAccountTitle": "Konto löschen",
+    "deleteAccountHint": "Löscht dauerhaft Ihr Login-Konto und Ihre persönlichen Daten. Trainings- und Teamverlauf bleiben in anonymisierter Form beim Verein erhalten.",
+    "deleteAccountAdminBlocked": "Das Admin-Konto kann nicht gelöscht werden. Übertragen Sie die Admin-Rolle zuerst auf einen anderen Benutzer.",
+    "deleteAccountButton": "Konto löschen",
+    "deleteAccountConfirm": "Möchten Sie Ihr Konto wirklich dauerhaft löschen? Ihr Login, Name und E-Mail-Adresse auf Ihrem Profil werden entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
   },
   "kpi": {
     "topScorers": "Top-Scorer",
@@ -3742,5 +3749,36 @@
     "section12Body": "Wir können diese Erklärung von Zeit zu Zeit aktualisieren, etwa wenn eine neue Funktion hinzukommt. Das Datum der letzten Aktualisierung finden Sie oben auf dieser Seite.",
     "section13Title": "13. Kontakt",
     "section13Body": "Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte kontaktieren Sie uns unter {{email}}."
+  },
+  "deleteAccountPage": {
+    "title": "Konto und Daten löschen",
+    "lastUpdated": "Zuletzt aktualisiert: 14.09.2026",
+    "intro": "Diese Seite beschreibt, wie Sie als Nutzer der mobilen App Flotr – Player oder der Web-App FloTr (flotr.cz) die Löschung Ihres Kontos und der damit verbundenen Daten beantragen können.",
+    "stepsTitle": "1. So beantragen Sie die Löschung Ihres Kontos",
+    "steps": [
+      "Öffnen Sie die App Flotr – Player oder die Web-App FloTr unter flotr.cz und melden Sie sich bei Ihrem Konto an.",
+      "Gehen Sie zum Bereich „Profil“.",
+      "Tippen Sie unten auf dem Bildschirm im Bereich „Gefahrenzone“ auf „Konto löschen“.",
+      "Bestätigen Sie die Löschung im angezeigten Dialog — Ihr Konto wird sofort und dauerhaft gelöscht."
+    ],
+    "cantLoginTitle": "2. Wenn Sie sich nicht anmelden können",
+    "cantLoginBody": "Wenn Sie keinen Zugriff auf Ihr Konto haben (z. B. weil Sie Ihr Passwort vergessen haben und die Wiederherstellung nicht funktioniert), beantragen Sie die Löschung Ihres Kontos und Ihrer Daten per E-Mail an {{email}} — schreiben Sie uns bitte von der bei Ihrem Konto hinterlegten E-Mail-Adresse aus. Per E-Mail eingehende Anfragen bearbeiten wir in der Regel innerhalb von 30 Tagen.",
+    "deletedTitle": "3. Welche Daten gelöscht werden",
+    "deletedItems": [
+      "Ihr Login-Konto — E-Mail-Adresse und Passwort,",
+      "Vorname, Nachname und E-Mail-Adresse in Ihrem Vereinsmitgliedsprofil (werden durch einen anonymen Eintrag „Gelöschter Nutzer“ ersetzt),",
+      "eine Eltern-Kind-Verknüpfung, falls Sie als Elternteil oder gesetzlicher Vertreter mit einem Kind verknüpft waren,",
+      "Ihr gespeicherter API-Schlüssel für KI-Funktionen, falls Sie einen eingerichtet haben,",
+      "Ihr Push-Benachrichtigungs-Token sowie Anmelde- (Refresh-)Token."
+    ],
+    "retainedTitle": "4. Welche Daten erhalten bleiben",
+    "retainedItems": [
+      "Trainings- und Spielhistorie — Anwesenheit, Statistiken, Aufstellungen, Ergebnisse von Fitnesstests, Fähigkeitsbewertungen, XP-Verlauf, Abzeichen, abgeschlossene Challenges und eingelöste Prämien — bleibt im anonymisierten Vereinsmitgliedsdatensatz erhalten. Sie ist Teil der gemeinsamen Vereins- und Teamhistorie (z. B. eines Spielprotokolls oder der Saisonstatistik) und identifiziert Sie ohne Namen oder Kontaktdaten nicht mehr.",
+      "Sicherheitsprotokolle (Anmeldezeiten, IP-Adresse) können aus Sicherheits- und rechtlichen Gründen länger aufbewahrt werden; für diese Aufzeichnungen gibt es derzeit keine fest definierte automatische Löschfrist."
+    ],
+    "timelineTitle": "5. Bearbeitungsdauer",
+    "timelineBody": "Die Löschung über die App oder das Web erfolgt sofort. Per E-Mail gesendete Anfragen bearbeiten wir in der Regel innerhalb von 30 Tagen.",
+    "moreInfoTitle": "6. Weitere Informationen",
+    "moreInfoBody": "Eine detaillierte Beschreibung, welche Daten wir über Sie verarbeiten und warum, finden Sie hier:"
   }
 }

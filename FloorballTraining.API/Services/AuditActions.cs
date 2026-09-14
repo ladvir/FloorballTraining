@@ -15,6 +15,7 @@ public static class AuditActions
     public const string UserCreated = "User.Created";
     public const string UserDeleted = "User.Deleted";
     public const string UserClubMembershipRemoved = "User.ClubMembershipRemoved";
+    public const string AccountSelfDeleted = "Account.SelfDeleted";
 
     public const string ActivityCreated = "Activity.Created";
     public const string ActivityUpdated = "Activity.Updated";

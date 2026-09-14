@@ -1380,7 +1380,14 @@
     "pushActive": "Active",
     "pushUnsupported": "Your browser does not support push notifications.",
     "pushPermissionDenied": "Notification permission was denied. Allow it in your browser settings.",
-    "pushError": "Could not enable push notifications."
+    "pushError": "Could not enable push notifications.",
+    "dangerZone": "Danger zone",
+    "deleteAccountTitle": "Delete account",
+    "deleteAccountHint": "Permanently deletes your login account and personal data. Training and team history stays with the club in anonymized form.",
+    "deleteAccountAdminBlocked": "The admin account cannot be deleted. Transfer the Admin role to another user first.",
+    "deleteAccountButton": "Delete account",
+    "deleteAccountConfirm": "Are you sure you want to permanently delete your account? Your login, name and email on your profile will be removed. This cannot be undone.",
+    "deleteAccountError": "Failed to delete the account. Please try again."
   },
   "kpi": {
     "topScorers": "Top scorers",
@@ -3733,5 +3740,36 @@
     "section12Body": "We may update this policy from time to time, for example when we add a new feature. The date of the last update is shown at the top of this page.",
     "section13Title": "13. Contact",
     "section13Body": "If you have any questions about data protection, or want to exercise your rights, contact us at {{email}}."
+  },
+  "deleteAccountPage": {
+    "title": "Delete account and data",
+    "lastUpdated": "Last updated: 14 Sep 2026",
+    "intro": "This page describes how, as a user of the Flotr – Player mobile app or the FloTr web app (flotr.cz), you can request that your account and its associated data be deleted.",
+    "stepsTitle": "1. How to request account deletion",
+    "steps": [
+      "Open the Flotr – Player app or the FloTr web app at flotr.cz and sign in to your account.",
+      "Go to the \"Profile\" section.",
+      "At the bottom of the screen, tap \"Delete account\" in the \"Danger zone\" section.",
+      "Confirm the deletion in the dialog shown — your account is deleted immediately and permanently."
+    ],
+    "cantLoginTitle": "2. If you can't sign in",
+    "cantLoginBody": "If you don't have access to your account (for example, you forgot your password and recovery doesn't work), request deletion of your account and its data by emailing {{email}} — please write to us from the email address registered on your account. We typically process email requests within 30 days.",
+    "deletedTitle": "3. What data is deleted",
+    "deletedItems": [
+      "your login account — email address and password,",
+      "the first name, last name and email on your club member profile (replaced with an anonymous \"Deleted user\" record),",
+      "any parent-child link, if you were linked to a child as a parent or legal guardian,",
+      "your stored API key for AI features, if you set one up in the app,",
+      "your push-notification token and login (refresh) tokens."
+    ],
+    "retainedTitle": "4. What data is kept",
+    "retainedItems": [
+      "Training and match history — attendance, statistics, lineups, physical test results, skill ratings, XP history, badges, completed challenges and reward claims — stays on the anonymized club member record. It's part of the club's and team's shared history (e.g. a match record or season statistics) and, without your name or contact details, no longer identifies you.",
+      "Security logs (login times, IP address) may be kept longer for security and legal-compliance reasons; there is currently no fixed automatic deletion period for these records."
+    ],
+    "timelineTitle": "5. Processing time",
+    "timelineBody": "Deletion through the app or web is immediate. Requests sent by email are typically processed within 30 days.",
+    "moreInfoTitle": "6. More information",
+    "moreInfoBody": "For a detailed description of what data we process about you and why, see:"
   }
 }

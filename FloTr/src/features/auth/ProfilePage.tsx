@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -10,11 +10,16 @@ import { Input } from '../../components/ui/Input'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useConfirm } from '../../store/confirmStore'
 import { formatFullName } from '../../utils/name'
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation()
-  const { user, setUser, isAdmin } = useAuthStore()
+  const navigate = useNavigate()
+  const confirm = useConfirm()
+  const { user, setUser, isAdmin, logout } = useAuthStore()
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const currentLang =
     ['cs', 'sk', 'pl', 'de', 'en'].find((l) => i18n.language?.startsWith(l)) ?? 'cs'
   const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
@@ -52,6 +57,28 @@ export function ProfilePage() {
   const filteredTeams = (
     selectedClubId ? (teams ?? []).filter((t) => t.clubId === selectedClubId) : (teams ?? [])
   ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
+
+  const handleDeleteAccount = () => {
+    confirm(
+      t('profile.deleteAccountConfirm'),
+      async () => {
+        setDeleting(true)
+        setDeleteError(null)
+        try {
+          await authApi.deleteAccount()
+          logout()
+          navigate('/')
+        } catch (err: unknown) {
+          const msg =
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+            t('profile.deleteAccountError')
+          setDeleteError(msg)
+          setDeleting(false)
+        }
+      },
+      t('profile.deleteAccountTitle')
+    )
+  }
 
   const handleLanguageChange = async (lang: string) => {
     if (lang === currentLang) return
@@ -298,11 +325,37 @@ export function ProfilePage() {
         </div>
       )}
 
-      <div className="mt-4 flex justify-end pb-8">
+      <div className="mt-4 flex justify-end">
         <Button loading={saving} onClick={handleSave}>
           {t('profile.save')}
         </Button>
       </div>
+
+      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wider text-red-400">
+        {t('profile.dangerZone')}
+      </h2>
+      <Card className="border-red-200">
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-medium text-gray-900">{t('profile.deleteAccountTitle')}</p>
+            <p className="text-sm text-gray-500">
+              {isAdmin ? t('profile.deleteAccountAdminBlocked') : t('profile.deleteAccountHint')}
+            </p>
+          </div>
+          {!isAdmin && (
+            <Button variant="danger" loading={deleting} onClick={handleDeleteAccount}>
+              {t('profile.deleteAccountButton')}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+      {deleteError && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          {deleteError}
+        </div>
+      )}
+      <div className="pb-8" />
     </div>
   )
 }

@@ -55,6 +55,7 @@ export const authApi = {
   setLanguage: (language: string) =>
     apiClient.put<AuthResponse>('/auth/language', { language }).then((r) => r.data),
   logout: () => apiClient.post('/auth/logout').then((r) => r.data),
+  deleteAccount: () => apiClient.delete('/auth/me'),
 }
 
 export interface AuditLogQuery {

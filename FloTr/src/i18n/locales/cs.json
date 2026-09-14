@@ -1381,7 +1381,14 @@
     "pushActive": "Aktivní",
     "pushUnsupported": "Váš prohlížeč nepodporuje push notifikace.",
     "pushPermissionDenied": "Oprávnění k notifikacím bylo zamítnuto. Povolte ho v nastavení prohlížeče.",
-    "pushError": "Push notifikace se nepodařilo povolit."
+    "pushError": "Push notifikace se nepodařilo povolit.",
+    "dangerZone": "Nebezpečná zóna",
+    "deleteAccountTitle": "Smazat účet",
+    "deleteAccountHint": "Trvale smaže váš přihlašovací účet a osobní údaje. Tréninková a týmová historie zůstane u klubu v anonymizované podobě.",
+    "deleteAccountAdminBlocked": "Účet správce nelze smazat. Nejprve předejte roli Admin jinému uživateli.",
+    "deleteAccountButton": "Smazat účet",
+    "deleteAccountConfirm": "Opravdu chcete trvale smazat svůj účet? Přihlašovací údaje, jméno a e-mail na vašem profilu budou odstraněny. Tuto akci nelze vrátit zpět.",
+    "deleteAccountError": "Smazání účtu se nezdařilo. Zkuste to prosím znovu."
   },
   "kpi": {
     "topScorers": "Nejlepší střelci",
@@ -3737,5 +3744,36 @@
     "section12Body": "Tyto zásady můžeme čas od času aktualizovat, například při přidání nové funkce. Datum poslední aktualizace je uvedeno v záhlaví dokumentu.",
     "section13Title": "13. Kontakt",
     "section13Body": "S jakýmikoli dotazy ohledně ochrany osobních údajů nebo žádostí o výkon vašich práv nás kontaktujte na e-mailu {{email}}."
+  },
+  "deleteAccountPage": {
+    "title": "Smazání účtu a dat",
+    "lastUpdated": "Naposledy aktualizováno: 14. 9. 2026",
+    "intro": "Tato stránka popisuje, jak si jako uživatel mobilní aplikace Flotr – Player nebo webové aplikace FloTr (flotr.cz) můžete nechat smazat svůj účet a k němu vedená data.",
+    "stepsTitle": "1. Jak požádat o smazání účtu",
+    "steps": [
+      "Otevřete aplikaci Flotr – Player nebo webovou aplikaci FloTr na flotr.cz a přihlaste se ke svému účtu.",
+      "Přejděte do sekce „Profil“.",
+      "Ve spodní části obrazovky klikněte na „Smazat účet“ v sekci „Nebezpečná zóna“.",
+      "Potvrďte smazání v zobrazeném dialogu — účet bude ihned a trvale smazán."
+    ],
+    "cantLoginTitle": "2. Pokud se nemůžete přihlásit",
+    "cantLoginBody": "Pokud nemáte přístup ke svému účtu (například jste zapomněli heslo a obnovení nefunguje), požádejte o smazání účtu a souvisejících dat e-mailem na {{email}} — napište nám prosím z e-mailové adresy, kterou máte u účtu registrovanou. Žádosti zaslané e-mailem vyřizujeme obvykle do 30 dnů.",
+    "deletedTitle": "3. Jaká data se smažou",
+    "deletedItems": [
+      "přihlašovací účet — e-mailová adresa a heslo,",
+      "jméno, příjmení a e-mail na vašem profilu člena klubu (nahrazeny anonymním záznamem „Smazaný uživatel“),",
+      "propojení rodič–dítě, pokud jste byli k některému dítěti připojeni jako rodič či zákonný zástupce,",
+      "uložený API klíč pro AI funkce, pokud jste si ho v aplikaci nastavili,",
+      "token pro push notifikace a přihlašovací (refresh) tokeny."
+    ],
+    "retainedTitle": "4. Jaká data zůstávají zachována",
+    "retainedItems": [
+      "Tréninková a zápasová historie — docházka, statistiky, sestavy, výsledky fyzických testů, hodnocení dovedností, XP historie, odznaky, splněné výzvy a nároky na odměny — zůstává uložena u anonymizovaného profilu člena klubu. Je součástí sdílené týmové a klubové historie (např. zápis o zápase nebo sezónní statistiky) a bez jména či kontaktu vás už dále neidentifikuje.",
+      "Bezpečnostní záznamy (čas přihlášení, IP adresa) mohou být uchovány déle z bezpečnostních a právních důvodů; pro tyto záznamy v tuto chvíli neexistuje pevně stanovená doba automatického mazání."
+    ],
+    "timelineTitle": "5. Doba vyřízení",
+    "timelineBody": "Smazání přes aplikaci nebo web proběhne okamžitě. Žádosti zaslané e-mailem vyřizujeme obvykle do 30 dnů.",
+    "moreInfoTitle": "6. Více informací",
+    "moreInfoBody": "Podrobný popis toho, jaké údaje o vás zpracováváme a proč, najdete zde:"
   }
 }

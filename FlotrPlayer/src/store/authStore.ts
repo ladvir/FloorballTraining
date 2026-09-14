@@ -16,6 +16,7 @@ interface AuthState {
   hydrate: () => Promise<void>
   login: (data: LoginRequest) => Promise<void>
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -66,6 +67,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Best-effort server-side revocation - local session is cleared either way below.
     }
+    await clearTokens()
+    set({ user: null, isAuthenticated: false, accountType: null })
+  },
+
+  // Self-service account deletion: the account and its login are gone server-side, so there's
+  // no refresh token left to revoke - just drop the push registration and clear local state.
+  deleteAccount: async () => {
+    await unregisterPushTokenAsync()
+    await authApi.deleteAccount()
     await clearTokens()
     set({ user: null, isAuthenticated: false, accountType: null })
   },

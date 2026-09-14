@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { BadgesSection } from '../../components/BadgesSection'
 import { Button } from '../../components/Button'
@@ -20,6 +21,23 @@ export function ProfileScreen() {
   const user = useAuthStore((s) => s.user)
   const accountType = useAuthStore((s) => s.accountType)
   const logout = useAuthStore((s) => s.logout)
+  const deleteAccount = useAuthStore((s) => s.deleteAccount)
+  const isAdmin = !!user?.roles.includes('Admin')
+  // Inline confirm, not Alert.alert with buttons - that's a no-op on react-native-web
+  // (see RatingWidget/LiveTrainingScreen for the same fix).
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    try {
+      await deleteAccount()
+    } catch {
+      setDeleting(false)
+      setConfirmingDelete(false)
+      Alert.alert(t('profile.deleteAccountError'))
+    }
+  }
 
   // Earned milestone badges moved here from the home card (2026-09-09). Shares the card query
   // cache; a Coach/Guardian has no player card so this errors and BadgesSection is just skipped.
@@ -50,6 +68,31 @@ export function ProfileScreen() {
           />
           <Button variant="ghost" title={t('auth.logout')} onPress={logout} />
         </View>
+        {!isAdmin && (
+          <View style={styles.dangerZone}>
+            {!confirmingDelete ? (
+              <Pressable onPress={() => setConfirmingDelete(true)} hitSlop={8}>
+                <Text style={styles.deleteAccountLink}>{t('profile.deleteAccountButton')}</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmText}>{t('profile.deleteAccountConfirm')}</Text>
+                <View style={styles.confirmActions}>
+                  <Pressable
+                    onPress={() => setConfirmingDelete(false)}
+                    disabled={deleting}
+                    hitSlop={6}
+                  >
+                    <Text style={styles.confirmCancel}>{t('common.cancel')}</Text>
+                  </Pressable>
+                  <Pressable onPress={handleDeleteAccount} disabled={deleting} hitSlop={6}>
+                    <Text style={styles.confirmDelete}>{t('profile.deleteAccountButton')}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
         {card?.memberId != null && <BadgesSection memberId={card.memberId} />}
       </ScrollView>
     </Screen>
@@ -93,4 +136,31 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 280,
   },
+  dangerZone: {
+    marginTop: spacing.lg,
+    width: '100%',
+    maxWidth: 280,
+    alignItems: 'center',
+  },
+  deleteAccountLink: {
+    color: colors.danger,
+    fontSize: typography.caption.fontSize + 1,
+    fontWeight: '600',
+  },
+  confirmRow: {
+    width: '100%',
+    gap: spacing.sm,
+  },
+  confirmText: {
+    color: colors.textSecondary,
+    fontSize: typography.caption.fontSize,
+    textAlign: 'center',
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.lg,
+  },
+  confirmCancel: { color: colors.textSecondary, fontSize: typography.body.fontSize, fontWeight: '600' },
+  confirmDelete: { color: colors.danger, fontSize: typography.body.fontSize, fontWeight: '700' },
 })

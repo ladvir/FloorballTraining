@@ -439,6 +439,9 @@ export type StringKey =
   | 'teamLeaderboard.challenges'
   | 'teamLeaderboard.empty'
   | 'profile.privacyPolicy'
+  | 'profile.deleteAccountButton'
+  | 'profile.deleteAccountConfirm'
+  | 'profile.deleteAccountError'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -882,6 +885,9 @@ const cs: Record<StringKey, string> = {
   'teamLeaderboard.challenges': 'Výzvy',
   'teamLeaderboard.empty': 'Zatím žádná data.',
   'profile.privacyPolicy': 'Zásady ochrany osobních údajů',
+  'profile.deleteAccountButton': 'Smazat účet',
+  'profile.deleteAccountConfirm': 'Opravdu chcete trvale smazat svůj účet? Přihlašovací údaje, jméno a e-mail na vašem profilu budou odstraněny. Tuto akci nelze vrátit zpět.',
+  'profile.deleteAccountError': 'Smazání účtu se nezdařilo. Zkuste to prosím znovu.',
 }
 
 const locales = { cs }

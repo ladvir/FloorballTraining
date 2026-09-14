@@ -13,4 +13,6 @@ export const authApi = {
     apiClient.post<AuthResponse>('/auth/refresh', { refreshToken }).then((r) => r.data),
 
   logout: (refreshToken: string | null) => apiClient.post('/auth/logout', { refreshToken }),
+
+  deleteAccount: () => apiClient.delete('/auth/me'),
 }

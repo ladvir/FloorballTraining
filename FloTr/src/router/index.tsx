@@ -203,6 +203,9 @@ const VideoEditorPage = lazy(() =>
 const PrivacyPolicyPage = lazy(() =>
   import('../features/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 )
+const DeleteAccountPage = lazy(() =>
+  import('../features/legal/DeleteAccountPage').then((m) => ({ default: m.DeleteAccountPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -310,6 +313,15 @@ export const router = createBrowserRouter(
       element: (
         <LazyPage>
           <PrivacyPolicyPage />
+        </LazyPage>
+      ),
+    },
+    {
+      // Public, unauthenticated — the Play Console "Delete account URL" (Data safety section).
+      path: '/delete-account',
+      element: (
+        <LazyPage>
+          <DeleteAccountPage />
         </LazyPage>
       ),
     },

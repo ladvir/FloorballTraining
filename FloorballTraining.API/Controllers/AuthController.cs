@@ -243,6 +243,59 @@ namespace FloorballTraining.API.Controllers
             return await BuildAuthResponseAsync(user, roles);
         }
 
+        /// <summary>
+        /// Self-service account deletion (GDPR right to erasure / Google Play account-deletion
+        /// requirement). The Admin role is protected — an admin account can only be removed by
+        /// another admin via <see cref="UsersController.DeleteUser"/>, never by itself.
+        /// Club membership rows (<see cref="CoreBusiness.Member"/>) are anonymized rather than
+        /// deleted: attendance, stats, XP and lineup history reference them with NoAction/Restrict
+        /// foreign keys so the club's team history stays intact for everyone else.
+        /// </summary>
+        [Authorize]
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var user = await userManager.FindByEmailAsync(email!);
+            if (user == null) return NotFound();
+
+            var roles = await userManager.GetRolesAsync(user);
+            if (roles.Contains("Admin"))
+                return BadRequest(new { message = "Účet správce nelze smazat." });
+
+            var members = await context.Members.Where(m => m.AppUserId == user.Id).ToListAsync();
+            foreach (var member in members)
+            {
+                member.FirstName = "Smazaný";
+                member.LastName = "uživatel";
+                member.Email = string.Empty;
+                member.AppUserId = null;
+                member.IsActive = false;
+            }
+
+            // GuardianAppUserId has no DB-level FK (cross-context reference), so it wouldn't
+            // block deletion — but left alone it would dangle, pointing at a user that no
+            // longer exists.
+            var guardianLinks = await context.MemberGuardians
+                .Where(g => g.GuardianAppUserId == user.Id)
+                .ToListAsync();
+            context.MemberGuardians.RemoveRange(guardianLinks);
+
+            await context.SaveChangesAsync();
+
+            var deletedEmail = user.Email;
+            var result = await userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors.Select(e => e.Description));
+
+            DeleteRefreshTokenCookie();
+            DeleteHangfireAdminCookie();
+            await auditService.LogAsync(AuditActions.AccountSelfDeleted, "User", user.Id,
+                details: new { target = deletedEmail }, userId: user.Id, userEmail: deletedEmail);
+
+            return NoContent();
+        }
+
         [Authorize]
         [HttpPut("active-club")]
         public async Task<ActionResult<AuthResponse>> SetActiveClub([FromBody] SetActiveClubDto dto)

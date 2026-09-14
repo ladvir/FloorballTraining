@@ -1380,7 +1380,14 @@
     "pushActive": "Aktywne",
     "pushUnsupported": "Twoja przeglądarka nie obsługuje powiadomień push.",
     "pushPermissionDenied": "Zgoda na powiadomienia została odrzucona. Zezwól na nie w ustawieniach przeglądarki.",
-    "pushError": "Nie udało się włączyć powiadomień push."
+    "pushError": "Nie udało się włączyć powiadomień push.",
+    "dangerZone": "Strefa zagrożenia",
+    "deleteAccountTitle": "Usuń konto",
+    "deleteAccountHint": "Trwale usuwa Twoje konto logowania i dane osobowe. Historia treningów i zespołu pozostaje w klubie w formie zanonimizowanej.",
+    "deleteAccountAdminBlocked": "Konta administratora nie można usunąć. Najpierw przekaż rolę Admina innemu użytkownikowi.",
+    "deleteAccountButton": "Usuń konto",
+    "deleteAccountConfirm": "Czy na pewno chcesz trwale usunąć swoje konto? Twój login, imię i e-mail w profilu zostaną usunięte. Tej operacji nie można cofnąć.",
+    "deleteAccountError": "Nie udało się usunąć konta. Spróbuj ponownie."
   },
   "kpi": {
     "topScorers": "Najlepsi strzelcy",
@@ -3737,5 +3744,36 @@
     "section12Body": "Możemy okresowo aktualizować niniejszą politykę, na przykład przy dodawaniu nowej funkcji. Data ostatniej aktualizacji jest podana na górze tej strony.",
     "section13Title": "13. Kontakt",
     "section13Body": "W przypadku pytań dotyczących ochrony danych osobowych lub chęci skorzystania ze swoich praw, skontaktuj się z nami pod adresem {{email}}."
+  },
+  "deleteAccountPage": {
+    "title": "Usunięcie konta i danych",
+    "lastUpdated": "Ostatnia aktualizacja: 14.09.2026",
+    "intro": "Ta strona opisuje, jak jako użytkownik aplikacji mobilnej Flotr – Player lub aplikacji webowej FloTr (flotr.cz) możesz zażądać usunięcia swojego konta i powiązanych z nim danych.",
+    "stepsTitle": "1. Jak zażądać usunięcia konta",
+    "steps": [
+      "Otwórz aplikację Flotr – Player lub aplikację webową FloTr na flotr.cz i zaloguj się na swoje konto.",
+      "Przejdź do sekcji „Profil”.",
+      "U dołu ekranu kliknij „Usuń konto” w sekcji „Strefa zagrożenia”.",
+      "Potwierdź usunięcie w wyświetlonym oknie dialogowym — konto zostanie natychmiast i trwale usunięte."
+    ],
+    "cantLoginTitle": "2. Jeśli nie możesz się zalogować",
+    "cantLoginBody": "Jeśli nie masz dostępu do swojego konta (np. zapomniałeś hasła, a odzyskiwanie nie działa), poproś o usunięcie konta i powiązanych danych, wysyłając e-mail na adres {{email}} — napisz do nas z adresu e-mail zarejestrowanego na Twoim koncie. Zgłoszenia przesłane e-mailem rozpatrujemy zwykle w ciągu 30 dni.",
+    "deletedTitle": "3. Jakie dane zostaną usunięte",
+    "deletedItems": [
+      "konto logowania — adres e-mail i hasło,",
+      "imię, nazwisko i adres e-mail w profilu członka klubu (zastąpione anonimowym wpisem „Usunięty użytkownik”),",
+      "powiązanie rodzic–dziecko, jeśli byłeś połączony z jakimś dzieckiem jako rodzic lub opiekun prawny,",
+      "zapisany klucz API do funkcji AI, jeśli został skonfigurowany w aplikacji,",
+      "token powiadomień push oraz tokeny logowania (odświeżania)."
+    ],
+    "retainedTitle": "4. Jakie dane pozostają zachowane",
+    "retainedItems": [
+      "Historia treningów i meczów — obecność, statystyki, składy, wyniki testów sprawnościowych, oceny umiejętności, historia XP, odznaki, ukończone wyzwania i wykorzystane nagrody — pozostaje w zanonimizowanym profilu członka klubu. Jest częścią wspólnej historii klubu i zespołu (np. zapisu meczu lub statystyk sezonu) i bez Twojego imienia czy danych kontaktowych już Cię nie identyfikuje.",
+      "Dzienniki bezpieczeństwa (czas logowania, adres IP) mogą być przechowywane dłużej ze względów bezpieczeństwa i prawnych; dla tych zapisów nie ma obecnie ustalonego stałego okresu automatycznego usuwania."
+    ],
+    "timelineTitle": "5. Czas realizacji",
+    "timelineBody": "Usunięcie przez aplikację lub stronę internetową następuje natychmiast. Zgłoszenia przesłane e-mailem rozpatrujemy zwykle w ciągu 30 dni.",
+    "moreInfoTitle": "6. Więcej informacji",
+    "moreInfoBody": "Szczegółowy opis tego, jakie dane o Tobie przetwarzamy i dlaczego, znajdziesz tutaj:"
   }
 }
