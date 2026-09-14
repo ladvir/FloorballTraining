@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { BadgesSection } from '../../components/BadgesSection'
 import { Button } from '../../components/Button'
@@ -10,6 +10,10 @@ import { t, type StringKey } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 import { colors, radius, spacing, typography } from '../../theme/tokens'
 import { formatFullName } from '../../utils/name'
+
+// Required by Google Play (Data safety / privacy policy): must be reachable from inside the
+// app, not just linked from the Play Console listing.
+const PRIVACY_POLICY_URL = 'https://flotr.cz/flotr/privacy'
 
 export function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight()
@@ -39,6 +43,11 @@ export function ProfileScreen() {
           </Text>
         </View>
         <View style={styles.actionButton}>
+          <Button
+            variant="ghost"
+            title={t('profile.privacyPolicy')}
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          />
           <Button variant="ghost" title={t('auth.logout')} onPress={logout} />
         </View>
         {card?.memberId != null && <BadgesSection memberId={card.memberId} />}

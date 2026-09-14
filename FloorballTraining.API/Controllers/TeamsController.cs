@@ -84,7 +84,7 @@ public class TeamsController(
             dto.ClubId = roleInfo.ClubId.Value;
 
         await addTeamUseCase.ExecuteAsync(dto);
-        return NoContent();
+        return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
 
     [HttpPut]

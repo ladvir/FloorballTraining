@@ -200,6 +200,9 @@ const AiActivityImportPage = lazy(() =>
 const VideoEditorPage = lazy(() =>
   import('../features/videoEditor/VideoEditorPage').then((m) => ({ default: m.VideoEditorPage }))
 )
+const PrivacyPolicyPage = lazy(() =>
+  import('../features/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -298,6 +301,15 @@ export const router = createBrowserRouter(
       element: (
         <LazyPage>
           <ResetPasswordPage />
+        </LazyPage>
+      ),
+    },
+    {
+      // Public, unauthenticated — required by Google Play for the Flotr – Player listing.
+      path: '/privacy',
+      element: (
+        <LazyPage>
+          <PrivacyPolicyPage />
         </LazyPage>
       ),
     },

@@ -438,6 +438,7 @@ export type StringKey =
   | 'teamLeaderboard.total'
   | 'teamLeaderboard.challenges'
   | 'teamLeaderboard.empty'
+  | 'profile.privacyPolicy'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -880,6 +881,7 @@ const cs: Record<StringKey, string> = {
   'teamLeaderboard.total': 'Celkem',
   'teamLeaderboard.challenges': 'Výzvy',
   'teamLeaderboard.empty': 'Zatím žádná data.',
+  'profile.privacyPolicy': 'Zásady ochrany osobních údajů',
 }
 
 const locales = { cs }

@@ -3670,5 +3670,77 @@
       "total": "Gesamt",
       "challenges": "Challenges"
     }
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert: 14.09.2026",
+    "backLink": "Zurück zur Startseite",
+    "intro1": "FloTr ist ein Werkzeug zur Verwaltung von Trainingseinheiten, Anwesenheit, Statistiken und Kommunikation innerhalb eines Floorball-Vereins — verfügbar als Web-App und als mobile App Flotr – Player für Spieler und ihre Familien. Diese Erklärung gilt für beide Apps sowie für den zugrunde liegenden Server (API) und beschreibt, welche personenbezogenen Daten wir verarbeiten, wozu wir sie verwenden und welche Rechte Sie haben.",
+    "intro2": "Personenbezogene Daten in der App werden vom Floorball-Verein verwaltet, der die App für sein Team nutzt (der „Verein“) — der Verein ist der Verantwortliche für die Daten seiner Mitglieder. Der Betreiber von FloTr verarbeitet diese Daten im Auftrag des Vereins als Auftragsverarbeiter und ist für die technische Sicherheit und den Betrieb des Systems zuständig.",
+    "section1Title": "1. Für wen diese Erklärung gilt",
+    "section1Body": "Diese Erklärung gilt für alle Nutzer der App — Trainer, Spieler, Eltern bzw. gesetzliche Vertreter minderjähriger Spieler und Vereinsadministratoren — unabhängig davon, ob sie die Web-App oder die mobile App Flotr – Player verwenden.",
+    "section2Title": "2. Welche personenbezogenen Daten wir verarbeiten",
+    "section2Items": [
+      "Kontodaten: Vorname, Nachname, E-Mail-Adresse und Passwort (als nicht umkehrbarer Hash gespeichert), die für die Anmeldung benötigt werden, sowie bevorzugte Sprache und Zeitpunkt der letzten Anmeldung.",
+      "Daten zum Vereinsmitglied/Spieler: Vorname, Nachname, Geburtsjahr, Geschlecht, E-Mail sowie Zugehörigkeit zu Verein und Team.",
+      "Trainings- und Leistungsdaten: Anwesenheit bei Trainings und Terminen, Bewertung spielerischer Fähigkeiten, Ergebnisse von Fitnesstests, Spielstatistiken, XP-Punkte, Abzeichen und abgeschlossene Challenges.",
+      "Von Ihnen erstellte Inhalte: Trainingsnotizen und -pläne, taktische Zeichnungen, zu Trainingsübungen hochgeladene Videos sowie schriftliche Bewertungen bzw. Feedback zu Trainings und Spielen.",
+      "Daten von Familienangehörigen: Ist ein Spieler minderjährig, kann ein Elternteil oder gesetzlicher Vertreter ein verknüpftes Konto haben, das Anwesenheit und Ergebnisse des Kindes einsieht und dessen Heimtraining bestätigen kann.",
+      "Push-Benachrichtigungen: eine technische Geräte-ID (Push-Token), sofern Sie Benachrichtigungen in der mobilen App aktivieren.",
+      "Technische und betriebliche Daten: IP-Adresse und übliche Server-Logs, die für Betrieb und Absicherung des Dienstes erforderlich sind.",
+      "Daten für optionale KI-Funktionen: Wenn ein Trainer oder Verein in den Einstellungen einen eigenen API-Schlüssel eines KI-Anbieters (Anthropic, OpenAI oder Google Gemini) hinterlegt, wird dieser Schlüssel verschlüsselt gespeichert; bei Nutzung der jeweiligen KI-Funktion (z. B. Trainingserstellung) wird der eingegebene Text direkt an diesen Anbieter gesendet."
+    ],
+    "section3Title": "3. Wofür wir die Daten verwenden",
+    "section3Items": [
+      "Bereitstellung und Betrieb der App-Funktionen — Trainingsplanung, Anwesenheit, Statistiken, Kalender und Gamification.",
+      "Anmeldung und Absicherung Ihres Kontos.",
+      "Versand von Push-Benachrichtigungen und E-Mail-Hinweisen, z. B. zu neuen Trainings oder Terminen, sofern aktiviert.",
+      "Auswertung der Spielerleistung und ihres Fortschritts im Zeitverlauf.",
+      "Generierung von Inhalten mittels KI, sofern Sie diese optionale Funktion selbst aktivieren.",
+      "Wartung, Fehlerbehebung und Weiterentwicklung der App."
+    ],
+    "section4Title": "4. Rechtsgrundlage der Verarbeitung",
+    "section4Items": [
+      "Vertragserfüllung — Verarbeitung, die zur Erbringung des vom Verein gebuchten Dienstes erforderlich ist.",
+      "Berechtigtes Interesse des Vereins an der Organisation des Trainingsbetriebs und der Sicherheit der Sportler.",
+      "Einwilligung — für optionale Funktionen wie Push-Benachrichtigungen oder die Nutzung eines eigenen KI-Schlüssels; die Einwilligung kann jederzeit widerrufen werden."
+    ],
+    "section5Title": "5. An wen wir Daten weitergeben",
+    "section5Items": [
+      "Unser Hosting- und Datenbankanbieter, auf dem die Anwendung läuft.",
+      "Unser Anbieter für E-Mail- und Push-Benachrichtigungsdienste, ausschließlich zur Zustellung von Benachrichtigungen.",
+      "KI-Anbieter (Anthropic, OpenAI, Google) — nur wenn ein Trainer oder Verein diese Funktion aktiv aktiviert und einen eigenen API-Schlüssel einrichtet; in diesem Fall unterliegen die übermittelten Daten der Datenschutzerklärung des jeweiligen Anbieters.",
+      "Wir verkaufen personenbezogene Daten niemals an Dritte und verwenden sie nicht für zielgerichtete Werbung."
+    ],
+    "section6Title": "6. Datenübermittlung außerhalb der EU/des EWR",
+    "section6Body": "Einige der oben genannten KI-Anbieter haben ihren Sitz außerhalb der Europäischen Union und des Europäischen Wirtschaftsraums (USA). Wenn Sie diese optionale Funktion nutzen, können die eingegebenen Daten auch außerhalb der EU/des EWR verarbeitet werden, gemäß den Richtlinien des jeweiligen Anbieters und den von ihm verwendeten Standardvertragsklauseln für internationale Datenübermittlungen.",
+    "section7Title": "7. Datensicherheit",
+    "section7Items": [
+      "Die gesamte Kommunikation erfolgt verschlüsselt über HTTPS.",
+      "Passwörter werden ausschließlich als nicht umkehrbarer Hash gespeichert, niemals im Klartext.",
+      "API-Schlüssel für KI-Funktionen werden verschlüsselt gespeichert.",
+      "Der Datenzugriff ist rollenbasiert (Spieler, Elternteil, Trainer, Cheftrainer, Vereinsadministrator) — jeder sieht nur die Daten, für die er berechtigt ist."
+    ],
+    "section8Title": "8. Speicherdauer und Löschung",
+    "section8Body": "Wir speichern personenbezogene Daten, solange der Verein die App für das jeweilige Mitglied aktiv nutzt, zuzüglich der Zeit, die zur Erfüllung gesetzlicher Pflichten erforderlich ist. Sie können jederzeit die Löschung Ihres Kontos oder der Daten Ihres Kindes beantragen — wenden Sie sich an Ihren Verein oder schreiben Sie uns direkt an die untenstehende E-Mail-Adresse; wir löschen die Daten, sofern keine gesetzliche Aufbewahrungspflicht besteht.",
+    "section9Title": "9. Ihre Rechte",
+    "section9Intro": "Gemäß DSGVO haben Sie das Recht:",
+    "section9Items": [
+      "auf Auskunft über Ihre personenbezogenen Daten,",
+      "auf Berichtigung unrichtiger Daten,",
+      "auf Löschung („Recht auf Vergessenwerden“),",
+      "auf Einschränkung der Verarbeitung,",
+      "auf Datenübertragbarkeit,",
+      "Widerspruch gegen die Verarbeitung einzulegen,",
+      "eine Beschwerde bei der zuständigen Aufsichtsbehörde einzureichen — für den Verein in Tschechien beim Amt für den Schutz personenbezogener Daten (uoou.cz) —, wenn Sie der Ansicht sind, dass die Verarbeitung gegen die DSGVO verstößt."
+    ],
+    "section10Title": "10. Cookies und lokaler Speicher",
+    "section10Body": "Sowohl die Web- als auch die mobile App verwenden ausschließlich technisch notwendigen Speicher (localStorage / sicherer Gerätespeicher) zur Aufbewahrung Ihres Anmelde-Tokens und Ihrer Benutzereinstellungen wie der gewählten Sprache. Wir verwenden keine Tracking- oder Werbe-Cookies von Drittanbietern.",
+    "section11Title": "11. Kinder und minderjährige Spieler",
+    "section11Body": "Die App kann auch von minderjährigen Spielern genutzt werden — ihr Konto und ihre Daten werden vom Verein gemeinsam mit einem Elternteil oder gesetzlichen Vertreter verwaltet, der Zugriff auf das Konto des Kindes haben kann. Wenn Sie als Elternteil eine Frage haben oder die Daten Ihres Kindes berichtigen oder löschen lassen möchten, wenden Sie sich bitte an Ihren Verein oder direkt an uns.",
+    "section12Title": "12. Änderungen dieser Erklärung",
+    "section12Body": "Wir können diese Erklärung von Zeit zu Zeit aktualisieren, etwa wenn eine neue Funktion hinzukommt. Das Datum der letzten Aktualisierung finden Sie oben auf dieser Seite.",
+    "section13Title": "13. Kontakt",
+    "section13Body": "Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte kontaktieren Sie uns unter {{email}}."
   }
 }

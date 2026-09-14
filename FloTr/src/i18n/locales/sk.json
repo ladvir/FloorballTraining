@@ -3664,5 +3664,77 @@
       "total": "Spolu",
       "challenges": "Výzvy"
     }
+  },
+  "privacy": {
+    "title": "Zásady ochrany osobných údajov",
+    "lastUpdated": "Naposledy aktualizované: 14. 9. 2026",
+    "backLink": "Späť na úvod",
+    "intro1": "FloTr je nástroj na riadenie tréningov, dochádzky, štatistík a komunikácie vo florbalovom klube — dostupný ako webová aplikácia a ako mobilná aplikácia Flotr – Player pre hráčov a ich rodiny. Tieto zásady sa vzťahujú na obe aplikácie aj na súvisiacu serverovú časť (API) a popisujú, aké osobné údaje spracúvame, na čo ich používame a aké máte práva.",
+    "intro2": "Osobné údaje v aplikácii spravuje florbalový klub alebo oddiel, ktorý ju používa pre svoj tím (ďalej len „klub“) — ten je prevádzkovateľom osobných údajov svojich členov. Prevádzkovateľ aplikácie FloTr spracúva tieto údaje v mene klubu ako sprostredkovateľ a zodpovedá za technické zabezpečenie a prevádzku systému.",
+    "section1Title": "1. Na koho sa zásady vzťahujú",
+    "section1Body": "Zásady platia pre všetkých používateľov aplikácie — trénerov, hráčov, rodičov či zákonných zástupcov neplnoletých hráčov a administrátorov klubu — bez ohľadu na to, či aplikáciu používajú na webe alebo v mobilnej appke Flotr – Player.",
+    "section2Title": "2. Aké osobné údaje spracúvame",
+    "section2Items": [
+      "Údaje o účte: meno, priezvisko, e-mailová adresa a heslo (uložené ako nevratný hash) potrebné na prihlásenie, ďalej preferovaný jazyk a čas posledného prihlásenia.",
+      "Údaje o hráčovi/členovi klubu: meno, priezvisko, ročník narodenia, pohlavie, e-mail a príslušnosť ku klubu a tímu.",
+      "Tréningové a výkonnostné údaje: dochádzka na tréningy a akcie, hodnotenie herných zručností, výsledky fyzických testov, štatistiky zo zápasov, XP body, odznaky a splnené výzvy.",
+      "Obsah, ktorý vytvárate: poznámky a plány tréningov, taktické kresby, videá nahrané k tréningovým aktivitám a slovné hodnotenia či spätná väzba k tréningom a zápasom.",
+      "Údaje o rodinných príslušníkoch: ak je hráč neplnoletý, môže mať účet prepojený rodič alebo zákonný zástupca, ktorý vidí dochádzku a výsledky dieťaťa a môže potvrdzovať jeho domáci tréning.",
+      "Push notifikácie: technický identifikátor zariadenia (push token), ak si v mobilnej aplikácii povolíte oznámenia.",
+      "Technické a prevádzkové údaje: IP adresa a štandardné serverové logy potrebné na prevádzku a zabezpečenie služby.",
+      "Údaje pre voliteľné AI funkcie: ak si tréner alebo klub v nastaveniach sám zadá vlastný API kľúč poskytovateľa umelej inteligencie (Anthropic, OpenAI alebo Google Gemini), tento kľúč je uložený v zašifrovanej podobe a pri použití danej AI funkcie (napr. generovanie tréningu) sa zadaný text odošle priamo tomuto poskytovateľovi."
+    ],
+    "section3Title": "3. Na čo údaje používame",
+    "section3Items": [
+      "Poskytovanie a prevádzku funkcií aplikácie — plánovanie tréningov, dochádzka, štatistiky, kalendár a gamifikácia.",
+      "Prihlasovanie a zabezpečenie účtu.",
+      "Zasielanie push notifikácií a e-mailových upozornení, napríklad na nové tréningy alebo termíny, ak ich máte zapnuté.",
+      "Vyhodnocovanie výkonnosti hráčov a ich pokroku v čase.",
+      "Generovanie obsahu pomocou umelej inteligencie, ak túto voliteľnú funkciu sami aktivujete.",
+      "Údržbu, opravu chýb a ďalší rozvoj aplikácie."
+    ],
+    "section4Title": "4. Právny základ spracovania",
+    "section4Items": [
+      "Plnenie zmluvy — spracovanie nevyhnutné na poskytovanie služby, ku ktorej sa klub prihlásil.",
+      "Oprávnený záujem klubu na organizácii tréningového procesu a bezpečnosti športovcov.",
+      "Súhlas — pri voliteľných funkciách, ako sú push notifikácie alebo použitie vlastného AI kľúča; súhlas môžete kedykoľvek odvolať."
+    ],
+    "section5Title": "5. Komu údaje odovzdávame",
+    "section5Items": [
+      "Poskytovateľovi hostingu a databázy, na ktorom aplikácia beží.",
+      "Poskytovateľovi e-mailových a push notifikačných služieb, slúžiacich výhradne na doručenie oznámení.",
+      "Poskytovateľom AI (Anthropic, OpenAI, Google) — iba ak tréner alebo klub sám aktívne zapne a nastaví vlastný API kľúč; v takom prípade sa odovzdané dáta riadia zásadami ochrany osobných údajov daného poskytovateľa.",
+      "Údaje nikdy nepredávame tretím stranám ani ich nepoužívame na cielenú reklamu."
+    ],
+    "section6Title": "6. Odovzdávanie údajov mimo EÚ/EHP",
+    "section6Body": "Niektorí z vyššie uvedených poskytovateľov AI majú sídlo mimo Európskej únie a Európskeho hospodárskeho priestoru (USA). Ak túto voliteľnú funkciu použijete, môžu byť zadané údaje spracované aj mimo EÚ/EHP, a to podľa zásad príslušného poskytovateľa a štandardných zmluvných doložiek, ktoré títo poskytovatelia na medzinárodný prenos dát používajú.",
+    "section7Title": "7. Zabezpečenie údajov",
+    "section7Items": [
+      "Všetka komunikácia prebieha šifrovane cez HTTPS.",
+      "Heslá sa ukladajú iba ako nevratný hash, nikdy v čitateľnej podobe.",
+      "API kľúče k AI funkciám sú uložené v zašifrovanej podobe.",
+      "Prístup k údajom je riadený rolami (hráč, rodič, tréner, hlavný tréner, administrátor klubu) — každý vidí len údaje, na ktoré má oprávnenie."
+    ],
+    "section8Title": "8. Doba uchovávania a mazanie údajov",
+    "section8Body": "Osobné údaje uchovávame po dobu, po ktorú klub aplikáciu aktívne používa pre daného člena, a ďalej po dobu nutnú na splnenie právnych povinností. Svoj účet alebo údaje o svojom dieťati môžete kedykoľvek požiadať o výmaz — stačí kontaktovať svoj klub alebo priamo nás na e-maile nižšie; údaje odstránime, ak ich ďalšie uchovávanie nevyžaduje zákon.",
+    "section9Title": "9. Vaše práva",
+    "section9Intro": "V súlade s GDPR máte právo:",
+    "section9Items": [
+      "na prístup k svojim osobným údajom,",
+      "na opravu nepresných údajov,",
+      "na výmaz („právo byť zabudnutý“),",
+      "na obmedzenie spracovania,",
+      "na prenosnosť údajov,",
+      "vzniesť námietku proti spracovaniu,",
+      "podať sťažnosť na Úrade pre ochranu osobných údajov príslušnom pre klub (v Česku: uoou.cz), ak sa domnievate, že spracovanie porušuje GDPR."
+    ],
+    "section10Title": "10. Cookies a lokálne úložisko",
+    "section10Body": "Webová aj mobilná aplikácia používa iba technicky nutné úložisko (localStorage / zabezpečené úložisko zariadenia) na uchovanie prihlasovacieho tokenu a používateľských nastavení, ako je zvolený jazyk. Nepoužívame sledovacie ani reklamné cookies tretích strán.",
+    "section11Title": "11. Deti a neplnoletí hráči",
+    "section11Body": "Aplikáciu môžu využívať aj neplnoletí hráči — ich účet a údaje spravuje klub v spolupráci s rodičom alebo zákonným zástupcom, ktorý môže mať prístup k účtu dieťaťa. Ak ste rodič a máte otázku alebo chcete údaje dieťaťa opraviť či zmazať, obráťte sa na svoj klub alebo priamo na nás.",
+    "section12Title": "12. Zmeny týchto zásad",
+    "section12Body": "Tieto zásady môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie. Dátum poslednej aktualizácie je uvedený v hlavičke tejto stránky.",
+    "section13Title": "13. Kontakt",
+    "section13Body": "S akýmikoľvek otázkami ohľadom ochrany osobných údajov alebo žiadosťami o výkon vašich práv nás kontaktujte na e-maile {{email}}."
   }
 }

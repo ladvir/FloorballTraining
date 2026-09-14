@@ -3665,5 +3665,77 @@
       "total": "Razem",
       "challenges": "Wyzwania"
     }
+  },
+  "privacy": {
+    "title": "Polityka prywatności",
+    "lastUpdated": "Ostatnia aktualizacja: 14.09.2026",
+    "backLink": "Powrót na stronę główną",
+    "intro1": "FloTr to narzędzie do zarządzania treningami, obecnością, statystykami i komunikacją w klubie unihokeja — dostępne jako aplikacja webowa oraz jako aplikacja mobilna Flotr – Player dla zawodników i ich rodzin. Niniejsza polityka dotyczy obu aplikacji oraz powiązanego serwera (API) i opisuje, jakie dane osobowe przetwarzamy, w jakim celu ich używamy oraz jakie przysługują Ci prawa.",
+    "intro2": "Danymi osobowymi w aplikacji zarządza klub unihokeja lub organizacja, która korzysta z niej dla swojej drużyny („klub”) — klub jest administratorem danych osobowych swoich członków. Operator aplikacji FloTr przetwarza te dane w imieniu klubu jako podmiot przetwarzający i odpowiada za bezpieczeństwo techniczne oraz działanie systemu.",
+    "section1Title": "1. Kogo dotyczy niniejsza polityka",
+    "section1Body": "Polityka dotyczy wszystkich użytkowników aplikacji — trenerów, zawodników, rodziców lub opiekunów prawnych niepełnoletnich zawodników oraz administratorów klubu — niezależnie od tego, czy korzystają z aplikacji webowej, czy z aplikacji mobilnej Flotr – Player.",
+    "section2Title": "2. Jakie dane osobowe przetwarzamy",
+    "section2Items": [
+      "Dane konta: imię, nazwisko, adres e-mail i hasło (przechowywane jako nieodwracalny skrót) potrzebne do logowania, a także preferowany język i czas ostatniego logowania.",
+      "Dane zawodnika/członka klubu: imię, nazwisko, rok urodzenia, płeć, e-mail oraz przynależność do klubu i zespołu.",
+      "Dane treningowe i wydajnościowe: obecność na treningach i wydarzeniach, oceny umiejętności, wyniki testów sprawnościowych, statystyki meczowe, punkty XP, odznaki i ukończone wyzwania.",
+      "Tworzone przez Ciebie treści: notatki i plany treningowe, rysunki taktyczne, filmy przesłane do ćwiczeń treningowych oraz pisemne oceny lub opinie dotyczące treningów i meczów.",
+      "Dane członków rodziny: jeśli zawodnik jest niepełnoletni, rodzic lub opiekun prawny może mieć powiązane konto, które widzi obecność i wyniki dziecka oraz może potwierdzać jego trening domowy.",
+      "Powiadomienia push: techniczny identyfikator urządzenia (token push), jeśli włączysz powiadomienia w aplikacji mobilnej.",
+      "Dane techniczne i operacyjne: adres IP oraz standardowe logi serwera niezbędne do działania i zabezpieczenia usługi.",
+      "Dane dla opcjonalnych funkcji AI: jeśli trener lub klub w ustawieniach wprowadzi własny klucz API dostawcy sztucznej inteligencji (Anthropic, OpenAI lub Google Gemini), klucz ten jest przechowywany w postaci zaszyfrowanej, a przy korzystaniu z danej funkcji AI (np. generowania treningu) wprowadzony tekst jest wysyłany bezpośrednio do tego dostawcy."
+    ],
+    "section3Title": "3. Do czego wykorzystujemy dane",
+    "section3Items": [
+      "Zapewnienie i działanie funkcji aplikacji — planowanie treningów, obecność, statystyki, kalendarz i grywalizacja.",
+      "Logowanie i zabezpieczenie konta.",
+      "Wysyłanie powiadomień push i e-mail, np. o nowych treningach lub terminach, jeśli są włączone.",
+      "Ocena wyników zawodników i ich postępów w czasie.",
+      "Generowanie treści przy pomocy AI, jeśli sam włączysz tę opcjonalną funkcję.",
+      "Utrzymanie, naprawę błędów i dalszy rozwój aplikacji."
+    ],
+    "section4Title": "4. Podstawa prawna przetwarzania",
+    "section4Items": [
+      "Wykonanie umowy — przetwarzanie niezbędne do świadczenia usługi, na którą zdecydował się klub.",
+      "Uzasadniony interes klubu polegający na organizacji procesu treningowego i bezpieczeństwie sportowców.",
+      "Zgoda — dla funkcji opcjonalnych, takich jak powiadomienia push lub użycie własnego klucza AI; zgodę można wycofać w dowolnym momencie."
+    ],
+    "section5Title": "5. Komu przekazujemy dane",
+    "section5Items": [
+      "Naszemu dostawcy hostingu i bazy danych, na którym działa aplikacja.",
+      "Naszemu dostawcy usług e-mail i powiadomień push, wykorzystywanemu wyłącznie do dostarczania powiadomień.",
+      "Dostawcom AI (Anthropic, OpenAI, Google) — tylko jeśli trener lub klub sam aktywnie włączy tę funkcję i skonfiguruje własny klucz API; w takim przypadku przekazane dane podlegają polityce prywatności danego dostawcy.",
+      "Nigdy nie sprzedajemy danych osobowych stronom trzecim ani nie wykorzystujemy ich do reklamy ukierunkowanej."
+    ],
+    "section6Title": "6. Przekazywanie danych poza UE/EOG",
+    "section6Body": "Niektórzy z wymienionych powyżej dostawców AI mają siedzibę poza Unią Europejską i Europejskim Obszarem Gospodarczym (USA). W przypadku korzystania z tej opcjonalnej funkcji wprowadzone dane mogą być przetwarzane również poza UE/EOG, zgodnie z zasadami danego dostawcy oraz standardowymi klauzulami umownymi stosowanymi przez niego do międzynarodowego przekazywania danych.",
+    "section7Title": "7. Bezpieczeństwo danych",
+    "section7Items": [
+      "Cała komunikacja odbywa się w sposób szyfrowany za pośrednictwem HTTPS.",
+      "Hasła są przechowywane wyłącznie jako nieodwracalny skrót, nigdy w postaci jawnej.",
+      "Klucze API do funkcji AI są przechowywane w postaci zaszyfrowanej.",
+      "Dostęp do danych jest kontrolowany na podstawie ról (zawodnik, rodzic, trener, główny trener, administrator klubu) — każdy widzi tylko dane, do których ma uprawnienia."
+    ],
+    "section8Title": "8. Okres przechowywania i usuwanie danych",
+    "section8Body": "Dane osobowe przechowujemy tak długo, jak klub aktywnie korzysta z aplikacji dla danego członka, a także przez czas niezbędny do wypełnienia obowiązków prawnych. W dowolnym momencie możesz poprosić o usunięcie swojego konta lub danych swojego dziecka — wystarczy skontaktować się z klubem lub bezpośrednio z nami pod adresem e-mail podanym poniżej; usuniemy dane, chyba że ich dalsze przechowywanie jest wymagane przez prawo.",
+    "section9Title": "9. Twoje prawa",
+    "section9Intro": "Zgodnie z RODO masz prawo do:",
+    "section9Items": [
+      "dostępu do swoich danych osobowych,",
+      "sprostowania nieprawidłowych danych,",
+      "usunięcia danych („prawo do bycia zapomnianym”),",
+      "ograniczenia przetwarzania,",
+      "przenoszenia danych,",
+      "wniesienia sprzeciwu wobec przetwarzania,",
+      "wniesienia skargi do Urzędu Ochrony Danych Osobowych właściwego dla klubu (w Czechach: uoou.cz), jeśli uważasz, że przetwarzanie narusza RODO."
+    ],
+    "section10Title": "10. Pliki cookie i lokalna pamięć",
+    "section10Body": "Zarówno aplikacja webowa, jak i mobilna wykorzystują wyłącznie technicznie niezbędną pamięć (localStorage / bezpieczna pamięć urządzenia) do przechowywania tokenu logowania i ustawień użytkownika, takich jak wybrany język. Nie używamy plików cookie do śledzenia ani reklam stron trzecich.",
+    "section11Title": "11. Dzieci i niepełnoletni zawodnicy",
+    "section11Body": "Z aplikacji mogą korzystać również niepełnoletni zawodnicy — ich konto i dane są zarządzane przez klub we współpracy z rodzicem lub opiekunem prawnym, który może mieć dostęp do konta dziecka. Jeśli jesteś rodzicem i masz pytanie lub chcesz poprawić bądź usunąć dane dziecka, skontaktuj się ze swoim klubem lub bezpośrednio z nami.",
+    "section12Title": "12. Zmiany niniejszej polityki",
+    "section12Body": "Możemy okresowo aktualizować niniejszą politykę, na przykład przy dodawaniu nowej funkcji. Data ostatniej aktualizacji jest podana na górze tej strony.",
+    "section13Title": "13. Kontakt",
+    "section13Body": "W przypadku pytań dotyczących ochrony danych osobowych lub chęci skorzystania ze swoich praw, skontaktuj się z nami pod adresem {{email}}."
   }
 }

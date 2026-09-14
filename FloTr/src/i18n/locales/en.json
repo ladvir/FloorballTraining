@@ -3661,5 +3661,77 @@
       "total": "Total",
       "challenges": "Challenges"
     }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: 14 Sep 2026",
+    "backLink": "Back to home",
+    "intro1": "FloTr is a tool for managing training sessions, attendance, statistics and communication within a floorball club — available as a web app and as the Flotr – Player mobile app for players and their families. This policy applies to both apps and to the underlying server (API), and describes what personal data we process, what we use it for and what rights you have.",
+    "intro2": "Personal data in the app is managed by the floorball club or organization that uses it for its team (the \"club\") — the club is the data controller for its members. The operator of FloTr processes this data on the club's behalf as a data processor and is responsible for the technical security and operation of the system.",
+    "section1Title": "1. Who this policy applies to",
+    "section1Body": "This policy applies to all app users — coaches, players, parents or legal guardians of minor players, and club administrators — regardless of whether they use the web app or the Flotr – Player mobile app.",
+    "section2Title": "2. What personal data we process",
+    "section2Items": [
+      "Account data: first name, last name, email address and password (stored as an irreversible hash) needed to sign in, plus your preferred language and last login time.",
+      "Club member/player data: first name, last name, birth year, gender, email, and club/team membership.",
+      "Training and performance data: attendance at trainings and events, skill ratings, physical test results, match statistics, XP points, badges and completed challenges.",
+      "Content you create: training notes and plans, tactical drawings, videos uploaded for training activities, and written ratings or feedback on trainings and matches.",
+      "Family member data: if a player is a minor, a parent or legal guardian may have a linked account that sees the child's attendance and results and can confirm their home training.",
+      "Push notifications: a technical device identifier (push token), if you enable notifications in the mobile app.",
+      "Technical and operational data: IP address and standard server logs needed to run and secure the service.",
+      "Data for optional AI features: if a coach or club enters their own API key for an AI provider (Anthropic, OpenAI or Google Gemini) in settings, the key is stored encrypted, and when that AI feature is used (e.g. generating a training) the entered text is sent directly to that provider."
+    ],
+    "section3Title": "3. What we use the data for",
+    "section3Items": [
+      "Providing and running the app's features — training planning, attendance, statistics, calendar and gamification.",
+      "Signing in and securing your account.",
+      "Sending push notifications and email alerts, e.g. about new trainings or events, if you have them enabled.",
+      "Evaluating player performance and progress over time.",
+      "Generating content with AI, if you enable this optional feature yourself.",
+      "Maintenance, bug fixing and further development of the app."
+    ],
+    "section4Title": "4. Legal basis for processing",
+    "section4Items": [
+      "Performance of a contract — processing necessary to provide the service the club has signed up for.",
+      "Legitimate interest of the club in organizing the training process and the safety of athletes.",
+      "Consent — for optional features such as push notifications or using your own AI key; you can withdraw consent at any time."
+    ],
+    "section5Title": "5. Who we share data with",
+    "section5Items": [
+      "Our hosting and database provider, which runs the application.",
+      "Our email and push notification provider, used solely to deliver notifications.",
+      "AI providers (Anthropic, OpenAI, Google) — only if a coach or club actively enables the feature and sets up their own API key; in that case, the shared data is governed by that provider's own privacy policy.",
+      "We never sell personal data to third parties or use it for targeted advertising."
+    ],
+    "section6Title": "6. Transfers outside the EU/EEA",
+    "section6Body": "Some of the AI providers listed above are based outside the European Union and European Economic Area (USA). If you use this optional feature, the data you enter may be processed outside the EU/EEA, subject to that provider's own policies and the standard contractual clauses they use for international data transfers.",
+    "section7Title": "7. Data security",
+    "section7Items": [
+      "All communication is encrypted over HTTPS.",
+      "Passwords are stored only as an irreversible hash, never in plain text.",
+      "API keys for AI features are stored encrypted.",
+      "Access to data is role-based (player, parent, coach, head coach, club administrator) — each user only sees data they are authorized to see."
+    ],
+    "section8Title": "8. Data retention and deletion",
+    "section8Body": "We keep personal data for as long as the club actively uses the app for that member, plus any additional time required to meet legal obligations. You can request deletion of your account or your child's data at any time — contact your club or email us directly at the address below; we will remove the data unless the law requires us to keep it.",
+    "section9Title": "9. Your rights",
+    "section9Intro": "Under GDPR, you have the right to:",
+    "section9Items": [
+      "access your personal data,",
+      "correct inaccurate data,",
+      "request erasure (\"the right to be forgotten\"),",
+      "restrict processing,",
+      "data portability,",
+      "object to processing,",
+      "lodge a complaint with the Czech Office for Personal Data Protection (uoou.cz) if you believe the processing violates GDPR."
+    ],
+    "section10Title": "10. Cookies and local storage",
+    "section10Body": "Both the web and mobile app use only technically necessary storage (localStorage / secure device storage) to keep your login token and user settings, such as your chosen language. We do not use third-party tracking or advertising cookies.",
+    "section11Title": "11. Children and minor players",
+    "section11Body": "The app can also be used by minor players — their account and data are managed by the club together with a parent or legal guardian, who may have access to the child's account. If you are a parent with a question, or want to correct or delete your child's data, please contact your club or reach out to us directly.",
+    "section12Title": "12. Changes to this policy",
+    "section12Body": "We may update this policy from time to time, for example when we add a new feature. The date of the last update is shown at the top of this page.",
+    "section13Title": "13. Contact",
+    "section13Body": "If you have any questions about data protection, or want to exercise your rights, contact us at {{email}}."
   }
 }
