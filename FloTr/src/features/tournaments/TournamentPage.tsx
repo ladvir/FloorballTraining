@@ -27,6 +27,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { tournamentsApi } from '../../api/index'
 import { TournamentMatchStatsButton } from '../stats/TournamentMatchStatsButton'
 import { useConfirm } from '../../store/confirmStore'
+import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../utils/toast'
 import type {
   TournamentDto,
@@ -436,7 +437,7 @@ function reducer(state: TournamentDto, action: Action): TournamentDto {
   }
 }
 
-function emptyTournamentDto(): TournamentDto {
+function emptyTournamentDto(clubId: number): TournamentDto {
   const now = new Date().toISOString()
   return {
     id: 0,
@@ -445,6 +446,7 @@ function emptyTournamentDto(): TournamentDto {
     specialGoalBonusPoints: 0,
     matchDurationSeconds: 300,
     fields: ['Hřiště 1'],
+    clubId,
     createdAt: now,
     updatedAt: now,
     teams: [],
@@ -462,6 +464,7 @@ export function TournamentPage() {
   const isNew = !id
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const { activeClubId } = useAuthStore()
   const [helpOpen, setHelpOpen] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   // Per-match undo stacks: previous snapshot of a single match, recorded before each result change
@@ -490,10 +493,10 @@ export function TournamentPage() {
       dispatch({ type: 'init', t: existing })
       initialized.current = true
     } else if (isNew) {
-      dispatch({ type: 'init', t: emptyTournamentDto() })
+      dispatch({ type: 'init', t: emptyTournamentDto(activeClubId ?? 0) })
       initialized.current = true
     }
-  }, [existing, isNew])
+  }, [existing, isNew, activeClubId])
 
   const saveMutation = useMutation({
     mutationFn: async (dto: TournamentDto) => {

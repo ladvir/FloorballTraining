@@ -30,12 +30,8 @@ public class TournamentsController(
         return new AccessScope(false, info.ClubId, info.EffectiveRole);
     }
 
-    private static bool CanRead(AccessScope scope, Tournament t)
-    {
-        if (scope.IsAdmin) return true;
-        if (t.ClubId == null) return scope.EffectiveRole != "User";
-        return t.ClubId == scope.ClubId;
-    }
+    private static bool CanRead(AccessScope scope, Tournament t) =>
+        scope.IsAdmin || t.ClubId == scope.ClubId;
 
     private static bool CanEdit(AccessScope scope)
     {
@@ -120,7 +116,7 @@ public class TournamentsController(
         var scope = await GetScopeAsync();
 
         var q = context.Tournaments.AsQueryable();
-        if (!scope.IsAdmin) q = q.Where(t => t.ClubId == null || t.ClubId == scope.ClubId);
+        if (!scope.IsAdmin) q = q.Where(t => t.ClubId == scope.ClubId);
         var list = await q.OrderByDescending(t => t.UpdatedAt)
             .Select(t => new
             {
@@ -158,6 +154,9 @@ public class TournamentsController(
         var scope = await GetScopeAsync();
         if (!CanEdit(scope)) return Forbid();
 
+        var clubId = scope.IsAdmin ? dto.ClubId : scope.ClubId;
+        if (clubId is null or <= 0) return BadRequest("ClubId is required.");
+
         var now = DateTime.UtcNow;
         var t = new Tournament
         {
@@ -166,7 +165,7 @@ public class TournamentsController(
             SpecialGoalBonusPoints = Math.Clamp(dto.SpecialGoalBonusPoints, 0, 5),
             MatchDurationSeconds = Math.Clamp(dto.MatchDurationSeconds, 0, 5999),
             FieldsJson = JsonSerializer.Serialize(dto.Fields ?? new List<string> { "Hřiště 1" }),
-            ClubId = scope.IsAdmin ? dto.ClubId : scope.ClubId,
+            ClubId = clubId.Value,
             CreatedByUserId = GetCurrentUserId(),
             CreatedAt = now,
             UpdatedAt = now,

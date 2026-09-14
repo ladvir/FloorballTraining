@@ -8,7 +8,7 @@ public class TournamentDto : BaseEntityDto
     public int MatchDurationSeconds { get; set; } = 300;
     public List<string> Fields { get; set; } = [];
 
-    public int? ClubId { get; set; }
+    public int ClubId { get; set; }
 
     public string? CreatedByUserId { get; set; }
     public string? CreatedByUserName { get; set; }

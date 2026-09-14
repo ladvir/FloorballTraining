@@ -36,6 +36,21 @@ function getSeasonMonths(startDate: string, endDate: string) {
   return months
 }
 
+/** Current month plus `count - 1` preceding months, chronological order */
+function getRecentMonths(count: number) {
+  const now = new Date()
+  const months: { year: number; month: number; label: string }[] = []
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+      label: format(d, 'LLLL yyyy', { locale: dfLocale() }),
+    })
+  }
+  return months
+}
+
 /** Find the season whose date range contains today */
 function findCurrentSeason(seasons: { id: number; startDate: string; endDate: string }[]) {
   const now = new Date()
@@ -84,10 +99,21 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     return auto
   }, [seasons, selectedSeasonId])
 
-  // Months in selected season
+  // Months in selected season, plus the current month and 2 preceding months
   const months = useMemo(() => {
-    if (!currentSeason) return []
-    return getSeasonMonths(currentSeason.startDate, currentSeason.endDate)
+    const seasonMonths = currentSeason
+      ? getSeasonMonths(currentSeason.startDate, currentSeason.endDate)
+      : []
+    const merged = [...seasonMonths, ...getRecentMonths(3)]
+    const seen = new Set<string>()
+    return merged
+      .filter((m) => {
+        const key = `${m.year}-${m.month}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .sort((a, b) => a.year - b.year || a.month - b.month)
   }, [currentSeason])
 
   // Auto-select current month

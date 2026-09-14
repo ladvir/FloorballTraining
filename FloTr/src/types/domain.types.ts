@@ -957,7 +957,7 @@ export interface TournamentDto {
   specialGoalBonusPoints: number
   matchDurationSeconds: number
   fields: string[]
-  clubId?: number | null
+  clubId: number
   createdByUserId?: string | null
   createdByUserName?: string | null
   createdAt: string

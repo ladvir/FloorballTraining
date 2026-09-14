@@ -15,8 +15,8 @@ public class Tournament : BaseEntity
     /// <summary>JSON array of field names, e.g. ["Hřiště 1","Hřiště 2"]</summary>
     public string FieldsJson { get; set; } = "[]";
 
-    public int? ClubId { get; set; }
-    public Club? Club { get; set; }
+    public int ClubId { get; set; }
+    public Club Club { get; set; } = null!;
 
     public string? CreatedByUserId { get; set; }
 

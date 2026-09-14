@@ -21,8 +21,7 @@ public class TournamentConfiguration : IEntityTypeConfiguration<Tournament>
         builder.HasOne(t => t.Club)
             .WithMany()
             .HasForeignKey(t => t.ClubId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(t => t.Teams)
             .WithOne(x => x.Tournament)
