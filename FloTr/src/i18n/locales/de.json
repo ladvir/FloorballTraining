@@ -2329,6 +2329,7 @@
     "export": "Exportieren",
     "exportPng": "PNG exportieren",
     "exportSvg": "SVG exportieren",
+    "exportGif": "GIF exportieren",
     "exportPdf": "PDF exportieren",
     "clear": "Leeren",
     "undo": "Rückgängig (Ctrl+Z)",

@@ -1,54 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { Frame } from './DrawingTypes'
+import {
+  prepareSvgClone,
+  serializeSvgElement,
+  rasterizeSvgToCanvas,
+  downloadBlob,
+} from './utils/svgExportUtils'
+import { exportAnimatedGif } from './utils/gifExport'
 
 interface ExportDrawingButtonsProps {
   svgRef: React.RefObject<SVGSVGElement> | null
+  /** Committed multi-frame storyboard (#121+). >=2 frames enables the GIF export button. */
+  frames?: Frame[]
 }
 
-const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) => {
+const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef, frames }) => {
   const { t } = useTranslation()
-
-  // Pomocná funkce: vytvoří klon SVG s korektními xmlns a rozměry podle viewBox
-  const serializeSvg = (
-    svg: SVGSVGElement
-  ): { svgString: string; width: number; height: number } => {
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    // Nastavit namespace atributy (důležité pro načtení jako obrázek)
-    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    if (!clone.getAttribute('xmlns:xlink'))
-      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-
-    // Rozměry z viewBox nebo width/height fallbacky
-    const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : (null as SVGRect | null)
-    const width =
-      vb && vb.width
-        ? vb.width
-        : svg.width && svg.width.baseVal && svg.width.baseVal.value
-          ? svg.width.baseVal.value
-          : 800
-    const height =
-      vb && vb.height
-        ? vb.height
-        : svg.height && svg.height.baseVal && svg.height.baseVal.value
-          ? svg.height.baseVal.value
-          : 600
-
-    // Zajistit, aby klon měl explicitní width/height (ovlivní "natural size" při rasterizaci)
-    clone.setAttribute('width', String(width))
-    clone.setAttribute('height', String(height))
-
-    // Některé prohlížeče vyžadují viewBox pro korektní škálování při exportu
-    if (!clone.getAttribute('viewBox') && vb) {
-      clone.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height}`)
-    }
-
-    const serializer = new XMLSerializer()
-    let source = serializer.serializeToString(clone)
-    if (!source.startsWith('<?xml')) {
-      source = '<?xml version="1.0" standalone="no"?>\r\n' + source
-    }
-    return { svgString: source, width, height }
-  }
+  const [exportingGif, setExportingGif] = useState(false)
 
   const handleExportSvg = () => {
     if (!svgRef) return
@@ -59,71 +28,47 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
       svg.setAttribute('src', 'flotr')
     }
 
-    const { svgString } = serializeSvg(svg)
-    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'drawing.svg'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    const { clone } = prepareSvgClone(svg)
+    const svgString = serializeSvgElement(clone)
+    downloadBlob(new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' }), 'drawing.svg')
   }
 
-  const handleExportPng = () => {
+  const handleExportPng = async () => {
     if (!svgRef) return
     const svg = svgRef.current
     if (!svg) return
 
     try {
-      const { svgString, width, height } = serializeSvg(svg)
-      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(svgBlob)
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = function () {
-        const pixelRatio = Math.max(window.devicePixelRatio || 1, 1)
-        const scale = Math.min(pixelRatio, 3)
-
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.max(Math.floor(width * scale), 1)
-        canvas.height = Math.max(Math.floor(height * scale), 1)
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          URL.revokeObjectURL(url)
-          return
-        }
-
-        // Bílé pozadí: zaplnit plátno před vykreslením SVG
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-        // Vykreslit SVG obrázek do canvasu přes škálování na cílové rozměry
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-        canvas.toBlob(function (blob) {
-          URL.revokeObjectURL(url)
-          if (!blob) return
-          const outUrl = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = outUrl
-          a.download = 'drawing.png'
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          URL.revokeObjectURL(outUrl)
-        }, 'image/png')
-      }
-      img.onerror = function () {
-        URL.revokeObjectURL(url)
-        console.error('Nepodařilo se načíst SVG pro export do PNG.')
-      }
-      img.src = url
+      const { clone, width, height } = prepareSvgClone(svg)
+      const svgString = serializeSvgElement(clone)
+      const pixelRatio = Math.max(window.devicePixelRatio || 1, 1)
+      const scale = Math.min(pixelRatio, 3)
+      const canvas = await rasterizeSvgToCanvas(svgString, width, height, scale)
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        downloadBlob(blob, 'drawing.png')
+      }, 'image/png')
     } catch (e) {
       console.error('Chyba při exportu do PNG:', e)
     }
   }
+
+  const handleExportGif = async () => {
+    if (!svgRef || !frames || frames.length < 2 || exportingGif) return
+    const svg = svgRef.current
+    if (!svg) return
+
+    setExportingGif(true)
+    try {
+      await exportAnimatedGif(svg, frames)
+    } catch (e) {
+      console.error('Chyba při exportu do GIF:', e)
+    } finally {
+      setExportingGif(false)
+    }
+  }
+
+  const hasAnimation = !!frames && frames.length >= 2
 
   return (
     <div className="tool-group-inline">
@@ -149,6 +94,19 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
         </button>
         <span>{t('drawing.exportSvg')}</span>
       </div>
+      {hasAnimation && (
+        <div className="tool-item">
+          <button onClick={handleExportGif} disabled={exportingGif} title={t('drawing.exportGif')}>
+            <svg width={32} height={32} viewBox="0 0 256 256" fill="none">
+              <path
+                fill="#000000"
+                d="m210.83 85.17l-56-56A4 4 0 0 0 152 28H56a12 12 0 0 0-12 12v72a4 4 0 1 0 8 0V40a4 4 0 0 1 4-4h92v52a4 4 0 0 0 4 4h52v20a4 4 0 0 0 8 0V88a4 4 0 0 0-1.17-2.83ZM156 41.65L198.34 84H156ZM112 130L176 168L112 206Z"
+              />
+            </svg>
+          </button>
+          <span>{t('drawing.exportGif')}</span>
+        </div>
+      )}
     </div>
   )
 }

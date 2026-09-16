@@ -331,6 +331,13 @@ const DrawingComponentInner = ({
     if (data) setPreviewSvg(data.svgString)
   }, [serializeDrawing])
 
+  // Storyboard with the active frame's live edits flushed in — same shape GIF export
+  // interpolates over, kept consistent with what serializeDrawing() feeds injectSmilAnimation.
+  const committedFramesForExport = useMemo(
+    () => commitFramePositions(frames, activeFrameIndex, snapshotPositions()),
+    [frames, activeFrameIndex, snapshotPositions]
+  )
+
   const addToActivityMutation = useMutation({
     mutationFn: (activity: ActivityDto) => {
       const data = serializeDrawing()
@@ -1638,7 +1645,7 @@ const DrawingComponentInner = ({
             <span>{t('drawing.save')}</span>
           </div>
         )}
-        <ExportDrawingButtons svgRef={svgCanvasRef} />
+        <ExportDrawingButtons svgRef={svgCanvasRef} frames={committedFramesForExport} />
         <div className="tool-item">
           <button
             onClick={() => {
