@@ -72,7 +72,7 @@ jobs:
         run: npm test
 
   mobile:
-    name: Mobile (lint & typecheck)
+    name: Mobile (lint, typecheck & test)
     runs-on: windows-latest
     defaults:
       run:
@@ -96,3 +96,6 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Test
+        run: npm test
