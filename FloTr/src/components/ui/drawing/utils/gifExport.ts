@@ -45,7 +45,10 @@ function applyInterpolatedFrame(clone: SVGSVGElement, frames: Frame[], tMs: numb
     if (!pa || !pb) return
     const el = clone.querySelector(`#player-${i}`)
     if (!el) return
-    el.setAttribute('transform', `translate(${lerp(pa.x, pb.x, localT)},${lerp(pa.y, pb.y, localT)})`)
+    el.setAttribute(
+      'transform',
+      `translate(${lerp(pa.x, pb.x, localT)},${lerp(pa.y, pb.y, localT)})`
+    )
   })
 
   a.equipment.forEach((ea, i) => {
@@ -59,7 +62,10 @@ function applyInterpolatedFrame(clone: SVGSVGElement, frames: Frame[], tMs: numb
     if (dxA !== dxB || dyA !== dyB) return
     const el = clone.querySelector(`#equipment${i}`)
     if (!el) return
-    el.setAttribute('transform', `translate(${lerp(ea.x, eb.x, localT)},${lerp(ea.y, eb.y, localT)})`)
+    el.setAttribute(
+      'transform',
+      `translate(${lerp(ea.x, eb.x, localT)},${lerp(ea.y, eb.y, localT)})`
+    )
   })
 
   a.lines.forEach((la, i) => {
