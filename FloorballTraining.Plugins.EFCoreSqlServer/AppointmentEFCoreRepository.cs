@@ -9,6 +9,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
+        // The base GetByIdAsync loads no navigations at all, so a single appointment fetched by id
+        // (e.g. the detail page / edit form) would otherwise silently show no location/opponent/training.
+        public override async Task<Appointment?> GetByIdAsync(int id)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Appointments
+                .Include(a => a.Location)
+                .Include(a => a.Opponent)
+                .Include(a => a.Training)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
         public async Task<Appointment?> GetAppointmentByIdAsync(int appointmentId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -52,6 +64,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             appointment.LocationId = updatedAppointment.LocationId;
             appointment.Team = null;
             appointment.TeamId = updatedAppointment.TeamId;
+            appointment.Opponent = null;
+            appointment.OpponentId = updatedAppointment.OpponentId;
             appointment.OwnerUserId = updatedAppointment.OwnerUserId;
             appointment.Training = null;
             appointment.TrainingId = updatedAppointment.TrainingId;
@@ -101,6 +115,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     {
                         fa.Location = null;
                         fa.Team = null;
+                        fa.Opponent = null;
                         fa.RepeatingPattern = null;
                         fa.ParentAppointment = null;
                         appointment.FutureAppointments.Add(fa);
@@ -110,6 +125,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     existingFutureAppointment.Merge(fa);
                     existingFutureAppointment.Location = null;
                     existingFutureAppointment.Team = null;
+                    existingFutureAppointment.Opponent = null;
                     existingFutureAppointment.RepeatingPattern = null;
                     existingFutureAppointment.ParentAppointment = null;
                 }

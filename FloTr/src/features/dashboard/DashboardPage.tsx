@@ -28,7 +28,7 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { dashboardApi, roleRequestsApi, xpApi } from '../../api/index'
+import { dashboardApi, roleRequestsApi, teamsApi, xpApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
 import { toast } from '../../utils/toast'
 import { activitiesApi } from '../../api/activities.api'
@@ -42,6 +42,7 @@ import { RecentAchievementsCard } from './RecentAchievementsCard'
 import { PendingRewardsCard } from '../members/RewardsCard'
 import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
+import { UpcomingMatchesCard } from './UpcomingMatchesCard'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
@@ -97,6 +98,12 @@ export function DashboardPage() {
     queryFn: () => activitiesApi.getAll(),
   })
 
+  const { data: teams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: teamsApi.getAll,
+    enabled: isCoach,
+  })
+
   const { data: roleRequests } = useQuery({
     queryKey: ['roleRequests'],
     queryFn: roleRequestsApi.getPending,
@@ -136,6 +143,17 @@ export function DashboardPage() {
         (a) => a.teamId === defaultTeamId || (a.teamId == null && a.ownerUserId === user?.id)
       )
     : allAppointments
+
+  // Upcoming matches across every team the coach is on (not just the default one).
+  const MATCH_TYPE = 3
+  const myTeamIds = new Set(
+    (teams ?? [])
+      .filter((tm) => isHeadCoach || (user?.coachTeamIds ?? []).includes(tm.id))
+      .map((tm) => tm.id)
+  )
+  const upcomingMatches = allAppointments.filter(
+    (a) => Number(a.appointmentType) === MATCH_TYPE && a.teamId != null && myTeamIds.has(a.teamId)
+  )
 
   // Activity counts
   const totalActivities = allActivities?.length ?? 0
@@ -241,6 +259,16 @@ export function DashboardPage() {
 
         {/* My challenges — self-hides when there are none active (#108) */}
         {myMemberId && <ChallengesCard memberId={myMemberId} isOwner />}
+
+        {/* Upcoming matches across all of the coach's teams */}
+        {isCoach && (
+          <UpcomingMatchesCard
+            matches={upcomingMatches}
+            allAppointments={allAppointments}
+            teams={teams ?? []}
+            canEdit={isCoach}
+          />
+        )}
 
         {/* Column: Události */}
         <div>

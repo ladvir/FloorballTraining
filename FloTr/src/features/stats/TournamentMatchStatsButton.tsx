@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,7 @@ import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'
 import { statTrackersApi, teamsApi } from '../../api/index'
+import { withReturnTo } from './statsReturnTo'
 
 interface Props {
   tournamentMatchId: number
@@ -17,6 +18,8 @@ interface Props {
 export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromPath = `${location.pathname}${location.search}`
   const qc = useQueryClient()
   const { user, isAdmin, isHeadCoach } = useAuthStore()
   const [open, setOpen] = useState(false)
@@ -51,7 +54,7 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
     onSuccess: (created) => {
       qc.invalidateQueries({ queryKey: ['stat-tracker-match', tournamentMatchId] })
       setOpen(false)
-      navigate(`/stats/${created.id}/setup`)
+      navigate(withReturnTo(`/stats/${created.id}/setup`, fromPath))
     },
   })
 
@@ -91,7 +94,7 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
               <button
                 key={tracker.id}
                 type="button"
-                onClick={() => navigate(`/stats/${tracker.id}/live`)}
+                onClick={() => navigate(withReturnTo(`/stats/${tracker.id}/live`, fromPath))}
                 className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm hover:bg-sky-50"
               >
                 <span className="font-medium text-gray-900">{tracker.teamName}</span>

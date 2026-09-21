@@ -9,7 +9,7 @@ public class GenericEFCoreRepository<T>(IDbContextFactory<FloorballTrainingConte
     : IGenericRepository<T>
     where T : BaseEntity
 {
-    public async Task<T?> GetByIdAsync(int id)
+    public virtual async Task<T?> GetByIdAsync(int id)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 

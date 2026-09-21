@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,7 @@ import { Modal } from '../../../components/shared/Modal'
 import { Button } from '../../../components/ui/Button'
 import { lineupsApi, statTrackersApi } from '../../../api/index'
 import { AppointmentFormModal } from '../../appointments/AppointmentFormModal'
+import { withReturnTo } from '../../stats/statsReturnTo'
 import type { AppointmentDto, MatchLineupDto } from '../../../types/domain.types'
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
 export function GoToStatsModal({ open, onClose, lineup, futureEvents }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromPath = `${location.pathname}${location.search}`
   const qc = useQueryClient()
   const [creatingEvent, setCreatingEvent] = useState(false)
 
@@ -58,7 +61,7 @@ export function GoToStatsModal({ open, onClose, lineup, futureEvents }: Props) {
     onSuccess: (tracker) => {
       qc.invalidateQueries({ queryKey: ['lineup', lineup.id] })
       qc.invalidateQueries({ queryKey: ['lineups', 'team', lineup.teamId] })
-      navigate(`/stats/${tracker.id}/setup`)
+      navigate(withReturnTo(`/stats/${tracker.id}/setup`, fromPath))
     },
   })
 

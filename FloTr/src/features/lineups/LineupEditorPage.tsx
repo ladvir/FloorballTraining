@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../utils/toast'
+import { withReturnTo } from '../stats/statsReturnTo'
 import {
   appointmentsApi,
   formationTemplatesApi,
@@ -614,7 +615,14 @@ export function LineupEditorPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate(`/stats/${linkedTracker.id}/live`)}
+              onClick={() =>
+                navigate(
+                  withReturnTo(
+                    `/stats/${linkedTracker.id}/live`,
+                    `${location.pathname}${location.search}`
+                  )
+                )
+              }
               title={t('drawing.openStatsTitle')}
             >
               <BarChart3 className="h-4 w-4" /> {t('drawing.statsLabel')}

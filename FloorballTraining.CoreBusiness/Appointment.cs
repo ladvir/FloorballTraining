@@ -24,6 +24,10 @@ public class Appointment : BaseEntity, IAuditable
     public int? TeamId { get; set; }
     public Team? Team { get; set; }
 
+    /// <summary>Optional opponent for a Match appointment, picked from the club's Opponent catalog.</summary>
+    public int? OpponentId { get; set; }
+    public Opponent? Opponent { get; set; }
+
     public string? OwnerUserId { get; set; }
     public string? CreatedByUserId { get; set; }
     public string? UpdatedByUserId { get; set; }
@@ -59,6 +63,8 @@ public class Appointment : BaseEntity, IAuditable
             LocationId = LocationId,
             TeamId = TeamId,
             Team = Team,
+            OpponentId = OpponentId,
+            Opponent = Opponent,
             OwnerUserId = OwnerUserId,
             TrainingId = TrainingId,
             Training = Training,
@@ -80,6 +86,8 @@ public class Appointment : BaseEntity, IAuditable
         LocationId = e.LocationId;
         TeamId = e.TeamId;
         Team = e.Team;
+        OpponentId = e.OpponentId;
+        Opponent = e.Opponent;
         OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
         Training = e.Training;

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Settings, Undo2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Settings, Undo2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -9,6 +9,7 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { statTrackersApi } from '../../api/index'
 import { lineupsApi } from '../../api/lineups.api'
+import { withReturnTo } from './statsReturnTo'
 import type {
   StatTrackerDto,
   StatTrackerMetricDto,
@@ -35,8 +36,13 @@ export function StatTrackerLivePage() {
   const { t } = useTranslation()
   const { trackerId } = useParams<{ trackerId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const qc = useQueryClient()
   const id = Number(trackerId)
+  // Page the coach actually came from — see statsReturnTo.ts.
+  const fromPath = new URLSearchParams(location.search).get('from')
+  const goBack = () => (fromPath ? navigate(fromPath) : navigate(-1))
+  const setupPath = fromPath ? withReturnTo(`/stats/${id}/setup`, fromPath) : `/stats/${id}/setup`
 
   const { data: tracker, isLoading } = useQuery({
     queryKey: ['stat-tracker', id],
@@ -235,7 +241,7 @@ export function StatTrackerLivePage() {
           title={t('stats.trackerLive')}
           description={t('stats.noStats')}
           action={
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="sm" onClick={goBack}>
               <ArrowLeft className="h-4 w-4" />
               {t('common.close')}
             </Button>
@@ -244,7 +250,7 @@ export function StatTrackerLivePage() {
         <Card>
           <CardContent className="text-center py-10">
             <p className="text-sm text-gray-500 mb-4">{t('stats.trackerSetup')}</p>
-            <Button onClick={() => navigate(`/stats/${id}/setup`)}>
+            <Button onClick={() => navigate(setupPath)}>
               <Settings className="h-4 w-4" />
               {t('lineups.settings')}
             </Button>
@@ -257,6 +263,7 @@ export function StatTrackerLivePage() {
   const eventLabel =
     tracker.eventName ?? (tracker.eventCategory === 1 ? t('stats.training') : t('stats.match'))
   const isMatch = tracker.eventCategory === 0
+  const isFutureEvent = !!tracker.eventDate && new Date(tracker.eventDate) > new Date()
   const periodCount = tracker.matchPeriodCount ?? null
 
   const getTotal = (pid: number, mid: number) =>
@@ -374,17 +381,24 @@ export function StatTrackerLivePage() {
         description={`${tracker.teamName ?? ''} • ${eventLabel}`}
         action={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate(`/stats/${id}/setup`)}>
+            <Button variant="outline" size="sm" onClick={() => navigate(setupPath)}>
               <Settings className="h-4 w-4" />
               {t('lineups.settings')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="sm" onClick={goBack}>
               <ArrowLeft className="h-4 w-4" />
               {t('common.close')}
             </Button>
           </div>
         }
       />
+
+      {isFutureEvent && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t('stats.futureEventWarning')}</span>
+        </div>
+      )}
 
       {/* Match scoreboard */}
       {isMatch && (
@@ -480,8 +494,9 @@ export function StatTrackerLivePage() {
         </Card>
       )}
 
-      {/* Sticky undo bar */}
-      <div className="sticky top-0 z-10 mb-3 -mx-1 flex items-center justify-end rounded-lg border border-gray-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
+      {/* Sticky undo bar — solid background, own stacking layer, so it never gets in the
+          way of (or is drawn over by) the table's own sticky header below it. */}
+      <div className="sticky top-0 z-20 mb-3 flex items-center justify-end rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
         <Button
           variant="outline"
           size="sm"
@@ -496,7 +511,11 @@ export function StatTrackerLivePage() {
       {/* Unified table */}
       <Card>
         <CardContent className="px-2 py-2 sm:px-3 sm:py-3">
-          <div className="overflow-x-auto">
+          {/* Bounded, self-scrolling area: `overflow-x-auto` alone would make this div the
+              sticky containing block without it ever actually scrolling vertically, so the
+              header row could never stick to the page. Capping the height and letting it
+              scroll both ways makes the sticky header below work for real. */}
+          <div className="max-h-[65vh] overflow-auto">
             <table className="w-full">
               <colgroup>
                 <col className="w-[180px]" />
@@ -506,11 +525,14 @@ export function StatTrackerLivePage() {
               </colgroup>
               <thead>
                 <tr className="text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                  <th className="px-2 py-1.5">
+                  <th className="sticky top-0 z-10 border-b border-gray-200 bg-white px-2 py-1.5">
                     {t('common.player')} / {t('lineups.formation')}
                   </th>
                   {sortedMetrics.map((m) => (
-                    <th key={m.id} className="px-1 py-1.5 text-center">
+                    <th
+                      key={m.id}
+                      className="sticky top-0 z-10 border-b border-gray-200 bg-white px-1 py-1.5 text-center"
+                    >
                       {m.name}
                       {m.isGoalkeeper && (
                         <span className="ml-1 text-[9px] text-amber-600">(B)</span>

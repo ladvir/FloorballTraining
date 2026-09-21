@@ -474,6 +474,15 @@ export interface AppointmentDto {
   myAssignmentCompleted?: boolean
   memberAssignments?: AppointmentMemberAssignmentDto[]
   assignedMemberIds?: number[]
+  opponentId?: number | null
+  opponentName?: string
+}
+
+// Opponent (per-club catalog, Match events)
+export interface OpponentDto {
+  id: number
+  name: string
+  clubId: number
 }
 
 // Equipment
@@ -1045,6 +1054,8 @@ export interface StatTrackerDto {
   createdAt: string
   updatedAt: string
   opponentName?: string | null
+  /** True when opponentName is derived from the linked appointment's Opponent (not editable here). */
+  opponentLocked?: boolean
   homeScore: number
   awayScore: number
   /** 1 = continuous, 2 = halves, 3 = thirds, 4 = quarters; null = not used */

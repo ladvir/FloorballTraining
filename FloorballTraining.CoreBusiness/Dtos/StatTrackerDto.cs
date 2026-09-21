@@ -16,6 +16,8 @@ public class StatTrackerDto : BaseEntityDto
     public DateTime UpdatedAt { get; set; }
 
     public string? OpponentName { get; set; }
+    /// <summary>True when OpponentName is derived from the linked appointment's Opponent (not freely editable here).</summary>
+    public bool OpponentLocked { get; set; }
     public int HomeScore { get; set; }
     public int AwayScore { get; set; }
     public int? MatchPeriodCount { get; set; }

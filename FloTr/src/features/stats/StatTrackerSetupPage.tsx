@@ -1,7 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowRight, LayoutGrid, Plus, Star, Swords, Trash2, Save } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  LayoutGrid,
+  Plus,
+  Star,
+  Swords,
+  Trash2,
+  Save,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -12,6 +22,7 @@ import { lineupsApi } from '../../api/lineups.api'
 import { STANDARD_STAT_METRICS } from '../../types/domain.types'
 import type { MatchLineupDto } from '../../types/domain.types'
 import { groupLineup } from './lineupGrouping'
+import { withReturnTo } from './statsReturnTo'
 import { colorClasses } from '../lineups/lineupUtils'
 import { formatFullName } from '../../utils/name'
 
@@ -28,6 +39,11 @@ export function StatTrackerSetupPage() {
   const location = useLocation()
   const qc = useQueryClient()
   const id = Number(trackerId)
+  // Page the coach actually came from (e.g. the dashboard, a team's Zápasy tab) — passed as
+  // ?from= by whatever launched this stat sheet — so "Zpět" returns there instead of just
+  // popping one step of browser history, which would land back on an intermediate stats page.
+  const fromPath = new URLSearchParams(location.search).get('from')
+  const goBack = () => (fromPath ? navigate(fromPath) : navigate(-1))
 
   // When returning from the lineup editor ("Nová sestava"), auto-select the freshly created lineup.
   const returnedLineupId =
@@ -204,7 +220,7 @@ export function StatTrackerSetupPage() {
 
   const saveAndStart = async () => {
     await setupMutation.mutateAsync()
-    navigate(`/stats/${id}/live`)
+    navigate(fromPath ? withReturnTo(`/stats/${id}/live`, fromPath) : `/stats/${id}/live`)
   }
 
   if (isLoading) return <LoadingSpinner />
@@ -215,6 +231,7 @@ export function StatTrackerSetupPage() {
     tracker.eventName ?? (tracker.eventCategory === 1 ? t('stats.training') : t('stats.match'))
   const playerCount = grouping?.all.length ?? 0
   const canSave = !!lineup && playerCount > 0 && metrics.length > 0
+  const isFutureEvent = !!tracker.eventDate && new Date(tracker.eventDate) > new Date()
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -222,12 +239,19 @@ export function StatTrackerSetupPage() {
         title={t('stats.trackerSetup')}
         description={`${tracker.teamName ?? ''} • ${eventLabel}`}
         action={
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={goBack}>
             <ArrowLeft className="h-4 w-4" />
             {t('common.back')}
           </Button>
         }
       />
+
+      {isFutureEvent && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t('stats.futureEventWarning')}</span>
+        </div>
+      )}
 
       {/* Lineup selector */}
       <Card className="mb-4">
@@ -260,7 +284,11 @@ export function StatTrackerSetupPage() {
                 size="sm"
                 onClick={() =>
                   navigate(`/teams/${tracker.teamId}/lineups/new`, {
-                    state: { returnTo: `/stats/${id}/setup` },
+                    state: {
+                      returnTo: fromPath
+                        ? withReturnTo(`/stats/${id}/setup`, fromPath)
+                        : `/stats/${id}/setup`,
+                    },
                   })
                 }
               >
@@ -289,7 +317,11 @@ export function StatTrackerSetupPage() {
                 className="mt-3"
                 onClick={() =>
                   navigate(`/teams/${tracker.teamId}/lineups/new`, {
-                    state: { returnTo: `/stats/${id}/setup` },
+                    state: {
+                      returnTo: fromPath
+                        ? withReturnTo(`/stats/${id}/setup`, fromPath)
+                        : `/stats/${id}/setup`,
+                    },
                   })
                 }
               >
@@ -318,17 +350,26 @@ export function StatTrackerSetupPage() {
             </h2>
 
             <div className="space-y-3">
-              <label className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                   {t('tournaments.matchOpponent')}
                 </span>
-                <input
-                  value={opponentName}
-                  onChange={(e) => setOpponentName(e.target.value)}
-                  placeholder={t('stats.opponentPlaceholder')}
-                  className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                />
-              </label>
+                {tracker.opponentLocked ? (
+                  <div className="flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700">
+                    <span className="font-medium">
+                      {tracker.opponentName || t('stats.opponentFallback')}
+                    </span>
+                    <span className="text-xs text-gray-400">{t('stats.opponentFromEvent')}</span>
+                  </div>
+                ) : (
+                  <input
+                    value={opponentName}
+                    onChange={(e) => setOpponentName(e.target.value)}
+                    placeholder={t('stats.opponentPlaceholder')}
+                    className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  />
+                )}
+              </div>
 
               <div>
                 <p className="mb-1.5 text-xs font-medium text-gray-600 uppercase tracking-wide">

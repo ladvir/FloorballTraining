@@ -9,7 +9,7 @@ import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { placesApi, seasonsApi, teamsApi, testDefinitionsApi } from '../../api/index'
+import { opponentsApi, placesApi, seasonsApi, teamsApi, testDefinitionsApi } from '../../api/index'
 import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -19,6 +19,7 @@ import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { refreshAppointments } from './refreshAppointments'
 
 const TESTING_TYPE = 8
+const MATCH_TYPE = 3
 
 type FormData = {
   name?: string
@@ -30,6 +31,8 @@ type FormData = {
   locationId: number
   locationName?: string
   trainingId?: number
+  opponentId?: number
+  customOpponentName?: string
   repeatingFrequency: number
   repeatingInterval?: number
   repeatUntil?: string
@@ -48,6 +51,8 @@ interface Props {
     teamId?: number
     locationId?: number
     trainingId?: number
+    opponentId?: number | null
+    opponentName?: string
     repeatingPattern?: {
       repeatingFrequency: number
       interval: number
@@ -94,6 +99,8 @@ export function AppointmentFormModal({
   const confirm = useConfirm()
   const [useCustomLocation, setUseCustomLocation] = useState(false)
   const [savingPlace, setSavingPlace] = useState(false)
+  const [useCustomOpponent, setUseCustomOpponent] = useState(false)
+  const [savingOpponent, setSavingOpponent] = useState(false)
   // 'form' = show form, 'chain-edit' = ask single/all for save, 'chain-delete' = ask single/all for delete
   const [step, setStep] = useState<'form' | 'chain-edit' | 'chain-delete'>('form')
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
@@ -148,6 +155,8 @@ export function AppointmentFormModal({
         locationId: z.coerce.number().min(1, t('appointments.validationPlace')),
         locationName: z.string().optional(),
         trainingId: z.coerce.number().optional(),
+        opponentId: z.coerce.number().optional(),
+        customOpponentName: z.string().optional(),
         repeatingFrequency: z.coerce.number(),
         repeatingInterval: z.coerce.number().min(1).max(52).optional(),
         repeatUntil: z.string().optional(),
@@ -161,6 +170,10 @@ export function AppointmentFormModal({
   const { data: seasons } = useQuery({
     queryKey: ['seasons', activeClubId],
     queryFn: () => seasonsApi.getAll(activeClubId),
+  })
+  const { data: opponents } = useQuery({
+    queryKey: ['opponents', activeClubId],
+    queryFn: () => opponentsApi.getAll(activeClubId),
   })
   const { data: testDefinitions } = useQuery({
     queryKey: ['testDefinitions', activeClubId],
@@ -204,6 +217,8 @@ export function AppointmentFormModal({
         locationId: appointment.locationId ?? 0,
         locationName: '',
         trainingId: appointment.trainingId ?? 0,
+        opponentId: appointment.opponentId ?? 0,
+        customOpponentName: '',
         repeatingFrequency: rp?.repeatingFrequency ?? 0,
         repeatingInterval: rp?.interval ?? 1,
         repeatUntil: rp?.endDate ? toLocalDate(rp.endDate) : '',
@@ -223,6 +238,8 @@ export function AppointmentFormModal({
       locationId: 0,
       locationName: '',
       trainingId: 0,
+      opponentId: 0,
+      customOpponentName: '',
       repeatingFrequency: 0,
       repeatingInterval: 1,
       repeatUntil: '',
@@ -260,6 +277,7 @@ export function AppointmentFormModal({
   }, [isOpen, appointment, defaultTeamId, defaultTestIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const customLocationName = watch('locationName')
+  const customOpponentName = watch('customOpponentName')
   const appointmentType = watch('appointmentType')
   const repeatingFrequency = watch('repeatingFrequency')
   const watchedTeamId = Number(watch('teamId')) || null
@@ -285,6 +303,13 @@ export function AppointmentFormModal({
   )
   const isRepeating = Number(repeatingFrequency) !== 0
   const watchStart = watch('start')
+
+  // Member-assignment checkboxes are only meaningful for individual training call-ups;
+  // matches (and other event types) use the team lineup instead. Clear any stale
+  // selection made before switching away from Training so it can't be submitted unseen.
+  useEffect(() => {
+    if (Number(appointmentType) !== 0) setSelectedMemberIds([])
+  }, [appointmentType])
 
   const matchingSeason = useMemo(() => {
     if (!seasons || !watchStart) return null
@@ -324,6 +349,8 @@ export function AppointmentFormModal({
     if (data.name?.trim()) body.name = data.name.trim()
     if (data.description?.trim()) body.description = data.description.trim()
     if (trainingId) body.trainingId = trainingId
+    body.opponentId =
+      aptType === MATCH_TYPE && Number(data.opponentId) > 0 ? Number(data.opponentId) : null
     body.testDefinitionIds = aptType === TESTING_TYPE ? selectedTestIds : []
     body.assignedMemberIds = teamId ? selectedMemberIds : []
 
@@ -440,6 +467,25 @@ export function AppointmentFormModal({
       setSaveError(t('appointments.formPlaceSaveFailed'))
     } finally {
       setSavingPlace(false)
+    }
+  }
+
+  const handleSaveOpponent = async () => {
+    if (!customOpponentName?.trim()) return
+    setSavingOpponent(true)
+    try {
+      const newOpponent = await opponentsApi.create({
+        name: customOpponentName.trim(),
+        clubId: activeClubId ?? undefined,
+      })
+      await queryClient.invalidateQueries({ queryKey: ['opponents'] })
+      setValue('opponentId', newOpponent.id)
+      setValue('customOpponentName', '')
+      setUseCustomOpponent(false)
+    } catch {
+      setSaveError(t('appointments.formOpponentSaveFailed'))
+    } finally {
+      setSavingOpponent(false)
     }
   }
 
@@ -636,8 +682,9 @@ export function AppointmentFormModal({
           )}
         </div>
 
-        {/* Member assignment (coaches only, when team is selected) */}
-        {isCoach && !!watchedTeamId && teamMembers.length > 0 && (
+        {/* Member assignment (coaches only, when team is selected) — individual training only;
+            matches use the team lineup (AppointmentLineupSection) instead. */}
+        {isCoach && !!watchedTeamId && teamMembers.length > 0 && Number(appointmentType) === 0 && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
               {t('appointments.formAssign')}{' '}
@@ -803,6 +850,58 @@ export function AppointmentFormModal({
             </>
           )}
         </div>
+
+        {/* Opponent — optional, Match events only */}
+        {Number(appointmentType) === MATCH_TYPE && (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                {t('appointments.formOpponent')}{' '}
+                <span className="text-xs font-normal text-gray-400">({t('common.optional')})</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setUseCustomOpponent(!useCustomOpponent)}
+                className="text-xs text-sky-600 hover:text-sky-800"
+              >
+                {useCustomOpponent
+                  ? t('appointments.formOpponentSelect')
+                  : t('appointments.formOpponentManual')}
+              </button>
+            </div>
+            {useCustomOpponent ? (
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder={t('appointments.formOpponentName')}
+                    {...register('customOpponentName')}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveOpponent}
+                  loading={savingOpponent}
+                  disabled={!customOpponentName?.trim()}
+                  className="mt-auto h-9 shrink-0"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  {t('appointments.formSaveOpponent')}
+                </Button>
+              </div>
+            ) : (
+              <select className={selectClass} {...register('opponentId')}>
+                <option value={0}>{t('appointments.formOpponentSelect0')}</option>
+                {opponents?.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
 
         {/* Repeating pattern */}
         <div className="flex flex-col gap-1">

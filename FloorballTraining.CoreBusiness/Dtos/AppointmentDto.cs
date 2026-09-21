@@ -20,6 +20,10 @@ public class AppointmentDto : BaseEntityDto
     public bool IsPast { get; set; }
 
     public int? TeamId { get; set; }
+
+    /// <summary>Opponent picked from the club's Opponent catalog (Match events only).</summary>
+    public int? OpponentId { get; set; }
+    public string? OpponentName { get; set; }
     public string? OwnerUserId { get; set; }
     public string? OwnerUserName { get; set; }
     public int? TrainingId { get; set; }
@@ -58,6 +62,7 @@ public class AppointmentDto : BaseEntityDto
         RepeatingPattern = e.RepeatingPattern;
         LocationId = e.LocationId;
         TeamId = e.TeamId;
+        OpponentId = e.OpponentId;
         OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
         TrainingName = e.TrainingName;
@@ -77,6 +82,7 @@ public class AppointmentDto : BaseEntityDto
         RepeatingPattern = e.RepeatingPattern;
         LocationId = e.LocationId;
         TeamId = e.TeamId;
+        OpponentId = e.OpponentId;
         OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
         TestDefinitionIds = e.TestDefinitionIds;

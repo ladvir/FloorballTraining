@@ -82,13 +82,25 @@ public class StatTrackersController(
 
         string? eventName = null;
         DateTime? eventDate = null;
+        string? opponentName = t.OpponentName;
+        var opponentLocked = false;
         if (t.AppointmentId.HasValue)
         {
-            var ap = await context.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == t.AppointmentId.Value);
+            var ap = await context.Appointments.AsNoTracking()
+                .Include(a => a.Opponent)
+                .FirstOrDefaultAsync(a => a.Id == t.AppointmentId.Value);
             if (ap != null)
             {
                 eventName = ap.Name ?? (ap.AppointmentType == AppointmentType.Match ? "Zápas" : "Trénink");
                 eventDate = ap.Start;
+                // The event's own opponent (Match appointments) is the single source of truth —
+                // what's set there must match what the stat sheet shows, so it wins over any
+                // free-text opponent name previously typed directly into this tracker.
+                if (ap.OpponentId.HasValue)
+                {
+                    opponentName = ap.Opponent?.Name;
+                    opponentLocked = true;
+                }
             }
         }
         else if (t.TournamentMatchId.HasValue)
@@ -160,7 +172,8 @@ public class StatTrackersController(
             CreatedByUserName = createdByName,
             CreatedAt = t.CreatedAt,
             UpdatedAt = t.UpdatedAt,
-            OpponentName = t.OpponentName,
+            OpponentName = opponentName,
+            OpponentLocked = opponentLocked,
             HomeScore = homeScore,
             AwayScore = awayScore,
             MatchPeriodCount = t.MatchPeriodCount,
@@ -509,7 +522,14 @@ public class StatTrackersController(
         var scope = await GetScopeAsync();
         if (!CanEdit(scope, t.TeamId)) return Forbid();
 
-        t.OpponentName = string.IsNullOrWhiteSpace(dto.OpponentName) ? null : dto.OpponentName.Trim();
+        // The linked appointment's Opponent (when set) is the single source of truth for the
+        // opponent name — ignore any free-text value submitted here so the two can never diverge.
+        var appointmentOpponentId = t.AppointmentId.HasValue
+            ? await context.Appointments.Where(a => a.Id == t.AppointmentId.Value).Select(a => a.OpponentId).FirstOrDefaultAsync()
+            : null;
+        if (!appointmentOpponentId.HasValue)
+            t.OpponentName = string.IsNullOrWhiteSpace(dto.OpponentName) ? null : dto.OpponentName.Trim();
+
         t.MatchPeriodCount = dto.MatchPeriodCount.HasValue
             ? Math.Clamp(dto.MatchPeriodCount.Value, 1, 4)
             : null;

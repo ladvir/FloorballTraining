@@ -9,6 +9,7 @@ import type {
   EquipmentDto,
   PlaceDto,
   SeasonDto,
+  OpponentDto,
   TagDto,
   AgeGroupDto,
   DashboardDto,
@@ -263,6 +264,18 @@ export const seasonsApi = {
   create: (data: Partial<SeasonDto>) => apiClient.post('/seasons/add', data),
   update: (data: Partial<SeasonDto>) => apiClient.put('/seasons/edit', data),
   delete: (id: number) => apiClient.delete(`/seasons/delete/${id}`),
+}
+
+export const opponentsApi = {
+  getAll: (clubId?: number | null) =>
+    apiClient
+      .get<OpponentDto[]>('/opponents', { params: clubId ? { clubId } : undefined })
+      .then((r) => r.data),
+  create: (data: { name: string; clubId?: number }) =>
+    apiClient.post<OpponentDto>('/opponents', data).then((r) => r.data),
+  update: (id: number, name: string) =>
+    apiClient.put<OpponentDto>(`/opponents/${id}`, { name }).then((r) => r.data),
+  delete: (id: number) => apiClient.delete(`/opponents/${id}`),
 }
 
 export const tagsApi = {

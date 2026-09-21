@@ -26,6 +26,7 @@ import {
   Gift,
   Coins,
   Flag,
+  Swords,
   Medal,
   Megaphone,
   Users,
@@ -127,6 +128,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/xp-rules', icon: Coins, label: t('nav.xpRules'), minRole: 'Coach' },
         { to: '/team-challenges', icon: Flag, label: t('nav.teamChallenges'), minRole: 'Coach' },
         { to: '/seasons', icon: Trophy, label: t('nav.seasons'), minRole: 'ClubAdmin' },
+        { to: '/opponents', icon: Swords, label: t('nav.opponents'), minRole: 'ClubAdmin' },
       ],
     },
     {

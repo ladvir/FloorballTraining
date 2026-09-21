@@ -40,6 +40,7 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
         }
 
         entity.TrainingId = dto.TrainingId;
+        entity.OpponentId = dto.OpponentId;
         entity.OwnerUserId = dto.OwnerUserId;
 
         // Rebuild the selected-tests links from the dto (set only the FK, not the navigation,

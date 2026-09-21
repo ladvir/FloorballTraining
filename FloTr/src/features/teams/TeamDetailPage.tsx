@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import {
@@ -29,6 +29,7 @@ import { teamsApi, xpApi, appointmentsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
 import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
+import { TeamMatchesTab } from './TeamMatchesTab'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { refreshAppointments } from '../appointments/refreshAppointments'
 import { RewardsPage } from '../rewards/RewardsPage'
@@ -58,9 +59,35 @@ export function TeamDetailPage() {
   const [editRoleFor, setEditRoleFor] = useState<TeamMemberDto | null>(null)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [deleteApptConfirm, setDeleteApptConfirm] = useState<AppointmentDto | null>(null)
-  const [activeTab, setActiveTab] = useState<
-    'roster' | 'events' | 'testing' | 'lineups' | 'rewards' | 'stats' | 'attendance' | 'calendar'
-  >('roster')
+
+  type TabKey =
+    | 'roster'
+    | 'events'
+    | 'matches'
+    | 'testing'
+    | 'lineups'
+    | 'rewards'
+    | 'stats'
+    | 'attendance'
+    | 'calendar'
+  const tabKeys: TabKey[] = [
+    'roster',
+    'events',
+    'matches',
+    'testing',
+    'lineups',
+    'rewards',
+    'stats',
+    'attendance',
+    'calendar',
+  ]
+  // Deep-link support (e.g. from the dashboard's upcoming-matches card): ?tab=matches&matchId=123
+  // opens straight to that tab, and — for the matches tab — scrolls to & expands that match.
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const initialTab = tabKeys.includes(tabParam as TabKey) ? (tabParam as TabKey) : 'roster'
+  const focusMatchId = searchParams.get('matchId') ? Number(searchParams.get('matchId')) : null
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
 
   const { data: team, isLoading } = useQuery({
     queryKey: ['team', id],
@@ -234,6 +261,9 @@ export function TeamDetailPage() {
         <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')}>
           {t('appointments.title')} ({upcomingAppointments.length})
         </TabButton>
+        <TabButton active={activeTab === 'matches'} onClick={() => setActiveTab('matches')}>
+          {t('matches.tabTitle')}
+        </TabButton>
         <TabButton active={activeTab === 'testing'} onClick={() => setActiveTab('testing')}>
           {t('testing.title')}
         </TabButton>
@@ -342,6 +372,13 @@ export function TeamDetailPage() {
               />
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Matches tab */}
+      {activeTab === 'matches' && (
+        <div className="mt-6">
+          <TeamMatchesTab teamId={team.id} focusAppointmentId={focusMatchId} />
         </div>
       )}
 

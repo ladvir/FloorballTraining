@@ -20,6 +20,8 @@ public static class AppointmentConverter
             End = entity.End,
             IsPast = entity.End < DateTime.UtcNow,
             TeamId = entity.TeamId,
+            OpponentId = entity.OpponentId,
+            OpponentName = entity.Opponent?.Name,
             RepeatingPattern = entity.RepeatingPattern.ToDto(),
             Name = entity.Name,
             Description = entity.Description,

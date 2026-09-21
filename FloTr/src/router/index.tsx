@@ -75,6 +75,9 @@ const PlacesPage = lazy(() =>
 const SeasonsPage = lazy(() =>
   import('../features/seasons/SeasonsPage').then((m) => ({ default: m.SeasonsPage }))
 )
+const OpponentsPage = lazy(() =>
+  import('../features/opponents/OpponentsPage').then((m) => ({ default: m.OpponentsPage }))
+)
 const TagsPage = lazy(() =>
   import('../features/tags/TagsPage').then((m) => ({ default: m.TagsPage }))
 )
@@ -454,6 +457,7 @@ export const router = createBrowserRouter(
                     { path: '/seasons', element: <SeasonsPage /> },
                     { path: '/seasons/new', element: <SeasonFormPage /> },
                     { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
+                    { path: '/opponents', element: <OpponentsPage /> },
                     // Club-wide rewards (#105): ClubAdmin+. /rewards uses the active club;
                     // /clubs/:clubId/rewards targets one club (admin, from the clubs list).
                     { path: '/rewards', element: <RewardsPage /> },

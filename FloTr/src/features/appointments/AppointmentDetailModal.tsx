@@ -316,7 +316,7 @@ const gradeColors = [
   'bg-red-500', // 5
 ]
 
-function RatingSection({ appointmentId }: { appointmentId: number }) {
+export function RatingSection({ appointmentId }: { appointmentId: number }) {
   const { t } = useTranslation()
   const { user } = useAuthStore()
   const queryClient = useQueryClient()

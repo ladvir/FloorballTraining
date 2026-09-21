@@ -49,6 +49,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public DbSet<Appointment> Appointments { get; set; } = null!;
 
+        public DbSet<Opponent> Opponents { get; set; } = null!;
+
         public DbSet<AppointmentTestDefinition> AppointmentTestDefinitions { get; set; } = null!;
 
         public DbSet<RepeatingPattern> RepeatingPatterns { get; set; } = null!;

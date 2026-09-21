@@ -20,6 +20,7 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
     )
     {
         AddInclude(m => m.Location);
+        AddInclude(m => m.Opponent);
         AddInclude(m => m.Training);
         
         AddInclude("Training.TrainingTags");

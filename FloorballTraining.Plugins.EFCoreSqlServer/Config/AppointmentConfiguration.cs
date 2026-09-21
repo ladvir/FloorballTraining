@@ -15,6 +15,7 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.HasOne(a => a.Team).WithMany(a => a.Appointments).HasForeignKey(t => t.TeamId).IsRequired(false);
         builder.HasOne(a => a.Training).WithMany(a => a.Appointments).HasForeignKey(a => a.TrainingId);
         builder.HasOne(t => t.Location).WithMany(x => x.Appointments).HasForeignKey(x => x.LocationId);
+        builder.HasOne(a => a.Opponent).WithMany().HasForeignKey(a => a.OpponentId).OnDelete(DeleteBehavior.SetNull);
 
         builder
             .HasMany(a => a.FutureAppointments)
@@ -36,6 +37,7 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.HasIndex(a => a.Start);
         builder.HasIndex(a => a.TrainingId);
         builder.HasIndex(a => a.TeamId);
+        builder.HasIndex(a => a.OpponentId);
     }
 }
 public class RepeatingPatternConfiguration : IEntityTypeConfiguration<RepeatingPattern>
