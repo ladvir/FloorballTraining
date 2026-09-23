@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -320,7 +321,11 @@ public class TeamsController(
     }
 
     [HttpPost("{id}/import-ical")]
-    public async Task<IActionResult> ImportICal(int id, [FromServices] IICalImportService iCalImportService, [FromServices] FloorballTrainingContext context)
+    public async Task<IActionResult> ImportICal(
+        int id,
+        [FromBody] ICalImportFilterRequest? request,
+        [FromServices] IICalImportService iCalImportService,
+        [FromServices] FloorballTrainingContext context)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
@@ -332,7 +337,7 @@ public class TeamsController(
             if (team.ClubId != roleInfo.ClubId) return Forbid();
         }
 
-        var result = await iCalImportService.ImportAsync(id, GetCurrentUserId()!);
+        var result = await iCalImportService.ImportAsync(id, GetCurrentUserId()!, request?.From, request?.To, request?.Types);
 
         if (result.Errors.Count > 0 && result.Imported == 0 && result.Updated == 0)
             return BadRequest(new { message = string.Join("; ", result.Errors) });

@@ -556,6 +556,8 @@
     "exportFormatZip": "ZIP (Datei/Trainer)",
     "icalUrlLabel": "Kalender-URL (iCal)",
     "selectTeamPlaceholder": "— Mannschaft auswählen —",
+    "icalFilterTypesLabel": "Zu importierende Ereignistypen",
+    "icalFilterAllTypes": "Alle Typen",
     "importResultMsg": "Importiert: {{imported}}, aktualisiert: {{updated}}, übersprungen: {{skipped}}",
     "repeatSummaryDay": "Jeden Tag",
     "repeatSummaryDayN": "Alle {{n}} Tage",

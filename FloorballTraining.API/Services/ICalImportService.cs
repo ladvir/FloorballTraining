@@ -3,6 +3,7 @@ using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using Ical.Net;
+using Ical.Net.DataTypes;
 using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Services;
@@ -17,8 +18,12 @@ public class ICalImportResult
 
 public interface IICalImportService
 {
-    Task<ICalImportResult> ImportAsync(int teamId, string ownerUserId);
-    Task<ICalImportResult> ImportFromUrlAsync(string url, int teamId, string ownerUserId);
+    Task<ICalImportResult> ImportAsync(
+        int teamId, string ownerUserId,
+        DateTime? from = null, DateTime? to = null, IReadOnlyCollection<AppointmentType>? types = null);
+    Task<ICalImportResult> ImportFromUrlAsync(
+        string url, int teamId, string ownerUserId,
+        DateTime? from = null, DateTime? to = null, IReadOnlyCollection<AppointmentType>? types = null);
 }
 
 public class ICalImportService(
@@ -26,7 +31,9 @@ public class ICalImportService(
     IHttpClientFactory httpClientFactory,
     IReferenceCache referenceCache) : IICalImportService
 {
-    public async Task<ICalImportResult> ImportAsync(int teamId, string ownerUserId)
+    public async Task<ICalImportResult> ImportAsync(
+        int teamId, string ownerUserId,
+        DateTime? from = null, DateTime? to = null, IReadOnlyCollection<AppointmentType>? types = null)
     {
         var team = await context.Teams.FindAsync(teamId);
         if (team == null)
@@ -35,10 +42,17 @@ public class ICalImportService(
         if (string.IsNullOrWhiteSpace(team.ICalUrl))
             return new ICalImportResult { Errors = ["Tým nemá nastavenou URL kalendáře."] };
 
-        return await ImportFromUrlAsync(team.ICalUrl, teamId, ownerUserId);
+        return await ImportFromUrlAsync(team.ICalUrl, teamId, ownerUserId, from, to, types);
     }
 
-    public async Task<ICalImportResult> ImportFromUrlAsync(string url, int teamId, string ownerUserId)
+    // Appointments are stored as Europe/Prague wall-clock time (see PublicCalendarController's
+    // export, which does the reverse conversion), but imported feeds commonly carry UTC ("Z")
+    // or TZID-qualified times — converting is what fixes the ~2h offset bug.
+    private static readonly TimeZoneInfo LocalTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
+
+    public async Task<ICalImportResult> ImportFromUrlAsync(
+        string url, int teamId, string ownerUserId,
+        DateTime? from = null, DateTime? to = null, IReadOnlyCollection<AppointmentType>? types = null)
     {
         var result = new ICalImportResult();
 
@@ -82,15 +96,28 @@ public class ICalImportService(
             return result;
         }
 
-        // Determine cutoff date: start of current season, or today if no season found
+        // Determine cutoff date: explicit "from" wins, otherwise start of current season, or today
         var today = DateTime.Today;
-        var currentSeason = await context.Set<Season>()
-            .Where(s => s.StartDate <= today && s.EndDate >= today)
-            .FirstOrDefaultAsync();
-        var cutoffDate = currentSeason?.StartDate.Date ?? today;
+        DateTime cutoffDate;
+        if (from.HasValue)
+        {
+            cutoffDate = from.Value.Date;
+        }
+        else
+        {
+            var currentSeason = await context.Set<Season>()
+                .Where(s => s.StartDate <= today && s.EndDate >= today)
+                .FirstOrDefaultAsync();
+            cutoffDate = currentSeason?.StartDate.Date ?? today;
+        }
+        var exclusiveEndDate = to?.Date.AddDays(1);
 
         var events = allEvents
-            .Where(e => (e.DtStart?.Value ?? DateTime.MinValue) >= cutoffDate)
+            .Where(e =>
+            {
+                var start = ToLocalWallClock(e.DtStart);
+                return start >= cutoffDate && (exclusiveEndDate == null || start < exclusiveEndDate.Value);
+            })
             .ToList();
 
         if (events.Count == 0)
@@ -113,10 +140,19 @@ public class ICalImportService(
             try
             {
                 var uid = evt.Uid;
-                var dtStart = evt.DtStart?.Value ?? DateTime.MinValue;
-                var dtEnd = evt.DtEnd?.Value ?? dtStart.AddHours(1);
+                var dtStart = ToLocalWallClock(evt.DtStart);
+                var dtEnd = evt.DtEnd != null ? ToLocalWallClock(evt.DtEnd) : dtStart.AddHours(1);
 
                 if (dtStart == DateTime.MinValue)
+                {
+                    result.Skipped++;
+                    continue;
+                }
+
+                var eventName = string.IsNullOrWhiteSpace(evt.Summary) ? "Událost" : evt.Summary;
+                var appointmentType = GuessAppointmentType(eventName);
+
+                if (types != null && types.Count > 0 && !types.Contains(appointmentType))
                 {
                     result.Skipped++;
                     continue;
@@ -127,9 +163,7 @@ public class ICalImportService(
                 var existing = existingAppointments.FirstOrDefault(a =>
                     a.Description != null && a.Description.Contains(uidMarker));
 
-                var eventName = string.IsNullOrWhiteSpace(evt.Summary) ? "Událost" : evt.Summary;
                 var description = BuildDescription(evt.Description, uidMarker);
-                var appointmentType = GuessAppointmentType(eventName);
 
                 // Create place only when actually importing/updating
                 var locationId = EnsureLocationId(evt.Location, placesByName);
@@ -170,6 +204,18 @@ public class ICalImportService(
 
         await context.SaveChangesAsync();
         return result;
+    }
+
+    /// <summary>
+    /// Converts a parsed iCal date/time to Europe/Prague wall-clock time, matching how
+    /// Appointment.Start/End are stored. UTC ("Z") and TZID-qualified values are converted;
+    /// floating (no timezone) values are assumed to already be local wall-clock time.
+    /// </summary>
+    private static DateTime ToLocalWallClock(CalDateTime? dt)
+    {
+        if (dt == null) return DateTime.MinValue;
+        if (dt.IsFloating) return DateTime.SpecifyKind(dt.Value, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dt.AsUtc, DateTimeKind.Utc), LocalTimeZone);
     }
 
     /// <summary>

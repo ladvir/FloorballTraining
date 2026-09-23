@@ -556,6 +556,8 @@
     "exportFormatZip": "ZIP (file/coach)",
     "icalUrlLabel": "Calendar URL (iCal)",
     "selectTeamPlaceholder": "— select a team —",
+    "icalFilterTypesLabel": "Event types to import",
+    "icalFilterAllTypes": "All types",
     "importResultMsg": "Imported: {{imported}}, updated: {{updated}}, skipped: {{skipped}}",
     "repeatSummaryDay": "Every day",
     "repeatSummaryDayN": "Every {{n}} days",

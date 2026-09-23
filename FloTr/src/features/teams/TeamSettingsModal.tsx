@@ -11,6 +11,8 @@ import type { ICalImportResult } from '../../api/index'
 import type { TeamDto } from '../../types/domain.types'
 import { TeamSettingsFields } from './teamSettingsForm'
 import { buildTeamSchema, type TeamFormData } from './teamSettingsSchema'
+import { ICalFilterFields } from '../appointments/ICalFilterFields'
+import { useICalImportFilters } from '../appointments/useICalImportFilters'
 
 /** Edit an existing team's settings in place (used by the merged team detail page). HeadCoach+ only. */
 export function TeamSettingsModal({
@@ -29,6 +31,7 @@ export function TeamSettingsModal({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ICalImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const icalFilters = useICalImportFilters()
 
   const { data: ageGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: seasons } = useQuery({
@@ -101,7 +104,7 @@ export function TeamSettingsModal({
   })
 
   const importMutation = useMutation({
-    mutationFn: () => teamsApi.importICal(team.id),
+    mutationFn: () => teamsApi.importICal(team.id, icalFilters.asFilters()),
     onSuccess: (data) => {
       setImportResult(data)
       setImportError(null)
@@ -132,7 +135,15 @@ export function TeamSettingsModal({
             seasons={seasons}
             iCalImportSlot={
               team.iCalUrl ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <ICalFilterFields
+                    from={icalFilters.from}
+                    to={icalFilters.to}
+                    types={icalFilters.types}
+                    onFromChange={icalFilters.setFrom}
+                    onToChange={icalFilters.setTo}
+                    onToggleType={icalFilters.toggleType}
+                  />
                   <Button
                     type="button"
                     variant="outline"

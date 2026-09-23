@@ -82,6 +82,12 @@ export interface ICalImportResult {
   errors: string[]
 }
 
+export interface ICalImportFilters {
+  from?: string
+  to?: string
+  types?: number[]
+}
+
 export const teamsApi = {
   getAll: () => apiClient.get<TeamDto[]>('/teams').then((r) => r.data),
   getById: (id: number) => apiClient.get<TeamDto>(`/teams/${id}`).then((r) => r.data),
@@ -90,8 +96,10 @@ export const teamsApi = {
   update: (data: Partial<TeamDto>) => apiClient.put<TeamDto>('/teams', data).then((r) => r.data),
   // Backend: DELETE /teams with id as body
   delete: (id: number) => apiClient.delete('/teams', { data: id }),
-  importICal: (teamId: number) =>
-    apiClient.post<ICalImportResult>(`/teams/${teamId}/import-ical`).then((r) => r.data),
+  importICal: (teamId: number, filters?: ICalImportFilters) =>
+    apiClient
+      .post<ICalImportResult>(`/teams/${teamId}/import-ical`, filters ?? {})
+      .then((r) => r.data),
   copyToSeason: (
     teamId: number,
     data: { seasonId: number; newName?: string; copyMembers?: boolean; copyPlan?: boolean }
@@ -229,9 +237,9 @@ export const appointmentsApi = {
       params: alsoFutureAppointments ? { alsoFutureAppointments: true } : undefined,
     }),
   deleteAll: () => apiClient.delete<{ deleted: number }>('/appointments/all').then((r) => r.data),
-  importICal: (url: string, teamId: number) =>
+  importICal: (url: string, teamId: number, filters?: ICalImportFilters) =>
     apiClient
-      .post<ICalImportResult>('/appointments/import-ical', { url, teamId })
+      .post<ICalImportResult>('/appointments/import-ical', { url, teamId, ...filters })
       .then((r) => r.data),
 }
 

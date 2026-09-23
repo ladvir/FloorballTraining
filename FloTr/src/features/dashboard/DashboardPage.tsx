@@ -266,7 +266,6 @@ export function DashboardPage() {
             matches={upcomingMatches}
             allAppointments={allAppointments}
             teams={teams ?? []}
-            canEdit={isCoach}
           />
         )}
 

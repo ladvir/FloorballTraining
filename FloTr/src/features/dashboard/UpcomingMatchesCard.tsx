@@ -4,8 +4,6 @@ import { format, parseISO, differenceInCalendarDays } from 'date-fns'
 import { Swords, CalendarDays, Dumbbell, ArrowRight } from 'lucide-react'
 import { dfLocale } from '../../utils/dateLocale'
 import { Card, CardContent } from '../../components/ui/Card'
-import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
-import { AppointmentLineupSection } from '../appointments/AppointmentLineupSection'
 import type { AppointmentDto, TeamDto } from '../../types/domain.types'
 
 interface Props {
@@ -14,12 +12,11 @@ interface Props {
   /** All of the coach's future appointments (any team) — used to count trainings left per match. */
   allAppointments: AppointmentDto[]
   teams: TeamDto[]
-  canEdit: boolean
 }
 
-/** Dashboard card: next few matches (across all of the coach's teams) with a countdown, plus
- * quick access to that match's lineup and stat sheet, and a deep link into its team's Matches tab. */
-export function UpcomingMatchesCard({ matches, allAppointments, teams, canEdit }: Props) {
+/** Dashboard card: next few matches (across all of the coach's teams) with a countdown and a
+ * deep link into its team's Matches tab (lineup/stats live only there, see TeamMatchesTab). */
+export function UpcomingMatchesCard({ matches, allAppointments, teams }: Props) {
   const { t } = useTranslation()
   const teamNames = new Map(teams.map((tm) => [tm.id, tm.name]))
 
@@ -38,7 +35,6 @@ export function UpcomingMatchesCard({ matches, allAppointments, teams, canEdit }
               appointment={m}
               teamName={m.teamId != null ? teamNames.get(m.teamId) : undefined}
               allAppointments={allAppointments}
-              canEdit={canEdit}
             />
           ))}
         </div>
@@ -51,12 +47,10 @@ function MatchCard({
   appointment,
   teamName,
   allAppointments,
-  canEdit,
 }: {
   appointment: AppointmentDto
   teamName?: string
   allAppointments: AppointmentDto[]
-  canEdit: boolean
 }) {
   const { t } = useTranslation()
   const start = parseISO(appointment.start)
@@ -110,19 +104,6 @@ function MatchCard({
             {t('dashboard.trainingsUntilMatch', { count: trainingsLeft })}
           </span>
         </div>
-
-        {canEdit && !!appointment.teamId && (
-          <div className="space-y-2 border-t border-gray-100 pt-2.5">
-            <AppointmentLineupSection appointmentId={appointment.id} teamId={appointment.teamId} />
-            <StatTrackerLauncher
-              eventCategory={0}
-              appointmentId={appointment.id}
-              teamId={appointment.teamId}
-              canEdit={canEdit}
-              compact
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   )

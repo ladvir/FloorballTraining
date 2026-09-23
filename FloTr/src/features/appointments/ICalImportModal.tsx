@@ -7,6 +7,8 @@ import { Input } from '../../components/ui/Input'
 import { appointmentsApi, teamsApi } from '../../api/index'
 import type { ICalImportResult } from '../../api/index'
 import { refreshAppointments } from './refreshAppointments'
+import { ICalFilterFields } from './ICalFilterFields'
+import { useICalImportFilters } from './useICalImportFilters'
 
 interface Props {
   isOpen: boolean
@@ -18,13 +20,14 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
   const queryClient = useQueryClient()
   const [url, setUrl] = useState('')
   const [teamId, setTeamId] = useState(0)
+  const filters = useICalImportFilters()
   const [importResult, setImportResult] = useState<ICalImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
 
   const mutation = useMutation({
-    mutationFn: () => appointmentsApi.importICal(url, teamId),
+    mutationFn: () => appointmentsApi.importICal(url, teamId, filters.asFilters()),
     onSuccess: (data) => {
       setImportResult(data)
       setImportError(null)
@@ -40,6 +43,7 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
   const handleClose = () => {
     setUrl('')
     setTeamId(0)
+    filters.reset()
     setImportResult(null)
     setImportError(null)
     onClose()
@@ -92,6 +96,15 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
               ))}
             </select>
           </div>
+
+          <ICalFilterFields
+            from={filters.from}
+            to={filters.to}
+            types={filters.types}
+            onFromChange={filters.setFrom}
+            onToChange={filters.setTo}
+            onToggleType={filters.toggleType}
+          />
 
           {importResult && (
             <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">

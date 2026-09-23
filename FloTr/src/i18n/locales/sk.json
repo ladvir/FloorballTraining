@@ -558,6 +558,8 @@
     "exportFormatZip": "ZIP (súbor/tréner)",
     "icalUrlLabel": "URL kalendára (iCal)",
     "selectTeamPlaceholder": "— vyberte tím —",
+    "icalFilterTypesLabel": "Typy udalostí na import",
+    "icalFilterAllTypes": "Všetky typy",
     "importResultMsg": "Importované: {{imported}}, aktualizované: {{updated}}, preskočené: {{skipped}}",
     "repeatSummaryDay": "Každý deň",
     "repeatSummaryDayN": "Každých {{n}} dní",

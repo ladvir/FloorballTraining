@@ -455,7 +455,8 @@ public class AppointmentsController(
         if (request.TeamId <= 0)
             return BadRequest(new { message = "Vyberte tým." });
 
-        var result = await iCalImportService.ImportFromUrlAsync(request.Url, request.TeamId, GetCurrentUserId()!);
+        var result = await iCalImportService.ImportFromUrlAsync(
+            request.Url, request.TeamId, GetCurrentUserId()!, request.From, request.To, request.Types);
 
         if (result.Errors.Count > 0 && result.Imported == 0 && result.Updated == 0)
             return BadRequest(new { message = string.Join("; ", result.Errors) });
