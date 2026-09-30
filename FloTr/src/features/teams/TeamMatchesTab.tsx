@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
-import { AlertTriangle, MapPin, Swords, ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertTriangle, MapPin, Swords, ChevronDown, ChevronUp, Zap } from 'lucide-react'
 import { dfLocale } from '../../utils/dateLocale'
 import { Card, CardContent } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { appointmentsApi, statTrackersApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { StatTrackerReportTable } from '../stats/StatTrackerReportTable'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
+import { QuickStatEntryModal } from '../stats/QuickStatEntryModal'
 import { AppointmentLineupSection } from '../appointments/AppointmentLineupSection'
 import { RatingSection } from '../appointments/AppointmentDetailModal'
 import type { AppointmentDto } from '../../types/domain.types'
@@ -74,6 +76,7 @@ function MatchCard({
     effectiveRole === 'HeadCoach' ||
     (effectiveRole === 'Coach' && (user?.coachTeamIds ?? []).includes(teamId))
   const [expanded, setExpanded] = useState(!!autoExpand)
+  const [quickEntryOpen, setQuickEntryOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const isPast = new Date(appointment.end) < new Date()
 
@@ -164,7 +167,15 @@ function MatchCard({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs italic text-gray-400">{t('matches.noStatsForMatch')}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs italic text-gray-400">{t('matches.noStatsForMatch')}</p>
+                      {canEdit && (
+                        <Button variant="outline" size="sm" onClick={() => setQuickEntryOpen(true)}>
+                          <Zap className="h-4 w-4" />
+                          {t('matches.quickEntry')}
+                        </Button>
+                      )}
+                    </div>
                   )}
                   <RatingSection appointmentId={appointment.id} />
                 </>
@@ -204,6 +215,13 @@ function MatchCard({
           )}
         </CardContent>
       </Card>
+      {quickEntryOpen && (
+        <QuickStatEntryModal
+          appointment={appointment}
+          teamId={teamId}
+          onClose={() => setQuickEntryOpen(false)}
+        />
+      )}
     </div>
   )
 }

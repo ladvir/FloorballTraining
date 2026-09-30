@@ -1501,7 +1501,12 @@
     "noMatches": "Zatím žádné zápasy.",
     "upcoming": "Nadcházející",
     "noStatsForMatch": "Pro tento zápas zatím nebyly zadány žádné statistiky.",
-    "statsEnteredEarlyWarning": "Zápas ještě neproběhl, ale statistiky pro něj už byly zadány."
+    "statsEnteredEarlyWarning": "Zápas ještě neproběhl, ale statistiky pro něj už byly zadány.",
+    "quickEntry": "Rychlý zápis",
+    "quickEntryTitle": "Rychlý zápis statistik",
+    "quickEntryScoreLabel": "Výsledek",
+    "quickEntryPlayedCol": "Hrál",
+    "quickEntrySuccess": "Statistiky byly uloženy."
   },
   "seasons": {
     "title": "Sezóny",
@@ -2628,6 +2633,30 @@
     "allSeasons": "Všechny sezóny",
     "allTeams": "Všechny týmy",
     "attendanceRate": "Míra docházky"
+  },
+  "attendanceImport": {
+    "buttonLabel": "Import z EOSu",
+    "title": "Import docházky z EOSu",
+    "description": "Nahrajte export docházky z EOSu (list „docházka běžných členů“). Události se dohledají podle týmu, typu a času zahájení, členové podle jména v týmu.",
+    "analyze": "Analyzovat",
+    "analyzeFailed": "Analýza souboru selhala.",
+    "commitFailed": "Import se nepodařilo dokončit.",
+    "parseErrorsTitle": "Některé řádky se nepodařilo přečíst:",
+    "noEvents": "V souboru nebyly nalezeny žádné události.",
+    "matchedEvent": "Nalezena událost",
+    "unnamedEvent": "Bez názvu",
+    "skipEvent": "— přeskočit tuto událost —",
+    "createEvent": "+ Založit novou událost",
+    "noEventFound": "Pro tento den nebyla nalezena žádná odpovídající událost — doporučujeme ji založit.",
+    "membersResolved": "{{count}} z {{total}} členů nalezeno",
+    "actionSkip": "Přeskočit",
+    "actionExisting": "Vybrat člena klubu",
+    "actionNew": "Založit nového člena",
+    "pickMember": "— vyberte člena —",
+    "existingConflict": "Docházka je již zaznamenaná pro {{count}} členů — aktualizovat celou událost?",
+    "existingConflictUnknown": "Pokud pro tuto událost již docházka existuje, aktualizovat ji?",
+    "confirmImport": "Potvrdit import",
+    "resultSummary": "Vytvořeno: {{created}}, aktualizováno: {{updated}}, přeskočeno (konflikt): {{skippedConflict}}, přeskočeno (volba): {{skippedByChoice}}, nové události: {{appointmentsCreated}}, aktualizované události: {{appointmentsSynced}}, noví členové: {{membersCreated}}, přidáno do týmu: {{membersAddedToTeam}}, přeskočené události: {{eventsSkipped}}"
   },
   "workouts": {
     "title": "Individuální plán",

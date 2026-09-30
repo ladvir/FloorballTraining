@@ -1500,7 +1500,12 @@
     "noMatches": "Zatiaľ žiadne zápasy.",
     "upcoming": "Nadchádzajúci",
     "noStatsForMatch": "Pre tento zápas zatiaľ neboli zadané žiadne štatistiky.",
-    "statsEnteredEarlyWarning": "Zápas ešte neprebehol, ale štatistiky preň už boli zadané."
+    "statsEnteredEarlyWarning": "Zápas ešte neprebehol, ale štatistiky preň už boli zadané.",
+    "quickEntry": "Rýchly zápis",
+    "quickEntryTitle": "Rýchly zápis štatistík",
+    "quickEntryScoreLabel": "Výsledok",
+    "quickEntryPlayedCol": "Hral",
+    "quickEntrySuccess": "Štatistiky boli uložené."
   },
   "seasons": {
     "title": "Sezóny",
@@ -2627,6 +2632,30 @@
     "allSeasons": "Všetky sezóny",
     "allTeams": "Všetky tímy",
     "attendanceRate": "Miera dochádzky"
+  },
+  "attendanceImport": {
+    "buttonLabel": "Import z EOS",
+    "title": "Import dochádzky z EOS",
+    "description": "Nahrajte export dochádzky z EOS (hárok „docházka běžných členů“). Udalosti sa dohľadajú podľa tímu, typu a času začiatku, členovia podľa mena v tíme.",
+    "analyze": "Analyzovať",
+    "analyzeFailed": "Analýza súboru zlyhala.",
+    "commitFailed": "Import sa nepodarilo dokončiť.",
+    "parseErrorsTitle": "Niektoré riadky sa nepodarilo prečítať:",
+    "noEvents": "V súbore neboli nájdené žiadne udalosti.",
+    "matchedEvent": "Nájdená udalosť",
+    "unnamedEvent": "Bez názvu",
+    "skipEvent": "— preskočiť túto udalosť —",
+    "createEvent": "+ Založiť novú udalosť",
+    "noEventFound": "Pre tento deň nebola nájdená žiadna zodpovedajúca udalosť — odporúčame ju založiť.",
+    "membersResolved": "{{count}} z {{total}} členov nájdených",
+    "actionSkip": "Preskočiť",
+    "actionExisting": "Vybrať člena klubu",
+    "actionNew": "Založiť nového člena",
+    "pickMember": "— vyberte člena —",
+    "existingConflict": "Dochádzka je už zaznamenaná pre {{count}} členov — aktualizovať celú udalosť?",
+    "existingConflictUnknown": "Ak pre túto udalosť už dochádzka existuje, aktualizovať ju?",
+    "confirmImport": "Potvrdiť import",
+    "resultSummary": "Vytvorené: {{created}}, aktualizované: {{updated}}, preskočené (konflikt): {{skippedConflict}}, preskočené (voľba): {{skippedByChoice}}, nové udalosti: {{appointmentsCreated}}, aktualizované udalosti: {{appointmentsSynced}}, noví členovia: {{membersCreated}}, pridané do tímu: {{membersAddedToTeam}}, preskočené udalosti: {{eventsSkipped}}"
   },
   "workouts": {
     "title": "Individuálny plán",

@@ -1498,7 +1498,12 @@
     "noMatches": "Noch keine Spiele.",
     "upcoming": "Bevorstehend",
     "noStatsForMatch": "Für dieses Spiel wurden noch keine Statistiken erfasst.",
-    "statsEnteredEarlyWarning": "Dieses Spiel hat noch nicht stattgefunden, aber es wurden bereits Statistiken dafür erfasst."
+    "statsEnteredEarlyWarning": "Dieses Spiel hat noch nicht stattgefunden, aber es wurden bereits Statistiken dafür erfasst.",
+    "quickEntry": "Schnellerfassung",
+    "quickEntryTitle": "Statistiken schnell erfassen",
+    "quickEntryScoreLabel": "Ergebnis",
+    "quickEntryPlayedCol": "Gespielt",
+    "quickEntrySuccess": "Statistiken wurden gespeichert."
   },
   "seasons": {
     "title": "Saisons",
@@ -2625,6 +2630,30 @@
     "allSeasons": "Alle Saisons",
     "allTeams": "Alle Mannschaften",
     "attendanceRate": "Anwesenheitsquote"
+  },
+  "attendanceImport": {
+    "buttonLabel": "Import aus EOS",
+    "title": "Anwesenheit aus EOS importieren",
+    "description": "Laden Sie einen EOS-Anwesenheitsexport hoch (Blatt \"docházka běžných členů\"). Termine werden nach Team, Typ und Startzeit abgeglichen, Mitglieder nach Namen im Kader.",
+    "analyze": "Analysieren",
+    "analyzeFailed": "Die Datei konnte nicht analysiert werden.",
+    "commitFailed": "Der Import konnte nicht abgeschlossen werden.",
+    "parseErrorsTitle": "Einige Zeilen konnten nicht gelesen werden:",
+    "noEvents": "In der Datei wurden keine Termine gefunden.",
+    "matchedEvent": "Termin gefunden",
+    "unnamedEvent": "Unbenannt",
+    "skipEvent": "— diesen Termin überspringen —",
+    "createEvent": "+ Neuen Termin anlegen",
+    "noEventFound": "Für diesen Tag wurde kein passender Termin gefunden — wir empfehlen, einen neuen anzulegen.",
+    "membersResolved": "{{count}} von {{total}} Mitgliedern gefunden",
+    "actionSkip": "Überspringen",
+    "actionExisting": "Vereinsmitglied auswählen",
+    "actionNew": "Neues Mitglied anlegen",
+    "pickMember": "— Mitglied auswählen —",
+    "existingConflict": "Anwesenheit für {{count}} Mitglieder bereits erfasst — den ganzen Termin aktualisieren?",
+    "existingConflictUnknown": "Falls für diesen Termin bereits Anwesenheit erfasst ist, aktualisieren?",
+    "confirmImport": "Import bestätigen",
+    "resultSummary": "Erstellt: {{created}}, aktualisiert: {{updated}}, übersprungen (Konflikt): {{skippedConflict}}, übersprungen (Wahl): {{skippedByChoice}}, neue Termine: {{appointmentsCreated}}, aktualisierte Termine: {{appointmentsSynced}}, neue Mitglieder: {{membersCreated}}, zum Team hinzugefügt: {{membersAddedToTeam}}, übersprungene Termine: {{eventsSkipped}}"
   },
   "workouts": {
     "title": "Individueller Plan",

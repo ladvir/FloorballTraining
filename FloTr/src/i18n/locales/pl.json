@@ -1502,7 +1502,12 @@
     "noMatches": "Brak meczów.",
     "upcoming": "Nadchodzący",
     "noStatsForMatch": "Dla tego meczu nie wprowadzono jeszcze żadnych statystyk.",
-    "statsEnteredEarlyWarning": "Ten mecz jeszcze się nie odbył, ale statystyki zostały już dla niego wprowadzone."
+    "statsEnteredEarlyWarning": "Ten mecz jeszcze się nie odbył, ale statystyki zostały już dla niego wprowadzone.",
+    "quickEntry": "Szybki wpis",
+    "quickEntryTitle": "Szybki wpis statystyk",
+    "quickEntryScoreLabel": "Wynik",
+    "quickEntryPlayedCol": "Grał",
+    "quickEntrySuccess": "Statystyki zostały zapisane."
   },
   "seasons": {
     "title": "Sezony",
@@ -2629,6 +2634,30 @@
     "allSeasons": "Wszystkie sezony",
     "allTeams": "Wszystkie drużyny",
     "attendanceRate": "Frekwencja"
+  },
+  "attendanceImport": {
+    "buttonLabel": "Import z EOS",
+    "title": "Import frekwencji z EOS",
+    "description": "Prześlij eksport frekwencji z EOS (arkusz „docházka běžných členů”). Wydarzenia są dopasowywane wg drużyny, typu i godziny rozpoczęcia, a członkowie wg imienia i nazwiska w składzie.",
+    "analyze": "Analizuj",
+    "analyzeFailed": "Nie udało się przeanalizować pliku.",
+    "commitFailed": "Nie udało się dokończyć importu.",
+    "parseErrorsTitle": "Niektórych wierszy nie udało się odczytać:",
+    "noEvents": "W pliku nie znaleziono żadnych wydarzeń.",
+    "matchedEvent": "Dopasowano wydarzenie",
+    "unnamedEvent": "Bez nazwy",
+    "skipEvent": "— pomiń to wydarzenie —",
+    "createEvent": "+ Utwórz nowe wydarzenie",
+    "noEventFound": "Nie znaleziono pasującego wydarzenia tego dnia — zalecamy jego utworzenie.",
+    "membersResolved": "Znaleziono {{count}} z {{total}} członków",
+    "actionSkip": "Pomiń",
+    "actionExisting": "Wybierz członka klubu",
+    "actionNew": "Utwórz nowego członka",
+    "pickMember": "— wybierz członka —",
+    "existingConflict": "Frekwencja jest już zapisana dla {{count}} członków — zaktualizować całe wydarzenie?",
+    "existingConflictUnknown": "Jeśli frekwencja dla tego wydarzenia już istnieje, zaktualizować ją?",
+    "confirmImport": "Potwierdź import",
+    "resultSummary": "Utworzono: {{created}}, zaktualizowano: {{updated}}, pominięto (konflikt): {{skippedConflict}}, pominięto (wybór): {{skippedByChoice}}, nowe wydarzenia: {{appointmentsCreated}}, zaktualizowane wydarzenia: {{appointmentsSynced}}, nowi członkowie: {{membersCreated}}, dodano do drużyny: {{membersAddedToTeam}}, pominięte wydarzenia: {{eventsSkipped}}"
   },
   "workouts": {
     "title": "Plan indywidualny",

@@ -1249,6 +1249,87 @@ export interface TeamAttendanceSummaryDto {
   members: TeamMemberAttendanceSummaryDto[]
 }
 
+// EOS attendance bulk import — analyze/commit DTOs (see TeamsController's import-analyze /
+// import-commit endpoints). Stateless: analyze's full response round-trips back as the commit
+// request, augmented with the coach's manual resolutions for whatever couldn't auto-match.
+export interface AttendanceImportCandidateAppointmentDto {
+  id: number
+  name?: string
+  appointmentType: number
+  start: string
+}
+
+export interface AttendanceImportMemberRowDto {
+  nameRaw: string
+  attended: boolean
+  matchedMemberId?: number
+  matchedMemberName?: string
+  suggestedClubMemberId?: number
+  suggestedClubMemberName?: string
+  existing?: AppointmentAttendanceDto
+}
+
+export interface AttendanceImportEventDto {
+  eventTypeRaw: string
+  eventName?: string
+  start: string
+  end: string
+  matchedAppointmentId?: number
+  matchedAppointmentName?: string
+  candidateAppointments: AttendanceImportCandidateAppointmentDto[]
+  members: AttendanceImportMemberRowDto[]
+}
+
+export interface AttendanceImportAnalyzeResultDto {
+  events: AttendanceImportEventDto[]
+  parseErrors: string[]
+}
+
+// 0 = Skip, 1 = UseExisting, 2 = CreateNew
+export type AttendanceImportMemberAction = 0 | 1 | 2
+
+export interface AttendanceImportMemberCommitDto {
+  nameRaw: string
+  attended: boolean
+  action: AttendanceImportMemberAction
+  memberId?: number
+  newFirstName?: string
+  newLastName?: string
+}
+
+export interface AttendanceImportEventCommitDto {
+  appointmentId?: number
+  // Manually paired to an existing appointment — sync its Name/Start/End/Type from the import.
+  syncAppointmentFromImport?: boolean
+  // No existing appointment fit — create a new one from the fields below.
+  createNewAppointment?: boolean
+  eventTypeRaw: string
+  eventName?: string
+  start: string
+  end: string
+  // Single per-event toggle: overwrite every already-recorded attendance row for this event.
+  updateAllExistingAttendance?: boolean
+  members: AttendanceImportMemberCommitDto[]
+}
+
+export interface AttendanceImportCommitRequestDto {
+  events: AttendanceImportEventCommitDto[]
+}
+
+export interface AttendanceImportCommitResultDto {
+  eventsMatched: number
+  eventsSkipped: number
+  appointmentsCreated: number
+  appointmentsSynced: number
+  membersCreated: number
+  membersAddedToTeam: number
+  attendanceCreated: number
+  attendanceUpdated: number
+  attendanceSkippedConflict: number
+  attendanceSkippedByChoice: number
+  errors: string[]
+}
+
 // KPI
 export interface EventKpiDto {
   appointmentId: number

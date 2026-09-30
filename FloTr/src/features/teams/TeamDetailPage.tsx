@@ -15,6 +15,7 @@ import {
   Trash2,
   Pencil,
   CalendarPlus,
+  Upload,
   X,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
@@ -29,6 +30,7 @@ import { teamsApi, xpApi, appointmentsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
 import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
+import { AttendanceImportModal } from '../attendance/AttendanceImportModal'
 import { TeamMatchesTab } from './TeamMatchesTab'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { refreshAppointments } from '../appointments/refreshAppointments'
@@ -59,9 +61,11 @@ export function TeamDetailPage() {
   const [editRoleFor, setEditRoleFor] = useState<TeamMemberDto | null>(null)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [deleteApptConfirm, setDeleteApptConfirm] = useState<AppointmentDto | null>(null)
+  const [attendanceImportOpen, setAttendanceImportOpen] = useState(false)
 
   type TabKey =
     | 'roster'
+    | 'goals'
     | 'events'
     | 'matches'
     | 'testing'
@@ -72,6 +76,7 @@ export function TeamDetailPage() {
     | 'calendar'
   const tabKeys: TabKey[] = [
     'roster',
+    'goals',
     'events',
     'matches',
     'testing',
@@ -238,11 +243,6 @@ export function TeamDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Season goals — self-hides when the team has no season or no goals yet */}
-      <div className="mb-4">
-        <SeasonGoalsCard teamId={team.id} compact />
-      </div>
-
       {/* Actions */}
       {canManage && (
         <div className="mb-4 flex flex-wrap gap-2">
@@ -257,6 +257,9 @@ export function TeamDetailPage() {
       <div className="mb-4 flex gap-6 border-b border-gray-200 overflow-x-auto">
         <TabButton active={activeTab === 'roster'} onClick={() => setActiveTab('roster')}>
           {t('teams.tabMembers')} ({players.length})
+        </TabButton>
+        <TabButton active={activeTab === 'goals'} onClick={() => setActiveTab('goals')}>
+          {t('seasonGoals.title')}
         </TabButton>
         <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')}>
           {t('appointments.title')} ({upcomingAppointments.length})
@@ -351,6 +354,13 @@ export function TeamDetailPage() {
         </>
       )}
 
+      {/* Season goals tab */}
+      {activeTab === 'goals' && (
+        <div className="mt-2">
+          <SeasonGoalsCard teamId={team.id} />
+        </div>
+      )}
+
       {/* Events tab */}
       {activeTab === 'events' && (
         <div className="mt-6">
@@ -413,6 +423,14 @@ export function TeamDetailPage() {
       {/* Attendance tab */}
       {activeTab === 'attendance' && (
         <div className="mt-6">
+          {canManage && (
+            <div className="mb-3 flex justify-end">
+              <Button size="sm" variant="outline" onClick={() => setAttendanceImportOpen(true)}>
+                <Upload className="h-3.5 w-3.5" />
+                {t('attendanceImport.buttonLabel')}
+              </Button>
+            </div>
+          )}
           <TeamAttendanceTab teamId={team.id} />
         </div>
       )}
@@ -522,6 +540,14 @@ export function TeamDetailPage() {
           }
           adding={addMembersMutation.isPending}
           onClose={() => setAddMemberOpen(false)}
+        />
+      )}
+      {canManage && attendanceImportOpen && (
+        <AttendanceImportModal
+          isOpen={attendanceImportOpen}
+          onClose={() => setAttendanceImportOpen(false)}
+          teamId={team.id}
+          clubId={team.clubId}
         />
       )}
       {scheduleOpen && (

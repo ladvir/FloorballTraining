@@ -1498,7 +1498,12 @@
     "noMatches": "No matches yet.",
     "upcoming": "Upcoming",
     "noStatsForMatch": "No statistics have been entered for this match yet.",
-    "statsEnteredEarlyWarning": "This match hasn't happened yet, but statistics have already been entered for it."
+    "statsEnteredEarlyWarning": "This match hasn't happened yet, but statistics have already been entered for it.",
+    "quickEntry": "Quick entry",
+    "quickEntryTitle": "Quick stat entry",
+    "quickEntryScoreLabel": "Final score",
+    "quickEntryPlayedCol": "Played",
+    "quickEntrySuccess": "Statistics saved."
   },
   "seasons": {
     "title": "Seasons",
@@ -2625,6 +2630,30 @@
     "allSeasons": "All seasons",
     "allTeams": "All teams",
     "attendanceRate": "Attendance Rate"
+  },
+  "attendanceImport": {
+    "buttonLabel": "Import from EOS",
+    "title": "Import attendance from EOS",
+    "description": "Upload an EOS attendance export (sheet \"docházka běžných členů\"). Events are matched by team, type and start time, members by name on the roster.",
+    "analyze": "Analyze",
+    "analyzeFailed": "Failed to analyze the file.",
+    "commitFailed": "Failed to complete the import.",
+    "parseErrorsTitle": "Some rows could not be read:",
+    "noEvents": "No events were found in the file.",
+    "matchedEvent": "Event matched",
+    "unnamedEvent": "Unnamed",
+    "skipEvent": "— skip this event —",
+    "createEvent": "+ Create a new event",
+    "noEventFound": "No matching event was found for this day — creating a new one is recommended.",
+    "membersResolved": "{{count}} of {{total}} members found",
+    "actionSkip": "Skip",
+    "actionExisting": "Pick a club member",
+    "actionNew": "Create a new member",
+    "pickMember": "— select a member —",
+    "existingConflict": "Attendance already recorded for {{count}} members — update the whole event?",
+    "existingConflictUnknown": "If attendance is already recorded for this event, update it?",
+    "confirmImport": "Confirm import",
+    "resultSummary": "Created: {{created}}, updated: {{updated}}, skipped (conflict): {{skippedConflict}}, skipped (choice): {{skippedByChoice}}, new events: {{appointmentsCreated}}, updated events: {{appointmentsSynced}}, new members: {{membersCreated}}, added to team: {{membersAddedToTeam}}, skipped events: {{eventsSkipped}}"
   },
   "workouts": {
     "title": "Individual Plan",
