@@ -3702,6 +3702,22 @@
     "clubEmpty": "Brak drużyn w tym sezonie",
     "clubEmptyHint": "Wybierz sezon, w którym grają drużyny klubu."
   },
+  "seasonReport": {
+    "title": "Raport sezonu",
+    "bestPlayers": "Najlepsi zawodnicy",
+    "wholeSeason": "Cały sezon",
+    "topXp": "Wg XP i poziomu",
+    "playerOfMonth": "Gracz miesiąca",
+    "playerOfSeason": "Gracz sezonu",
+    "topScoring": "Strzelcy (gole + asysty)",
+    "topAttendance": "Frekwencja",
+    "topBadges": "Odznaki",
+    "topRewards": "Nagrody",
+    "noData": "Brak danych",
+    "saveImage": "Zapisz jako obraz",
+    "exporting": "Zapisywanie…",
+    "exportFailed": "Nie udało się zapisać obrazu"
+  },
   "teamChallenge": {
     "title": "Wyzwania zespołowe",
     "subtitle": "Tworzenie i zarządzanie wyzwaniami dla całego zespołu",

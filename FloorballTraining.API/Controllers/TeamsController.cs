@@ -432,8 +432,18 @@ public class TeamsController(
             .Select(a => new { a.Id, a.Name, a.Start })
             .ToListAsync();
 
+        // Only count members who are currently on this team's roster and active — a former or
+        // deactivated member's historical attendance rows shouldn't inflate this team's numbers.
+        var activeTeamMemberIds = await context.TeamMembers
+            .Where(tm => tm.TeamId == id && tm.Member!.IsActive)
+            .Select(tm => tm.MemberId)
+            .ToListAsync();
+
         var allAttendances = await context.AppointmentAttendances
-            .Where(a => a.Appointment!.TeamId == id && appointmentIds.Contains(a.AppointmentId))
+            .Where(a =>
+                a.Appointment!.TeamId == id
+                && appointmentIds.Contains(a.AppointmentId)
+                && activeTeamMemberIds.Contains(a.MemberId))
             .Select(a => new AppointmentAttendanceDto
             {
                 Id = a.Id,

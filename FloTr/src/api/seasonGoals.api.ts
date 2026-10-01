@@ -4,12 +4,17 @@ import type {
   SeasonGoalInputDto,
   TeamSeasonGoalsDto,
   ClubSeasonGoalRowDto,
+  TeamSeasonReportDto,
 } from '../types/domain.types'
 
 export const seasonGoalsApi = {
   // Goals + live progress + derived/overridden verdict for the team's current season
   getTeamGoals: (teamId: number) =>
     apiClient.get<TeamSeasonGoalsDto>(`/seasongoals/team/${teamId}`).then((r) => r.data),
+
+  // Month-by-month + season-total best players & goal progress
+  getTeamReport: (teamId: number) =>
+    apiClient.get<TeamSeasonReportDto>(`/seasongoals/team/${teamId}/report`).then((r) => r.data),
 
   // One row per team of the season — club-manager rollup
   getClubRollup: (clubId: number, seasonId: number) =>

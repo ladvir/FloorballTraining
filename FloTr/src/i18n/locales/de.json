@@ -3703,6 +3703,22 @@
     "clubEmpty": "Keine Teams in dieser Saison",
     "clubEmptyHint": "Wähle eine Saison, in der die Vereinsteams spielen."
   },
+  "seasonReport": {
+    "title": "Saisonbericht",
+    "bestPlayers": "Beste Spieler",
+    "wholeSeason": "Ganze Saison",
+    "topXp": "Nach XP und Level",
+    "playerOfMonth": "Spieler des Monats",
+    "playerOfSeason": "Spieler der Saison",
+    "topScoring": "Torschützen (Tore + Assists)",
+    "topAttendance": "Anwesenheit",
+    "topBadges": "Abzeichen",
+    "topRewards": "Prämien",
+    "noData": "Noch keine Daten",
+    "saveImage": "Als Bild speichern",
+    "exporting": "Wird gespeichert…",
+    "exportFailed": "Bild konnte nicht gespeichert werden"
+  },
   "teamChallenge": {
     "title": "Team-Challenges",
     "subtitle": "Challenges für das gesamte Team erstellen und verwalten",

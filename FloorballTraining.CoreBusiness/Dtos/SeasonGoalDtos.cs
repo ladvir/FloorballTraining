@@ -79,3 +79,58 @@ public class ClubSeasonGoalRowDto
     public SeasonVerdict Verdict { get; set; }
     public bool VerdictOverridden { get; set; }
 }
+
+/// <summary>One player's value in a best-players ranking (scoring points / attendance % / reward count).</summary>
+public class PlayerRankRowDto
+{
+    public int MemberId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public double Value { get; set; }
+}
+
+/// <summary>One badge earned by a player — name/description are frontend i18n keys off <see cref="Code"/>.</summary>
+public class BadgeEarnRowDto
+{
+    public int MemberId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    /// <summary>A <see cref="Enums.BadgeCode"/> name, e.g. "Attendance10" — frontend i18n key is badge.{code}.name.</summary>
+    public string Code { get; set; } = string.Empty;
+    /// <summary>Relative path under wwwroot, e.g. "badges/attendance10.png".</summary>
+    public string Icon { get; set; } = string.Empty;
+}
+
+/// <summary>One player's XP ranking row, plus their career level (lifetime XP) as of that point.</summary>
+public class XpRankRowDto
+{
+    public int MemberId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public double Value { get; set; }
+    /// <summary>0-based index into <see cref="XpProgression.Ranks"/> — the frontend derives the level icon from it.</summary>
+    public int LevelIndex { get; set; }
+    public string LevelName { get; set; } = string.Empty;
+}
+
+/// <summary>Best players for one calendar month, or for the whole season.</summary>
+public class MonthlyTeamReportDto
+{
+    /// <summary>"2026-09" for a calendar month, or "season" for the season-total bucket.</summary>
+    public string Label { get; set; } = string.Empty;
+    public List<XpRankRowDto> TopXp { get; set; } = [];
+    public List<PlayerRankRowDto> TopScoring { get; set; } = [];
+    public List<PlayerRankRowDto> TopAttendance { get; set; } = [];
+    public List<BadgeEarnRowDto> TopBadges { get; set; } = [];
+    public List<PlayerRankRowDto> TopRewards { get; set; } = [];
+}
+
+/// <summary>Month-by-month + season-total best-players report for one team.</summary>
+public class TeamSeasonReportDto
+{
+    public int TeamId { get; set; }
+    public string TeamName { get; set; } = string.Empty;
+    public int? SeasonId { get; set; }
+    public string? SeasonName { get; set; }
+    public DateTime? SeasonStart { get; set; }
+    public DateTime? SeasonEnd { get; set; }
+    public List<MonthlyTeamReportDto> Months { get; set; } = [];
+    public MonthlyTeamReportDto? SeasonTotal { get; set; }
+}

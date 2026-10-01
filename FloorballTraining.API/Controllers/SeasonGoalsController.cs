@@ -156,6 +156,227 @@ public class SeasonGoalsController(
         return Ok(dto);
     }
 
+    // ── Read: month-by-month + season-total report ──────────────────────────
+
+    private const int RankTakeCount = 7;
+
+    private sealed record XpRow(int MemberId, int Points, DateTime When);
+    private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When);
+    private sealed record AttendanceRow(int MemberId, int Status, DateTime When);
+    private sealed record EarnRow(int MemberId, DateTime When);
+    private sealed record BadgeEarnRow(int MemberId, BadgeCode Code, DateTime When);
+
+    private static readonly Dictionary<BadgeCode, string> BadgeIcons =
+        BadgeCatalog.All.ToDictionary(d => d.Code, d => d.Icon);
+
+    /// <summary>
+    /// GET /seasongoals/team/{teamId}/report — for each elapsed calendar month of the season, plus a
+    /// season-total bucket: best players by XP (with career level) / scoring / attendance / badges /
+    /// rewards.
+    /// </summary>
+    [HttpGet("team/{teamId:int}/report")]
+    public async Task<IActionResult> GetTeamReport(int teamId)
+    {
+        var team = await context.Teams.Include(t => t.Season).FirstOrDefaultAsync(t => t.Id == teamId);
+        if (team == null) return NotFound();
+
+        var accessible = await GetAccessibleTeamIdsAsync();
+        if (!accessible.Contains(teamId)) return Forbid();
+
+        var dto = new TeamSeasonReportDto
+        {
+            TeamId = team.Id,
+            TeamName = team.Name,
+            SeasonId = team.SeasonId,
+            SeasonName = team.Season?.Name,
+            SeasonStart = team.Season?.StartDate,
+            SeasonEnd = team.Season?.EndDate,
+        };
+        if (team.SeasonId == null || team.Season == null) return Ok(dto);
+
+        var seasonStart = team.Season.StartDate.Date;
+        var seasonEndExcl = team.Season.EndDate.Date.AddDays(1);
+        var todayExcl = DateTime.Now.Date.AddDays(1);
+        var reportEndExcl = seasonEndExcl < todayExcl ? seasonEndExcl : todayExcl;
+        if (reportEndExcl <= seasonStart)
+        {
+            dto.SeasonTotal = new MonthlyTeamReportDto { Label = "season" };
+            return Ok(dto);
+        }
+
+        var rosterMemberIds = await context.TeamMembers
+            .Where(tm => tm.TeamId == teamId && tm.IsPlayer)
+            .Select(tm => tm.MemberId)
+            .Distinct().ToListAsync();
+
+        var names = (await context.Members
+                .Where(m => rosterMemberIds.Contains(m.Id))
+                .Select(m => new { m.Id, m.FirstName, m.LastName })
+                .ToListAsync())
+            .ToDictionary(m => m.Id, m => LeaderboardService.FormatName(m.FirstName, m.LastName));
+
+        // Lifetime XP earned before the season started — the baseline for each month's career level
+        // (XpProgression.Career runs on lifetime XP, not just XP earned within the season/month).
+        var priorXpByMember = (await context.XpEvents.AsNoTracking()
+                .Where(e => rosterMemberIds.Contains(e.MemberId) && e.OccurredAt < seasonStart)
+                .GroupBy(e => e.MemberId)
+                .Select(g => new { MemberId = g.Key, Points = g.Sum(x => x.Points) })
+                .ToListAsync())
+            .ToDictionary(x => x.MemberId, x => x.Points);
+
+        var xpRaw = await context.XpEvents.AsNoTracking()
+            .Where(e => rosterMemberIds.Contains(e.MemberId) && e.OccurredAt >= seasonStart && e.OccurredAt < reportEndExcl)
+            .Select(e => new XpRow(e.MemberId, e.Points, e.OccurredAt))
+            .ToListAsync();
+
+        var scoringRaw = await context.StatTrackerEntries.AsNoTracking()
+            .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker != null
+                        && e.StatTracker.TeamId == teamId && e.StatTracker.EventCategory == 0
+                        && e.StatTracker.CreatedAt >= seasonStart && e.StatTracker.CreatedAt < reportEndExcl
+                        && e.Metric != null && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
+            .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta, e.StatTracker!.CreatedAt))
+            .ToListAsync();
+
+        var attendanceRaw = await context.AppointmentAttendances.AsNoTracking()
+            .Where(a => a.Appointment != null && a.Appointment.TeamId == teamId
+                        && a.Appointment.Start >= seasonStart && a.Appointment.Start < reportEndExcl)
+            .Select(a => new AttendanceRow(a.MemberId, a.Status, a.Appointment!.Start))
+            .ToListAsync();
+
+        var badgeRaw = await context.MemberBadges.AsNoTracking()
+            .Where(b => rosterMemberIds.Contains(b.MemberId) && b.EarnedAt >= seasonStart && b.EarnedAt < reportEndExcl)
+            .Select(b => new BadgeEarnRow(b.MemberId, b.Code, b.EarnedAt))
+            .ToListAsync();
+
+        var rewardRaw = await context.MemberRewardClaims.AsNoTracking()
+            .Where(r => rosterMemberIds.Contains(r.MemberId) && r.EarnedAt >= seasonStart && r.EarnedAt < reportEndExcl)
+            .Select(r => new EarnRow(r.MemberId, r.EarnedAt))
+            .ToListAsync();
+
+        var lastElapsedMonth = new DateTime(reportEndExcl.AddDays(-1).Year, reportEndExcl.AddDays(-1).Month, 1);
+        for (var cursor = new DateTime(seasonStart.Year, seasonStart.Month, 1);
+             cursor <= lastElapsedMonth;
+             cursor = cursor.AddMonths(1))
+        {
+            var monthStart = cursor;
+            var monthEndExcl = cursor.AddMonths(1);
+
+            dto.Months.Add(new MonthlyTeamReportDto
+            {
+                Label = monthStart.ToString("yyyy-MM"),
+                TopXp = RankXp(xpRaw, monthStart, monthEndExcl, priorXpByMember, names),
+                TopScoring = RankScoring(scoringRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names),
+                TopAttendance = RankAttendance(attendanceRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names),
+                TopBadges = ListBadges(badgeRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names),
+                TopRewards = RankCount(rewardRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names),
+            });
+        }
+
+        dto.SeasonTotal = new MonthlyTeamReportDto
+        {
+            Label = "season",
+            TopXp = RankXp(xpRaw, seasonStart, reportEndExcl, priorXpByMember, names),
+            TopScoring = RankScoring(scoringRaw, names),
+            TopAttendance = RankAttendance(attendanceRaw, names),
+            TopBadges = ListBadges(badgeRaw, names),
+            TopRewards = RankCount(rewardRaw, names),
+        };
+
+        return Ok(dto);
+    }
+
+    /// <summary>
+    /// Ranks players by XP earned in [periodStart, periodEndExcl), and attaches each one's career
+    /// level (rank name + index) as of the end of that period — lifetime XP, not just this period's.
+    /// </summary>
+    private static List<XpRankRowDto> RankXp(
+        List<XpRow> allRows, DateTime periodStart, DateTime periodEndExcl,
+        Dictionary<int, int> priorXpByMember, Dictionary<int, string> names)
+    {
+        var periodSums = allRows.Where(r => r.When >= periodStart && r.When < periodEndExcl)
+            .GroupBy(r => r.MemberId).ToDictionary(g => g.Key, g => g.Sum(x => x.Points));
+        var cumulativeSums = allRows.Where(r => r.When < periodEndExcl)
+            .GroupBy(r => r.MemberId).ToDictionary(g => g.Key, g => g.Sum(x => x.Points));
+
+        var ranked = periodSums.Where(kv => kv.Value != 0).OrderByDescending(kv => kv.Value).ToList();
+        return TakeTopWithTies(ranked, kv => kv.Value, RankTakeCount)
+            .Select(kv =>
+            {
+                var lifetime = priorXpByMember.GetValueOrDefault(kv.Key) + cumulativeSums.GetValueOrDefault(kv.Key);
+                var career = XpProgression.Career(lifetime);
+                return new XpRankRowDto
+                {
+                    MemberId = kv.Key,
+                    Name = names.GetValueOrDefault(kv.Key, "?"),
+                    Value = kv.Value,
+                    LevelIndex = career.RankIndex,
+                    LevelName = career.Rank,
+                };
+            })
+            .ToList();
+    }
+
+    /// <summary>Top N by descending value, plus any further rows tied with the Nth value (ties are never cut off).</summary>
+    private static List<T> TakeTopWithTies<T>(List<T> sortedDesc, Func<T, double> value, int n)
+    {
+        if (sortedDesc.Count <= n) return sortedDesc;
+        var cutoff = value(sortedDesc[n - 1]);
+        return sortedDesc.TakeWhile(x => value(x) >= cutoff).ToList();
+    }
+
+    private static List<PlayerRankRowDto> RankCount(IEnumerable<EarnRow> rows, Dictionary<int, string> names)
+    {
+        var ranked = rows.GroupBy(r => r.MemberId)
+            .Select(g => new PlayerRankRowDto { MemberId = g.Key, Name = names.GetValueOrDefault(g.Key, "?"), Value = g.Count() })
+            .OrderByDescending(r => r.Value)
+            .ToList();
+        return TakeTopWithTies(ranked, r => r.Value, RankTakeCount);
+    }
+
+    /// <summary>Most recently earned badges first (a member earns each badge code at most once per season).</summary>
+    private static List<BadgeEarnRowDto> ListBadges(IEnumerable<BadgeEarnRow> rows, Dictionary<int, string> names) =>
+        rows.OrderByDescending(r => r.When)
+            .Take(RankTakeCount)
+            .Select(r => new BadgeEarnRowDto
+            {
+                MemberId = r.MemberId,
+                Name = names.GetValueOrDefault(r.MemberId, "?"),
+                Code = r.Code.ToString(),
+                Icon = BadgeIcons.GetValueOrDefault(r.Code, string.Empty),
+            })
+            .ToList();
+
+    private static List<PlayerRankRowDto> RankScoring(IEnumerable<ScoringRow> rows, Dictionary<int, string> names)
+    {
+        var ranked = rows.GroupBy(r => r.MemberId)
+            .Select(g => new PlayerRankRowDto
+            {
+                MemberId = g.Key,
+                Name = names.GetValueOrDefault(g.Key, "?"),
+                Value = g.Where(x => x.Code == "goals").Sum(x => x.Delta) + g.Where(x => x.Code == "assists").Sum(x => x.Delta),
+            })
+            .Where(r => r.Value != 0)
+            .OrderByDescending(r => r.Value)
+            .ToList();
+        return TakeTopWithTies(ranked, r => r.Value, RankTakeCount);
+    }
+
+    private static List<PlayerRankRowDto> RankAttendance(IEnumerable<AttendanceRow> rows, Dictionary<int, string> names)
+    {
+        var ranked = rows.GroupBy(r => r.MemberId)
+            .Select(g => new { MemberId = g.Key, Total = g.Count(), Present = g.Count(x => x.Status == 1) })
+            .Where(x => x.Total > 0)
+            .Select(x => new PlayerRankRowDto
+            {
+                MemberId = x.MemberId,
+                Name = names.GetValueOrDefault(x.MemberId, "?"),
+                Value = Math.Round(100.0 * x.Present / x.Total, 1),
+            })
+            .OrderByDescending(r => r.Value)
+            .ToList();
+        return TakeTopWithTies(ranked, r => r.Value, RankTakeCount);
+    }
+
     // ── Read: club rollup ──────────────────────────────────────────────────
 
     /// <summary>GET /seasongoals/club/{clubId}?seasonId= — one row per team of that season.</summary>

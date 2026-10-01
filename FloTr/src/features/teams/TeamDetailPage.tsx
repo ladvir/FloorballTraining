@@ -29,6 +29,7 @@ import { useTableSort } from '../../utils/tableSort'
 import { teamsApi, xpApi, appointmentsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
+import { TeamSeasonReportTab } from '../planning/TeamSeasonReportTab'
 import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
 import { AttendanceImportModal } from '../attendance/AttendanceImportModal'
 import { TeamMatchesTab } from './TeamMatchesTab'
@@ -66,6 +67,7 @@ export function TeamDetailPage() {
   type TabKey =
     | 'roster'
     | 'goals'
+    | 'report'
     | 'events'
     | 'matches'
     | 'testing'
@@ -77,6 +79,7 @@ export function TeamDetailPage() {
   const tabKeys: TabKey[] = [
     'roster',
     'goals',
+    'report',
     'events',
     'matches',
     'testing',
@@ -261,6 +264,9 @@ export function TeamDetailPage() {
         <TabButton active={activeTab === 'goals'} onClick={() => setActiveTab('goals')}>
           {t('seasonGoals.title')}
         </TabButton>
+        <TabButton active={activeTab === 'report'} onClick={() => setActiveTab('report')}>
+          {t('seasonReport.title')}
+        </TabButton>
         <TabButton active={activeTab === 'events'} onClick={() => setActiveTab('events')}>
           {t('appointments.title')} ({upcomingAppointments.length})
         </TabButton>
@@ -358,6 +364,13 @@ export function TeamDetailPage() {
       {activeTab === 'goals' && (
         <div className="mt-2">
           <SeasonGoalsCard teamId={team.id} />
+        </div>
+      )}
+
+      {/* Season report tab */}
+      {activeTab === 'report' && (
+        <div className="mt-2">
+          <TeamSeasonReportTab teamId={team.id} />
         </div>
       )}
 

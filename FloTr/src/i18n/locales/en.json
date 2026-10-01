@@ -3694,6 +3694,22 @@
     "clubEmpty": "No teams in this season",
     "clubEmptyHint": "Pick a season the club teams play in."
   },
+  "seasonReport": {
+    "title": "Season report",
+    "bestPlayers": "Best players",
+    "wholeSeason": "Whole season",
+    "topXp": "By XP and level",
+    "playerOfMonth": "Player of the month",
+    "playerOfSeason": "Player of the season",
+    "topScoring": "Top scorers (goals + assists)",
+    "topAttendance": "Attendance",
+    "topBadges": "Badges",
+    "topRewards": "Rewards",
+    "noData": "No data yet",
+    "saveImage": "Save as image",
+    "exporting": "Saving…",
+    "exportFailed": "Could not save the image"
+  },
   "teamChallenge": {
     "title": "Team challenges",
     "subtitle": "Create and manage challenges for the whole team",

@@ -169,6 +169,12 @@ public class SeasonGoalTests : IAsyncLifetime
 
         db.TestDefinitions.RemoveRange(db.TestDefinitions.Where(td => td.ClubId == _clubId));
         db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => tm.TeamId == _teamId));
+        db.XpEvents.RemoveRange(db.XpEvents.Where(e => e.MemberId == _memberId1 || e.MemberId == _memberId2));
+        db.MemberBadges.RemoveRange(db.MemberBadges.Where(b => b.MemberId == _memberId1 || b.MemberId == _memberId2));
+        db.MemberRewardClaims.RemoveRange(
+            db.MemberRewardClaims.Where(c => c.MemberId == _memberId1 || c.MemberId == _memberId2));
+        await db.SaveChangesAsync();
+        db.ClubRewards.RemoveRange(db.ClubRewards.Where(r => r.ClubId == _clubId));
         await db.SaveChangesAsync();
 
         db.Teams.RemoveRange(db.Teams.Where(t => t.Id == _teamId));
@@ -368,6 +374,149 @@ public class SeasonGoalTests : IAsyncLifetime
                 new { seasonId = _seasonId, successful = (bool?)null, note = (string?)null }))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await GetTeamGoalsAsync(client)).Verdict.Should().Be(SeasonVerdict.Successful);
+    }
+
+    // ── Month-by-month + season-total report ──────────────────────────────────
+
+    [Fact]
+    public async Task Report_buckets_scoring_badges_rewards_and_xp_level_by_month_and_totals_the_season()
+    {
+        var matchDate = new DateTime(2020, 9, 15);
+        const int xpPoints = 150; // XpProgression.Career(150) => rank index 1 ("Hráč")
+        int clubRewardId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var tracker = new StatTracker
+            {
+                EventCategory = 0, TeamId = _teamId, SeasonId = _seasonId,
+                CreatedAt = matchDate, UpdatedAt = matchDate,
+            };
+            db.StatTrackers.Add(tracker);
+            await db.SaveChangesAsync();
+            var participant = new StatTrackerParticipant { StatTrackerId = tracker.Id, MemberId = _memberId1 };
+            var goalsMetric = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "goals", Name = "Góly" };
+            db.StatTrackerParticipants.Add(participant);
+            db.StatTrackerMetrics.Add(goalsMetric);
+            await db.SaveChangesAsync();
+            db.StatTrackerEntries.Add(new StatTrackerEntry
+            {
+                StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id,
+                StatTrackerMetricId = goalsMetric.Id, Delta = 2, CreatedAt = matchDate,
+            });
+
+            db.XpEvents.Add(new XpEvent
+            {
+                MemberId = _memberId1, Type = XpEventType.TrainingAttendance, Points = xpPoints,
+                SeasonId = _seasonId, SourceKind = XpSourceKind.Attendance, OccurredAt = matchDate,
+            });
+            db.MemberBadges.Add(new MemberBadge
+            {
+                MemberId = _memberId2, Code = BadgeCode.Attendance10, SeasonId = _seasonId, EarnedAt = matchDate,
+            });
+            var reward = new ClubReward
+            {
+                ClubId = _clubId, Name = "Test odměna",
+                TriggerType = RewardTriggerType.XpThreshold, TriggerValue = "100",
+            };
+            db.ClubRewards.Add(reward);
+            await db.SaveChangesAsync();
+            clubRewardId = reward.Id;
+            db.MemberRewardClaims.Add(new MemberRewardClaim
+            {
+                MemberId = _memberId1, ClubRewardId = clubRewardId, EarnedAt = matchDate,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var client = await CreateClientAsync(_coachEmail);
+        var report = (await client.GetFromJsonAsync<TeamSeasonReportDto>($"/SeasonGoals/team/{_teamId}/report"))!;
+
+        // Season Aug 2020 .. Jun 2021 = 11 elapsed calendar months.
+        report.Months.Should().HaveCount(11);
+
+        var expectedLevel = XpProgression.Career(xpPoints);
+        var september = report.Months.Single(m => m.Label == "2020-09");
+        september.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 2);
+        september.TopXp.Should().ContainSingle(r =>
+            r.MemberId == _memberId1 && r.Value == xpPoints &&
+            r.LevelIndex == expectedLevel.RankIndex && r.LevelName == expectedLevel.Rank);
+        september.TopBadges.Should().ContainSingle(r =>
+            r.MemberId == _memberId2 && r.Code == nameof(BadgeCode.Attendance10) && r.Icon != "");
+        september.TopRewards.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 1);
+
+        var october = report.Months.Single(m => m.Label == "2020-10");
+        october.TopScoring.Should().BeEmpty();
+        october.TopXp.Should().BeEmpty();
+        october.TopBadges.Should().BeEmpty();
+        october.TopRewards.Should().BeEmpty();
+
+        report.SeasonTotal.Should().NotBeNull();
+        report.SeasonTotal!.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 2);
+        report.SeasonTotal!.TopXp.Should().ContainSingle(r => r.MemberId == _memberId1 && r.LevelIndex == expectedLevel.RankIndex);
+        report.SeasonTotal!.TopBadges.Should().ContainSingle(r => r.MemberId == _memberId2 && r.Code == nameof(BadgeCode.Attendance10));
+        report.SeasonTotal!.TopRewards.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 1);
+
+        var otherClient = await CreateClientAsync(_otherCoachEmail);
+        (await otherClient.GetAsync($"/SeasonGoals/team/{_teamId}/report"))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Report_shows_top_7_but_keeps_every_player_tied_for_7th_place()
+    {
+        var matchDate = new DateTime(2020, 9, 15);
+        // 8 players, XP 100..30 stepping by 10, except the last three all tie at 50 —
+        // a plain "top 7 by value" cutoff would arbitrarily drop one of the tied ones.
+        int[] xpByRank = [100, 90, 80, 70, 60, 50, 50, 50];
+        var extraMemberIds = new List<int>();
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            foreach (var xp in xpByRank)
+            {
+                var member = new Member
+                {
+                    FirstName = "Tie", LastName = $"Player{xp}-{Guid.NewGuid():N}", BirthYear = 2007, ClubId = _clubId,
+                };
+                db.Members.Add(member);
+                await db.SaveChangesAsync();
+                extraMemberIds.Add(member.Id);
+                db.TeamMembers.Add(new TeamMember { TeamId = _teamId, MemberId = member.Id, IsPlayer = true });
+                db.XpEvents.Add(new XpEvent
+                {
+                    MemberId = member.Id, Type = XpEventType.TrainingAttendance, Points = xp,
+                    SeasonId = _seasonId, SourceKind = XpSourceKind.Attendance, OccurredAt = matchDate,
+                });
+            }
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            var client = await CreateClientAsync(_coachEmail);
+            var report = (await client.GetFromJsonAsync<TeamSeasonReportDto>($"/SeasonGoals/team/{_teamId}/report"))!;
+
+            // All 8 survive: top 6 are strictly above the cutoff, and the 3-way tie at 50 for what
+            // would be "7th place" is kept whole rather than arbitrarily dropping one of them.
+            report.SeasonTotal!.TopXp.Should().HaveCount(8);
+            report.SeasonTotal!.TopXp.Select(r => r.MemberId).Should().BeEquivalentTo(extraMemberIds);
+            report.SeasonTotal!.TopXp.Where(r => r.Value == 50).Should().HaveCount(3);
+        }
+        finally
+        {
+            await using var scope = _factory.Services.CreateAsyncScope();
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            db.XpEvents.RemoveRange(db.XpEvents.Where(e => extraMemberIds.Contains(e.MemberId)));
+            db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => extraMemberIds.Contains(tm.MemberId)));
+            await db.SaveChangesAsync();
+            db.Members.RemoveRange(db.Members.Where(m => extraMemberIds.Contains(m.Id)));
+            await db.SaveChangesAsync();
+        }
     }
 
     // ── Club rollup ─────────────────────────────────────────────────────────

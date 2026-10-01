@@ -619,6 +619,51 @@ export interface ClubSeasonGoalRowDto {
   verdictOverridden: boolean
 }
 
+export interface PlayerRankRowDto {
+  memberId: number
+  name: string
+  value: number
+}
+
+export interface XpRankRowDto {
+  memberId: number
+  name: string
+  value: number
+  /** 0-based index into the career rank ladder — derive the level icon from it (badges/rank{N}.png). */
+  levelIndex: number
+  levelName: string
+}
+
+export interface BadgeEarnRowDto {
+  memberId: number
+  name: string
+  /** A BadgeCode name, e.g. "Attendance10" — i18n key is badge.{code}.name. */
+  code: string
+  /** Relative path under the API's wwwroot, e.g. "badges/attendance10.png". */
+  icon: string
+}
+
+export interface MonthlyTeamReportDto {
+  /** "2026-09" for a calendar month, or "season" for the season-total bucket. */
+  label: string
+  topXp: XpRankRowDto[]
+  topScoring: PlayerRankRowDto[]
+  topAttendance: PlayerRankRowDto[]
+  topBadges: BadgeEarnRowDto[]
+  topRewards: PlayerRankRowDto[]
+}
+
+export interface TeamSeasonReportDto {
+  teamId: number
+  teamName: string
+  seasonId?: number | null
+  seasonName?: string | null
+  seasonStart?: string | null
+  seasonEnd?: string | null
+  months: MonthlyTeamReportDto[]
+  seasonTotal: MonthlyTeamReportDto | null
+}
+
 export interface CycleCalendarDto {
   microcycleId: number
   mesocycleId: number

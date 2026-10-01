@@ -3699,6 +3699,22 @@
     "clubEmpty": "Žiadne tímy v tejto sezóne",
     "clubEmptyHint": "Vyberte sezónu, v ktorej tímy klubu hrajú."
   },
+  "seasonReport": {
+    "title": "Sezónny report",
+    "bestPlayers": "Najlepší hráči",
+    "wholeSeason": "Celá sezóna",
+    "topXp": "Podľa XP a levelu",
+    "playerOfMonth": "Hráč mesiaca",
+    "playerOfSeason": "Hráč sezóny",
+    "topScoring": "Strelci (góly + asistencie)",
+    "topAttendance": "Dochádzka",
+    "topBadges": "Odznaky",
+    "topRewards": "Ocenenia",
+    "noData": "Zatiaľ žiadne dáta",
+    "saveImage": "Uložiť ako obrázok",
+    "exporting": "Ukladám…",
+    "exportFailed": "Uloženie obrázka zlyhalo"
+  },
   "teamChallenge": {
     "title": "Tímové výzvy",
     "subtitle": "Vytváranie a správa výziev pre celý tím",
