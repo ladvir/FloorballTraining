@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { dfLocale } from '../../utils/dateLocale'
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Download, FileSpreadsheet } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
-import { seasonsApi, clubsApi } from '../../api/index'
+import { seasonsApi, clubsApi, appointmentsApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
 import { apiClient } from '../../api/axios'
 import { useAuthStore } from '../../store/authStore'
@@ -69,6 +69,8 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [hoursSource, setHoursSource] = useState<'plan' | 'attendance'>('plan')
+  const [preparationHours, setPreparationHours] = useState(0)
+  const [preparationHoursTouched, setPreparationHoursTouched] = useState(false)
   const [scope, setScope] = useState<'single' | 'bulk'>('single')
   const [coverage, setCoverage] = useState<'own' | 'all'>('own')
   const [bulkMode, setBulkMode] = useState<'workbook' | 'files'>('workbook')
@@ -127,6 +129,37 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     return current ? `${current.year}-${current.month}` : `${months[0].year}-${months[0].month}`
   }, [selectedMonth, months])
 
+  // Auto-computed "Příprava" total for the selected month (sum of Preparation-type calendar
+  // events) — shown to the coach so the form never silently swaps in a different number; they
+  // see this value and can overwrite it, but nothing changes unless they type over it.
+  const [exportYear, exportMonth] = effectiveMonth ? effectiveMonth.split('-').map(Number) : [0, 0]
+  const { data: computedPreparationHours } = useQuery({
+    queryKey: [
+      'preparationHours',
+      exportYear,
+      exportMonth,
+      coverage,
+      coverage === 'own' ? selectedUserId : '',
+    ],
+    queryFn: () =>
+      appointmentsApi.getPreparationHours({
+        year: exportYear,
+        month: exportMonth,
+        coverage: isAdmin ? coverage : undefined,
+        userId: isAdmin && coverage === 'own' ? selectedUserId || undefined : undefined,
+      }),
+    enabled: scope === 'single' && !!effectiveMonth,
+  })
+
+  // Pre-fill (or re-fill, on month/user/coverage change) with the computed value; once the coach
+  // edits the field by hand, further unrelated re-renders must not stomp on their typed value.
+  useEffect(() => {
+    if (computedPreparationHours != null) {
+      setPreparationHours(computedPreparationHours)
+      setPreparationHoursTouched(false)
+    }
+  }, [computedPreparationHours])
+
   const handleDownload = async () => {
     if (!effectiveMonth) return
     const [year, month] = effectiveMonth.split('-').map(Number)
@@ -136,6 +169,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     try {
       const params: Record<string, string | number> = { year, month, scope, hoursSource }
       if (scope === 'single') {
+        params.preparationHours = preparationHours
         if (isAdmin) {
           params.coverage = coverage
           if (coverage === 'own' && selectedUserId) params.userId = selectedUserId
@@ -289,6 +323,33 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
               : t('appointments.exportHoursSourceAttendanceDesc')}
           </p>
         </div>
+
+        {/* Preparation hours — shows the auto-computed total from calendar events, editable */}
+        {scope === 'single' && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportPreparationHoursLabel')}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={preparationHours}
+              onChange={(e) => {
+                setPreparationHours(Number(e.target.value))
+                setPreparationHoursTouched(true)
+              }}
+              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            />
+            <p className="text-xs text-gray-500">
+              {preparationHoursTouched && computedPreparationHours != null
+                ? t('appointments.exportPreparationHoursOverridden', {
+                    hours: computedPreparationHours,
+                  })
+                : t('appointments.exportPreparationHoursDesc')}
+            </p>
+          </div>
+        )}
 
         {/* Scope selector — HeadCoach+ */}
         {canBulkExport && (

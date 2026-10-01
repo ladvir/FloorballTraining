@@ -493,7 +493,8 @@ public class AppointmentsController(
         [FromQuery] string? mode = "workbook",
         [FromQuery] int? clubId = null,
         [FromQuery] string? coverage = "own",
-        [FromQuery] string? hoursSource = "plan")
+        [FromQuery] string? hoursSource = "plan",
+        [FromQuery] double? preparationHours = null)
     {
         if (month < 1 || month > 12)
             return BadRequest(new ApiResponse(400, "Neplatný měsíc. Povolené hodnoty jsou 1–12."));
@@ -551,7 +552,7 @@ public class AppointmentsController(
         var includeAll = IsAdmin() && string.Equals(coverage, "all", StringComparison.OrdinalIgnoreCase);
 
         List<AppointmentDto> userAppointments;
-        double preparationHours;
+        double computedPreparationHours;
 
         if (includeAll)
         {
@@ -559,9 +560,7 @@ public class AppointmentsController(
                 .Where(a => a.AppointmentType != AppointmentType.Preparation)
                 .ToList();
 
-            preparationHours = allAppointments
-                .Where(a => a.AppointmentType == AppointmentType.Preparation)
-                .Sum(a => (a.End - a.Start).TotalHours);
+            computedPreparationHours = ComputePreparationHours(allAppointments, includeAll: true, targetUserId);
         }
         else
         {
@@ -601,9 +600,7 @@ public class AppointmentsController(
                     (a.OwnerUserId == targetUserId && IsAllowedPersonalEventType(a.AppointmentType)))
                 .ToList();
 
-            preparationHours = allAppointments
-                .Where(a => a.AppointmentType == AppointmentType.Preparation && a.OwnerUserId == targetUserId)
-                .Sum(a => (a.End - a.Start).TotalHours);
+            computedPreparationHours = ComputePreparationHours(allAppointments, includeAll: false, targetUserId);
         }
 
         var teamName = userAppointments
@@ -619,7 +616,11 @@ public class AppointmentsController(
             TeamName = teamName,
             CoachName = coachName,
             Appointments = userAppointments,
-            Preparation = preparationHours,
+            // The export form shows the coach the auto-summed total from "Preparation"-type calendar
+            // appointments (see GetPreparationHours below) and lets them overwrite it before exporting;
+            // whatever value comes through here is used as-is. Omitting the parameter entirely (e.g. a
+            // direct API call) falls back to that same auto-summed total.
+            Preparation = preparationHours ?? computedPreparationHours,
         };
 
         var bytes = await appointmentService.GenerateWorkTimeExcel(exportData);
@@ -629,6 +630,49 @@ public class AppointmentsController(
         var fileName = $"vykaz-prace-{safeCoachName}-{year}-{month:D2}.xlsx";
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
+
+    /// <summary>GET /appointments/export/preparation-hours — the same auto-summed "Příprava" total
+    /// that <see cref="ExportWorkTime"/> would use for this month if the coach doesn't overwrite it.
+    /// The export form calls this to show that number before the coach decides whether to keep it.</summary>
+    [HttpGet("export/preparation-hours")]
+    public async Task<IActionResult> GetPreparationHours(
+        [FromQuery] int year,
+        [FromQuery] int month,
+        [FromQuery] string? userId = null,
+        [FromQuery] string? coverage = "own")
+    {
+        if (month < 1 || month > 12)
+            return BadRequest(new ApiResponse(400, "Neplatný měsíc. Povolené hodnoty jsou 1–12."));
+        if (year < 2000 || year > 2100)
+            return BadRequest(new ApiResponse(400, "Neplatný rok."));
+
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+        var result = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters
+        {
+            Start = startDate,
+            End = endDate,
+            PageSize = 10000
+        });
+        var allAppointments = result.Data?.ToList() ?? [];
+
+        var targetUserId = userId;
+        if (!IsAdmin() || string.IsNullOrEmpty(targetUserId))
+            targetUserId = GetCurrentUserId();
+
+        var includeAll = IsAdmin() && string.Equals(coverage, "all", StringComparison.OrdinalIgnoreCase);
+
+        return Ok(new { hours = ComputePreparationHours(allAppointments, includeAll, targetUserId) });
+    }
+
+    /// <summary>Sum of hours across this month's "Preparation"-type calendar appointments — every
+    /// one of them when <paramref name="includeAll"/> (admin "vše"), otherwise only the target
+    /// user's own.</summary>
+    private static double ComputePreparationHours(List<AppointmentDto> allAppointments, bool includeAll, string? targetUserId) =>
+        allAppointments
+            .Where(a => a.AppointmentType == AppointmentType.Preparation && (includeAll || a.OwnerUserId == targetUserId))
+            .Sum(a => (a.End - a.Start).TotalHours);
 
     private async Task<IActionResult> ExportBulkAsync(
         List<AppointmentDto> allAppointments,
@@ -800,7 +844,9 @@ public class AppointmentsController(
     //   Zápas           → Match             → daily row (fixed work time)
     //   Pořádání akce   → EventOrganization → "pořadatel" columns + Pořádání summary
     //   Propagace       → Promotion         → "pořadatel" columns + Pořádání summary
-    //   Příprava        → Camp              → data carried through (no dedicated render slot)
+    //   Soustředění     → Camp              → daily row
+    // "Příprava" (AppointmentType.Preparation) isn't in this list — it never gets its own daily
+    // row; it only feeds the "Příprava" summary row's total (see ComputePreparationHours).
     private static bool IsAllowedPersonalEventType(AppointmentType type) =>
         type is AppointmentType.Training
             or AppointmentType.Testing

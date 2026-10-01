@@ -137,7 +137,8 @@ public class XpController(
     }
 
     /// <summary>Team ids the caller may see achievements for. Mirrors PlayerSkillsController's helper,
-    /// plus an admin ?clubId narrow.</summary>
+    /// plus an admin ?clubId narrow. Any coach — plain Coach, HeadCoach or ClubAdmin — is scoped to the
+    /// team(s) they actually coach; only someone with no coached team at all falls back to the whole club.</summary>
     private async Task<List<int>> AccessibleTeamIdsAsync(ClubRoleInfo role, int? clubId, CancellationToken ct)
     {
         if (role.EffectiveRole == "Admin")
@@ -146,13 +147,10 @@ public class XpController(
                     : context.Teams.Where(t => t.ClubId == clubId))
                 .Select(t => t.Id).ToListAsync(ct);
 
-        if (role.EffectiveRole is "ClubAdmin" or "HeadCoach" && role.ClubId != null)
-            return await context.Teams.Where(t => t.ClubId == role.ClubId).Select(t => t.Id).ToListAsync(ct);
-
-        if (role.EffectiveRole == "Coach")
+        if (role.EffectiveRole is "ClubAdmin" or "HeadCoach" or "Coach")
         {
             var ids = role.CoachTeamIds.ToList();
-            if (ids.Count == 0 && role.ClubId != null) // same "no explicit coach teams → club-wide" quirk as elsewhere
+            if (ids.Count == 0 && role.ClubId != null) // no team explicitly coached → club-wide
                 ids = await context.Teams.Where(t => t.ClubId == role.ClubId).Select(t => t.Id).ToListAsync(ct);
             return ids;
         }

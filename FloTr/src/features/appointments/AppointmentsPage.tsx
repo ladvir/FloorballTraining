@@ -986,6 +986,8 @@ function aptDisplayName(apt: AppointmentDto, typeLabels: Record<number, string>)
 
 // ── Calendar View ────────────────────────────────────────────────────────────
 
+const MAX_VISIBLE_DAY_EVENTS = 5
+
 function CalendarView({
   days,
   dayNames,
@@ -1171,7 +1173,7 @@ function CalendarView({
                       ))}
                     </div>
                   )}
-                  {dayAppointments.slice(0, 3).map((apt, j) => {
+                  {dayAppointments.slice(0, MAX_VISIBLE_DAY_EVENTS).map((apt, j) => {
                     const isVirtual = isRecurringOccurrence(apt)
                     const hasRating = ratingAverages?.[apt.id] != null
                     const scope = getEventScope(apt, isCoach)
@@ -1222,9 +1224,10 @@ function CalendarView({
                       </button>
                     )
                   })}
-                  {dayAppointments.length > 3 && (
+                  {dayAppointments.length > MAX_VISIBLE_DAY_EVENTS && (
                     <div className="px-1 text-[10px] text-gray-400">
-                      +{dayAppointments.length - 3} {t('common.next').toLowerCase()}
+                      +{dayAppointments.length - MAX_VISIBLE_DAY_EVENTS}{' '}
+                      {t('common.next').toLowerCase()}
                     </div>
                   )}
                 </div>

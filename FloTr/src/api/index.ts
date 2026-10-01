@@ -241,6 +241,15 @@ export const appointmentsApi = {
     apiClient
       .post<ICalImportResult>('/appointments/import-ical', { url, teamId, ...filters })
       .then((r) => r.data),
+  getPreparationHours: (params: {
+    year: number
+    month: number
+    userId?: string
+    coverage?: 'own' | 'all'
+  }) =>
+    apiClient
+      .get<{ hours: number }>('/appointments/export/preparation-hours', { params })
+      .then((r) => r.data.hours),
 }
 
 export const equipmentApi = {

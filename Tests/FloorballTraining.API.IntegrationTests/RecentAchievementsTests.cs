@@ -23,7 +23,9 @@ public class RecentAchievementsTests(CustomWebApplicationFactory factory) : IAsy
     private const string Pwd = "Test123!";
     private readonly string _coachEmail = $"ra-coach-{Guid.NewGuid():N}@test.example";
     private readonly string _otherCoachEmail = $"ra-other-{Guid.NewGuid():N}@test.example";
+    private readonly string _headCoachEmail = $"ra-head-{Guid.NewGuid():N}@test.example";
     private int _playerId;
+    private int _otherTeamPlayerId;
 
     public async Task InitializeAsync()
     {
@@ -37,24 +39,33 @@ public class RecentAchievementsTests(CustomWebApplicationFactory factory) : IAsy
         await db.SaveChangesAsync();
 
         var team = new Team { Name = $"RATeam-{Guid.NewGuid():N}", ClubId = club.Id, AgeGroupId = 1 };
-        db.Teams.Add(team);
+        var otherTeamInSameClub = new Team { Name = $"RATeam2-{Guid.NewGuid():N}", ClubId = club.Id, AgeGroupId = 1 };
+        db.Teams.AddRange(team, otherTeamInSameClub);
         var player = new Member { FirstName = "Ray", LastName = "Cent", BirthYear = 2011, ClubId = club.Id };
-        db.Members.Add(player);
+        var otherTeamPlayer = new Member { FirstName = "Taylor", LastName = "Mate", BirthYear = 2011, ClubId = club.Id };
+        db.Members.AddRange(player, otherTeamPlayer);
         await db.SaveChangesAsync();
         _playerId = player.Id;
+        _otherTeamPlayerId = otherTeamPlayer.Id;
         db.TeamMembers.Add(new TeamMember { TeamId = team.Id, MemberId = player.Id, IsPlayer = true });
+        db.TeamMembers.Add(new TeamMember { TeamId = otherTeamInSameClub.Id, MemberId = otherTeamPlayer.Id, IsPlayer = true });
 
         await CreateCoachAsync(db, um, _coachEmail, club.Id, team.Id);
         await CreateCoachAsync(db, um, _otherCoachEmail, otherClub.Id, teamId: null);
+        await CreateHeadCoachAsync(db, um, _headCoachEmail, club.Id, team.Id);
 
         // 10 present trainings in the last two weeks → Attendance10 badge + 100 XP (Nováček → Hráč).
+        // Seeded for both teams' players, so a scoping bug (e.g. HeadCoach seeing the whole club
+        // instead of just the team they coach) would show up as the other team's player leaking in.
         for (var i = 0; i < 10; i++)
         {
             var when = DateTime.UtcNow.AddDays(-i - 1);
             var appt = new Appointment { AppointmentType = AppointmentType.Training, Start = when, End = when.AddHours(1), LocationId = 1, TeamId = team.Id };
-            db.Appointments.Add(appt);
+            var otherAppt = new Appointment { AppointmentType = AppointmentType.Training, Start = when, End = when.AddHours(1), LocationId = 1, TeamId = otherTeamInSameClub.Id };
+            db.Appointments.AddRange(appt, otherAppt);
             await db.SaveChangesAsync();
             db.AppointmentAttendances.Add(new AppointmentAttendance { AppointmentId = appt.Id, MemberId = player.Id, Status = 1, RecordedAt = when });
+            db.AppointmentAttendances.Add(new AppointmentAttendance { AppointmentId = otherAppt.Id, MemberId = otherTeamPlayer.Id, Status = 1, RecordedAt = when });
         }
         await db.SaveChangesAsync();
 
@@ -71,6 +82,17 @@ public class RecentAchievementsTests(CustomWebApplicationFactory factory) : IAsy
         await db.SaveChangesAsync();
         if (teamId is int tid)
             db.TeamMembers.Add(new TeamMember { TeamId = tid, MemberId = member.Id, IsCoach = true });
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task CreateHeadCoachAsync(FloorballTrainingContext db, UserManager<AppUser> um, string email, int clubId, int teamId)
+    {
+        var user = new AppUser { UserName = email, Email = email, FirstName = "H", LastName = "Ead", DefaultClubId = clubId };
+        (await um.CreateAsync(user, Pwd)).Succeeded.Should().BeTrue();
+        var member = new Member { FirstName = "H", LastName = "Ead", Email = email, BirthYear = 1980, ClubId = clubId, AppUserId = user.Id, HasClubRoleMainCoach = true };
+        db.Members.Add(member);
+        await db.SaveChangesAsync();
+        db.TeamMembers.Add(new TeamMember { TeamId = teamId, MemberId = member.Id, IsCoach = true });
         await db.SaveChangesAsync();
     }
 
@@ -93,6 +115,19 @@ public class RecentAchievementsTests(CustomWebApplicationFactory factory) : IAsy
         feed!.Should().Contain(a => a.MemberId == _playerId && a.Kind == "badge" && a.BadgeCode == nameof(BadgeCode.Attendance10));
         feed.Should().Contain(a => a.MemberId == _playerId && a.Kind == "rank" && a.FromRankIndex == 0 && a.ToRankIndex == 1);
         feed.Should().OnlyContain(a => a.MemberName == "Ray Cent");
+    }
+
+    [Fact]
+    public async Task HeadCoach_WithOwnTeam_SeesOnlyThatTeamsPlayers_NotWholeClub()
+    {
+        // The head coach explicitly coaches `team` only, not `otherTeamInSameClub` — even though
+        // HeadCoach is normally club-wide, this dashboard feed should stay scoped to their own team.
+        var client = await ClientFor(_headCoachEmail);
+        var feed = await client.GetFromJsonAsync<List<RecentAchievementDto>>("/xp/recent-achievements?days=14");
+
+        feed.Should().NotBeNull();
+        feed!.Should().Contain(a => a.MemberId == _playerId);
+        feed.Should().NotContain(a => a.MemberId == _otherTeamPlayerId);
     }
 
     [Fact]

@@ -438,7 +438,7 @@ public class SeasonGoalTests : IAsyncLifetime
 
         var expectedLevel = XpProgression.Career(xpPoints);
         var september = report.Months.Single(m => m.Label == "2020-09");
-        september.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 2);
+        september.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 4); // 2 goals × weight 2
         september.TopXp.Should().ContainSingle(r =>
             r.MemberId == _memberId1 && r.Value == xpPoints &&
             r.LevelIndex == expectedLevel.RankIndex && r.LevelName == expectedLevel.Rank);
@@ -453,7 +453,7 @@ public class SeasonGoalTests : IAsyncLifetime
         october.TopRewards.Should().BeEmpty();
 
         report.SeasonTotal.Should().NotBeNull();
-        report.SeasonTotal!.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 2);
+        report.SeasonTotal!.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 4);
         report.SeasonTotal!.TopXp.Should().ContainSingle(r => r.MemberId == _memberId1 && r.LevelIndex == expectedLevel.RankIndex);
         report.SeasonTotal!.TopBadges.Should().ContainSingle(r => r.MemberId == _memberId2 && r.Code == nameof(BadgeCode.Attendance10));
         report.SeasonTotal!.TopRewards.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 1);
@@ -515,6 +515,106 @@ public class SeasonGoalTests : IAsyncLifetime
             db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => extraMemberIds.Contains(tm.MemberId)));
             await db.SaveChangesAsync();
             db.Members.RemoveRange(db.Members.Where(m => extraMemberIds.Contains(m.Id)));
+            await db.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Report_TopScoring_weighs_goals_above_assists_and_keeps_ties_at_the_cutoff()
+    {
+        var matchDate = new DateTime(2020, 9, 15);
+        // (goals, assists) -> weighted value with goals worth 2x an assist: 10, 9, 8, 8, 7, 7, 6, 6, 3.
+        // Player B (0 goals, 9 assists) has a higher RAW total than player A (5 goals, 0 assists),
+        // but A must still rank above B — proving goals outweigh assists, not just sum with them.
+        (int Goals, int Assists)[] stats =
+        [
+            (5, 0), // 10 -- raw total 5
+            (0, 9), // 9  -- raw total 9, higher than the row above, yet ranks lower once weighted
+            (4, 0), // 8
+            (3, 2), // 8  tie
+            (3, 1), // 7
+            (2, 3), // 7  tie
+            (2, 2), // 6  -- would-be 7th/8th place tie
+            (1, 4), // 6  -- would-be 7th/8th place tie
+            (1, 1), // 3  below the cutoff, must be excluded
+        ];
+        var memberIds = new List<int>();
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+
+            var tracker = new StatTracker
+            {
+                EventCategory = 0, TeamId = _teamId, SeasonId = _seasonId,
+                CreatedAt = matchDate, UpdatedAt = matchDate,
+            };
+            db.StatTrackers.Add(tracker);
+            await db.SaveChangesAsync();
+            var goalsMetric = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "goals", Name = "Góly" };
+            var assistsMetric = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "assists", Name = "Asistence" };
+            db.StatTrackerMetrics.AddRange(goalsMetric, assistsMetric);
+            await db.SaveChangesAsync();
+
+            foreach (var (goals, assists) in stats)
+            {
+                var member = new Member
+                {
+                    FirstName = "Scorer", LastName = $"G{goals}A{assists}-{Guid.NewGuid():N}", BirthYear = 2007, ClubId = _clubId,
+                };
+                db.Members.Add(member);
+                await db.SaveChangesAsync();
+                memberIds.Add(member.Id);
+                db.TeamMembers.Add(new TeamMember { TeamId = _teamId, MemberId = member.Id, IsPlayer = true });
+                var participant = new StatTrackerParticipant { StatTrackerId = tracker.Id, MemberId = member.Id };
+                db.StatTrackerParticipants.Add(participant);
+                await db.SaveChangesAsync();
+                if (goals > 0)
+                    db.StatTrackerEntries.Add(new StatTrackerEntry
+                    {
+                        StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id,
+                        StatTrackerMetricId = goalsMetric.Id, Delta = goals, CreatedAt = matchDate,
+                    });
+                if (assists > 0)
+                    db.StatTrackerEntries.Add(new StatTrackerEntry
+                    {
+                        StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id,
+                        StatTrackerMetricId = assistsMetric.Id, Delta = assists, CreatedAt = matchDate,
+                    });
+            }
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            var client = await CreateClientAsync(_coachEmail);
+            var report = (await client.GetFromJsonAsync<TeamSeasonReportDto>($"/SeasonGoals/team/{_teamId}/report"))!;
+            var scoring = report.SeasonTotal!.TopScoring;
+
+            // Top 7 by weighted value plus the one extra player tied for 7th/8th place (value 6) = 8 rows;
+            // the 9th player (value 3) falls below the cutoff and is excluded.
+            scoring.Should().HaveCount(8);
+            scoring.Should().NotContain(r => r.MemberId == memberIds[8]);
+
+            var byMember = scoring.ToDictionary(r => r.MemberId, r => r.Value);
+            byMember[memberIds[0]].Should().Be(10); // 5 goals, 0 assists
+            byMember[memberIds[1]].Should().Be(9); // 0 goals, 9 assists
+            byMember[memberIds[0]].Should().BeGreaterThan(byMember[memberIds[1]]); // goals outweigh assists despite fewer raw events
+            scoring.Where(r => r.Value == 6).Should().HaveCount(2);
+        }
+        finally
+        {
+            await using var scope = _factory.Services.CreateAsyncScope();
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            db.StatTrackerEntries.RemoveRange(db.StatTrackerEntries.Where(e => e.StatTracker!.TeamId == _teamId && e.CreatedAt == matchDate));
+            db.StatTrackerParticipants.RemoveRange(db.StatTrackerParticipants.Where(p => memberIds.Contains(p.MemberId)));
+            await db.SaveChangesAsync();
+            db.StatTrackers.RemoveRange(db.StatTrackers.Where(s => s.TeamId == _teamId && s.CreatedAt == matchDate));
+            db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => memberIds.Contains(tm.MemberId)));
+            await db.SaveChangesAsync();
+            db.Members.RemoveRange(db.Members.Where(m => memberIds.Contains(m.Id)));
             await db.SaveChangesAsync();
         }
     }

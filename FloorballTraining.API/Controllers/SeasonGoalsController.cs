@@ -351,6 +351,10 @@ public class SeasonGoalsController(
             })
             .ToList();
 
+    /// <summary>A goal counts for more than an assist in the scoring ranking.</summary>
+    private const int GoalWeight = 2;
+    private const int AssistWeight = 1;
+
     private static List<PlayerRankRowDto> RankScoring(IEnumerable<ScoringRow> rows, Dictionary<int, string> names)
     {
         var ranked = rows.GroupBy(r => r.MemberId)
@@ -358,7 +362,8 @@ public class SeasonGoalsController(
             {
                 MemberId = g.Key,
                 Name = names.GetValueOrDefault(g.Key, "?"),
-                Value = g.Where(x => x.Code == "goals").Sum(x => x.Delta) + g.Where(x => x.Code == "assists").Sum(x => x.Delta),
+                Value = g.Where(x => x.Code == "goals").Sum(x => x.Delta) * GoalWeight
+                        + g.Where(x => x.Code == "assists").Sum(x => x.Delta) * AssistWeight,
             })
             .Where(r => r.Value != 0)
             .OrderByDescending(r => r.Value)

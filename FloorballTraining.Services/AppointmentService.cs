@@ -8,7 +8,36 @@ namespace FloorballTraining.Services
     public class AppointmentService : IAppointmentService
     {
 
-        private const double WorkTimeMatch = 2.5;
+        // Same-day matches are reported as a single fixed 10:00–12:00 (2h) block in the work report,
+        // regardless of how many matches were actually played that day.
+        private const double WorkTimeMatch = 2.0;
+        private static readonly TimeSpan MatchBlockStart = new(10, 0, 0);
+        private static readonly TimeSpan MatchBlockEnd = new(12, 0, 0);
+
+        /// <summary>Collapses a day's Match appointments into a single row — matches are merged by
+        /// day, trainings/testing are left as separate rows.</summary>
+        private static AppointmentDto[] MergeMatchesPerDay(AppointmentDto[] dayItems)
+        {
+            var matches = dayItems.Where(a => a.AppointmentType == AppointmentType.Match).ToList();
+            if (matches.Count <= 1) return dayItems;
+
+            var merged = new AppointmentDto
+            {
+                AppointmentType = AppointmentType.Match,
+                LocationName = matches[0].LocationName,
+                Name = string.Join(", ", matches.Select(m => m.Name).Where(n => !string.IsNullOrWhiteSpace(n))),
+                Start = matches[0].Start.Date,
+            };
+
+            var result = new List<AppointmentDto>();
+            var inserted = false;
+            foreach (var item in dayItems)
+            {
+                if (item.AppointmentType != AppointmentType.Match) { result.Add(item); continue; }
+                if (!inserted) { result.Add(merged); inserted = true; }
+            }
+            return result.ToArray();
+        }
         public void GenerateFutureAppointments(AppointmentDto appointment,
             RepeatingFrequency repeatingFrequency, int interval, DateTime? repeatingEnd,
             bool updateAllFutureAppointments)
@@ -177,7 +206,7 @@ namespace FloorballTraining.Services
                     worksheet.Cell(rowIndex, 1).Value = d;
 
                     var day = d;
-                    var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray();
+                    var dayTrainings = MergeMatchesPerDay(month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray());
                     var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
 
                     var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
@@ -207,7 +236,7 @@ namespace FloorballTraining.Services
                             {
 
                                 SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, dayTrainings[i].Name,
-                                    dayTrainings[i].Start.Date.Add(new TimeSpan(8, 0, 0)), dayTrainings[i].Start.Date.Add(new TimeSpan(10, 30, 0)), WorkTimeMatch);
+                                    dayTrainings[i].Start.Date.Add(MatchBlockStart), dayTrainings[i].Start.Date.Add(MatchBlockEnd), WorkTimeMatch);
                             }
 
 
@@ -445,7 +474,7 @@ namespace FloorballTraining.Services
                 worksheet.Cell(rowIndex, 1).Value = d;
 
                 var day = d;
-                var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray();
+                var dayTrainings = MergeMatchesPerDay(month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray());
                 var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
 
                 var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
@@ -467,7 +496,7 @@ namespace FloorballTraining.Services
                         if (dayTrainings[i].AppointmentType == AppointmentType.Match)
                         {
                             SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, dayTrainings[i].Name,
-                                dayTrainings[i].Start.Date.Add(new TimeSpan(8, 0, 0)), dayTrainings[i].Start.Date.Add(new TimeSpan(10, 30, 0)), WorkTimeMatch);
+                                dayTrainings[i].Start.Date.Add(MatchBlockStart), dayTrainings[i].Start.Date.Add(MatchBlockEnd), WorkTimeMatch);
                         }
                         trainingRowAdded = true;
                     }

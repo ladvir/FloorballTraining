@@ -335,7 +335,7 @@ Automaticky nastaví `appointmentType = Training`, přiřadí trénink.
 - Řádek na každý den s událostmi
 - Souhrn:
   - Hodiny tréninků (součet dob pro typy Training + Match)
-  - Zápasy mají fixní hodnotu 2,5 hodiny
+  - Všechny zápasy jednoho dne se exportují jako jedna událost s fixním časem 10:00–12:00 (2 hodiny)
   - Hodiny přípravy
   - Počet ostatních událostí
   - Hodiny pořádání akcí
