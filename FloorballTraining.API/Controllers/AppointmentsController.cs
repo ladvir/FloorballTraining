@@ -512,30 +512,9 @@ public class AppointmentsController(
         });
         var allAppointments = result.Data?.ToList() ?? [];
 
-        // "Podle docházky": drop team events with no one actually marked present (Status == 1) —
-        // an appointment where attendance was never recorded (Status 0 / no row) or where everyone
-        // was marked absent (Status == 2) counts as not having taken place. Personal events (no
-        // TeamId, e.g. Příprava) aren't attendance-tracked, so they're unaffected. Applies to both
-        // single and bulk export.
-        if (string.Equals(hoursSource, "attendance", StringComparison.OrdinalIgnoreCase))
-        {
-            var teamAppointmentIds = allAppointments.Where(a => a.TeamId != null).Select(a => a.Id).ToList();
-            var attendedSet = new HashSet<int>();
-            if (teamAppointmentIds.Count > 0)
-            {
-                attendedSet = (await context.AppointmentAttendances
-                    .Where(a => teamAppointmentIds.Contains(a.AppointmentId) && a.Status == 1)
-                    .Select(a => a.AppointmentId)
-                    .Distinct()
-                    .ToListAsync())
-                    .ToHashSet();
-            }
-            allAppointments = allAppointments.Where(a => a.TeamId == null || attendedSet.Contains(a.Id)).ToList();
-        }
-
         if (string.Equals(scope, "bulk", StringComparison.OrdinalIgnoreCase))
         {
-            return await ExportBulkAsync(allAppointments, year, month, clubId, mode);
+            return await ExportBulkAsync(allAppointments, year, month, clubId, mode, hoursSource);
         }
 
         // ─── Single coach (existing behavior) ────────────────────────────
@@ -552,6 +531,42 @@ public class AppointmentsController(
 
         // Admin-only "vše" mode: skip coach/owner filter — include every event in the month.
         var includeAll = IsAdmin() && string.Equals(coverage, "all", StringComparison.OrdinalIgnoreCase);
+
+        // "Podle docházky": drop team events where the responsible coach wasn't marked present
+        // (Status == 1) — not just "someone on the team was there". A coach who skipped a session
+        // their co-coach ran must not have it counted as worked hours, even though the training
+        // did happen and players were marked present. In "vše" (includeAll) mode — admin viewing
+        // every event in the club at once, not attributed to one person — each event is still
+        // checked against ITS OWN team's coach(es), same as a per-coach breakdown would; it's never
+        // reduced to "did anyone (e.g. a player) attend". Personal events (no TeamId, e.g.
+        // Příprava) aren't attendance-tracked, so unaffected.
+        if (string.Equals(hoursSource, "attendance", StringComparison.OrdinalIgnoreCase))
+        {
+            var presentByAppointment = await GetPresentMemberIdsByAppointmentAsync(allAppointments);
+            if (includeAll)
+            {
+                var teamIds = allAppointments.Where(a => a.TeamId != null).Select(a => a.TeamId!.Value);
+                var coachIdsByTeam = await GetCoachMemberIdsByTeamAsync(teamIds);
+                allAppointments = allAppointments
+                    .Where(a => a.TeamId == null ||
+                                (presentByAppointment.TryGetValue(a.Id, out var present) &&
+                                 coachIdsByTeam.TryGetValue(a.TeamId.Value, out var coachIds) &&
+                                 coachIds.Any(present.Contains)))
+                    .ToList();
+            }
+            else
+            {
+                var targetMemberIds = await context.Members
+                    .Where(m => m.AppUserId == targetUserId)
+                    .Select(m => m.Id)
+                    .ToListAsync();
+                allAppointments = allAppointments
+                    .Where(a => a.TeamId == null ||
+                                (presentByAppointment.TryGetValue(a.Id, out var present) &&
+                                 targetMemberIds.Any(present.Contains)))
+                    .ToList();
+            }
+        }
 
         List<AppointmentDto> userAppointments;
         double computedPreparationHours;
@@ -676,12 +691,52 @@ public class AppointmentsController(
             .Where(a => a.AppointmentType == AppointmentType.Preparation && (includeAll || a.OwnerUserId == targetUserId))
             .Sum(a => (a.End - a.Start).TotalHours);
 
+    /// <summary>Appointment id → the set of member ids marked present (Status == 1) there. Only
+    /// covers team appointments (<paramref name="appointments"/> items with a TeamId) — personal
+    /// events aren't attendance-tracked. Used by the "podle docházky" hours-source filter to check
+    /// whether a SPECIFIC person attended, not just whether anyone on the team did.</summary>
+    private async Task<Dictionary<int, HashSet<int>>> GetPresentMemberIdsByAppointmentAsync(List<AppointmentDto> appointments)
+    {
+        var teamAppointmentIds = appointments.Where(a => a.TeamId != null).Select(a => a.Id).ToList();
+        if (teamAppointmentIds.Count == 0) return [];
+
+        var rows = await context.AppointmentAttendances
+            .Where(a => teamAppointmentIds.Contains(a.AppointmentId) && a.Status == 1)
+            .Select(a => new { a.AppointmentId, a.MemberId })
+            .ToListAsync();
+
+        return rows
+            .GroupBy(r => r.AppointmentId)
+            .ToDictionary(g => g.Key, g => g.Select(r => r.MemberId).ToHashSet());
+    }
+
+    /// <summary>Team id → the set of member ids who coach that team (TeamMember.IsCoach, or any
+    /// TeamMember row for someone with a club-level coach role). Used by the admin "vše" export so
+    /// each event's "podle docházky" check is still scoped to that team's own coach(es), never to
+    /// "any attendee" (e.g. a player).</summary>
+    private async Task<Dictionary<int, HashSet<int>>> GetCoachMemberIdsByTeamAsync(IEnumerable<int> teamIds)
+    {
+        var ids = teamIds.Distinct().ToList();
+        if (ids.Count == 0) return [];
+
+        var rows = await context.TeamMembers
+            .Where(tm => tm.TeamId.HasValue && ids.Contains(tm.TeamId.Value)
+                         && (tm.IsCoach || tm.Member!.HasClubRoleCoach || tm.Member.HasClubRoleMainCoach))
+            .Select(tm => new { TeamId = tm.TeamId!.Value, tm.MemberId })
+            .ToListAsync();
+
+        return rows
+            .GroupBy(r => r.TeamId)
+            .ToDictionary(g => g.Key, g => g.Select(r => r.MemberId).ToHashSet());
+    }
+
     private async Task<IActionResult> ExportBulkAsync(
         List<AppointmentDto> allAppointments,
         int year,
         int month,
         int? requestedClubId,
-        string? mode)
+        string? mode,
+        string? hoursSource)
     {
         var callerId = GetCurrentUserId();
         if (callerId == null) return Unauthorized();
@@ -739,6 +794,9 @@ public class AppointmentsController(
             {
                 AppUserId = g.First().AppUserId,
                 FirstMember = g.First(),
+                // This coach's own Member row id(s) in this club — used to check THEIR OWN
+                // attendance (not just "someone on the team attended") under hoursSource=attendance.
+                MemberIds = g.Select(m => m.Id).ToList(),
                 // If the Member carries a club-level coach role, count every team they're a TeamMember of
                 // (the per-row IsCoach flag isn't reliably set by the team-add UI).
                 // Otherwise fall back to TeamMember.IsCoach explicitly.
@@ -770,6 +828,13 @@ public class AppointmentsController(
             return $"{fallback.FirstName} {fallback.LastName}".Trim();
         }
 
+        // "Podle docházky": each coach's own attendance (Status == 1), not just "someone on the
+        // team was there" — mirrors the single-export check in ExportWorkTime.
+        var isAttendanceSource = string.Equals(hoursSource, "attendance", StringComparison.OrdinalIgnoreCase);
+        var presentByAppointment = isAttendanceSource
+            ? await GetPresentMemberIdsByAppointmentAsync(allAppointments)
+            : [];
+
         // Build per-coach export data. Every coach in the club gets an entry, even with zero events.
         var perCoachData = coachGroups
             .Select(coach => new
@@ -778,7 +843,10 @@ public class AppointmentsController(
                 DisplayName = CoachDisplayName(coach.AppUserId, coach.FirstMember),
                 Appointments = allAppointments
                     .Where(a =>
-                        (a.TeamId != null && coach.TeamIds.Contains(a.TeamId.Value)) ||
+                        (a.TeamId != null && coach.TeamIds.Contains(a.TeamId.Value)
+                            && (!isAttendanceSource ||
+                                (presentByAppointment.TryGetValue(a.Id, out var present) &&
+                                 coach.MemberIds.Any(present.Contains)))) ||
                         (a.TeamId == null
                             && !string.IsNullOrEmpty(coach.AppUserId)
                             && a.OwnerUserId == coach.AppUserId

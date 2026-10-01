@@ -7,6 +7,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,9 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
     private string _coachUserId = "";
     private int _appointmentId;
     private int _memberId;
+    private int _coachMemberId;
+    private int _teamId;
+    private int _clubId;
 
     public async Task InitializeAsync()
     {
@@ -36,6 +40,7 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
         var club = new Club { Name = $"ExportClub-{Guid.NewGuid():N}" };
         db.Clubs.Add(club);
         await db.SaveChangesAsync();
+        _clubId = club.Id;
 
         var team = new Team { Name = $"ExportTeam-{Guid.NewGuid():N}", ClubId = club.Id, AgeGroupId = 1 };
         db.Teams.Add(team);
@@ -43,6 +48,7 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
         var coachMember = new Member { FirstName = "Export", LastName = "Coach", BirthYear = 1990, ClubId = club.Id, AppUserId = coachUserId };
         db.Members.Add(coachMember);
         await db.SaveChangesAsync();
+        _coachMemberId = coachMember.Id;
         db.TeamMembers.Add(new TeamMember { TeamId = team.Id, MemberId = coachMember.Id, IsCoach = true });
 
         var player = new Member { FirstName = "Export", LastName = "Player", BirthYear = 2010, ClubId = club.Id };
@@ -62,14 +68,65 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
         await db.SaveChangesAsync();
         _appointmentId = training.Id;
         _coachUserId = coachUserId;
+        _teamId = team.Id;
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public async Task DisposeAsync()
+    {
+        // The admin "vše" (coverage=all) export has no club scoping by design — it aggregates every
+        // appointment in the date range system-wide. Leftover data from one test would otherwise
+        // leak into another test's aggregate-mode assertions (e.g. a different test's coach
+        // attendance making this one's "excluded" expectation fail), so every test cleans up fully.
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+        var teamIds = await db.Teams.Where(t => t.ClubId == _clubId).Select(t => t.Id).ToListAsync();
+        var appointmentIds = await db.Appointments
+            .Where(a => a.TeamId.HasValue && teamIds.Contains(a.TeamId.Value))
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        db.AppointmentAttendances.RemoveRange(db.AppointmentAttendances.Where(a => appointmentIds.Contains(a.AppointmentId)));
+        await db.SaveChangesAsync();
+
+        db.Appointments.RemoveRange(db.Appointments.Where(a => appointmentIds.Contains(a.Id)));
+        await db.SaveChangesAsync();
+
+        db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => tm.TeamId.HasValue && teamIds.Contains(tm.TeamId.Value)));
+        await db.SaveChangesAsync();
+
+        db.Teams.RemoveRange(db.Teams.Where(t => teamIds.Contains(t.Id)));
+        await db.SaveChangesAsync();
+
+        var memberUserIds = await db.Members.Where(m => m.ClubId == _clubId && m.AppUserId != null).Select(m => m.AppUserId!).ToListAsync();
+        db.Members.RemoveRange(db.Members.Where(m => m.ClubId == _clubId));
+        await db.SaveChangesAsync();
+
+        db.Clubs.RemoveRange(db.Clubs.Where(c => c.Id == _clubId));
+        await db.SaveChangesAsync();
+
+        foreach (var uid in memberUserIds)
+        {
+            var u = await um.FindByIdAsync(uid);
+            if (u != null) await um.DeleteAsync(u);
+        }
+    }
 
     private AppointmentsController Controller(IServiceProvider sp)
     {
         var principal = new ClaimsPrincipal(
             new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, _coachUserId)], "TestAuth"));
+        var controller = ActivatorUtilities.CreateInstance<AppointmentsController>(sp);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = principal } };
+        return controller;
+    }
+
+    private AppointmentsController AdminController(IServiceProvider sp)
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()), new Claim(ClaimTypes.Role, "Admin")],
+            "TestAuth"));
         var controller = ActivatorUtilities.CreateInstance<AppointmentsController>(sp);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = principal } };
         return controller;
@@ -143,7 +200,7 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
     }
 
     [Fact]
-    public async Task AttendanceSource_IncludesTeamEvent_OnceAttendanceIsRecorded()
+    public async Task AttendanceSource_IncludesTeamEvent_OnceTheExportedCoachWasMarkedPresent()
     {
         await using (var seedScope = factory.Services.CreateAsyncScope())
         {
@@ -151,7 +208,7 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
             db.AppointmentAttendances.Add(new AppointmentAttendance
             {
                 AppointmentId = _appointmentId,
-                MemberId = _memberId,
+                MemberId = _coachMemberId,
                 Status = 1,
                 RecordedByUserId = _coachUserId,
             });
@@ -167,17 +224,35 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
     }
 
     [Fact]
-    public async Task AttendanceSource_IncludesTeamEvent_WhenAtLeastOnePlayerWasPresent()
+    public async Task AttendanceSource_ExcludesTeamEvent_WhenAPlayerAttendedButTheExportedCoachDidNot()
+    {
+        // Regression: a training the coach skipped (co-coach ran it) must not count as their own
+        // worked hours just because the player(s) showed up and got marked present.
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.AppointmentAttendances.AddRange(
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _memberId, Status = 1, RecordedByUserId = _coachUserId },
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _coachMemberId, Status = 2, RecordedByUserId = _coachUserId });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await Controller(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, hoursSource: "attendance");
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task AttendanceSource_IncludesTeamEvent_WhenExportedCoachAttended_EvenIfAPlayerDidNot()
     {
         await using (var seedScope = factory.Services.CreateAsyncScope())
         {
             var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
-            var otherPlayer = new Member { FirstName = "Export", LastName = "PlayerTwo", BirthYear = 2010, ClubId = (await db.Members.FirstAsync(m => m.Id == _memberId)).ClubId };
-            db.Members.Add(otherPlayer);
-            await db.SaveChangesAsync();
             db.AppointmentAttendances.AddRange(
-                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _memberId, Status = 1, RecordedByUserId = _coachUserId },
-                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = otherPlayer.Id, Status = 2, RecordedByUserId = _coachUserId });
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _coachMemberId, Status = 1, RecordedByUserId = _coachUserId },
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _memberId, Status = 2, RecordedByUserId = _coachUserId });
             await db.SaveChangesAsync();
         }
 
@@ -187,6 +262,90 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
 
         var file = result.Should().BeOfType<FileContentResult>().Subject;
         file.FileContents.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task AdminAggregateMode_AttendanceSource_ExcludesTeamEvent_WhenOnlyAPlayerAttended()
+    {
+        // Regression: admin's "vše" (coverage=all) view must not fall back to "did anyone attend" —
+        // a player showing up doesn't make the event count if none of the team's own coaches did.
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.AppointmentAttendances.Add(new AppointmentAttendance
+            {
+                AppointmentId = _appointmentId, MemberId = _memberId, Status = 1, RecordedByUserId = _coachUserId,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await AdminController(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, coverage: "all", hoursSource: "attendance");
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task AdminAggregateMode_AttendanceSource_IncludesTeamEvent_WhenTheTeamsCoachAttended()
+    {
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.AppointmentAttendances.Add(new AppointmentAttendance
+            {
+                AppointmentId = _appointmentId, MemberId = _coachMemberId, Status = 1, RecordedByUserId = _coachUserId,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await AdminController(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, coverage: "all", hoursSource: "attendance");
+
+        var file = result.Should().BeOfType<FileContentResult>().Subject;
+        file.FileContents.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task BulkExport_AttendanceSource_ScopesEachCoachToTheirOwnAttendance()
+    {
+        var headCoachUserId = Guid.NewGuid().ToString();
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.Users.Add(new AppUser { Id = headCoachUserId, UserName = $"u-{headCoachUserId}", Email = $"{headCoachUserId}@t.cz", FirstName = "Head", LastName = "Coachsky" });
+            var headCoachMember = new Member { FirstName = "Head", LastName = "Coachsky", BirthYear = 1985, ClubId = _clubId, AppUserId = headCoachUserId, HasClubRoleMainCoach = true };
+            db.Members.Add(headCoachMember);
+            await db.SaveChangesAsync();
+            db.TeamMembers.Add(new TeamMember { TeamId = _teamId, MemberId = headCoachMember.Id, IsCoach = true });
+            // Only "Export Coach" (the original coach) was actually there; the head coach was not.
+            db.AppointmentAttendances.Add(new AppointmentAttendance
+            {
+                AppointmentId = _appointmentId, MemberId = _coachMemberId, Status = 1, RecordedByUserId = headCoachUserId,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var principal = new ClaimsPrincipal(
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, headCoachUserId)], "TestAuth"));
+        var controller = ActivatorUtilities.CreateInstance<AppointmentsController>(scope.ServiceProvider);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = principal } };
+
+        var result = await controller.ExportWorkTime(_start.Year, _start.Month, scope: "bulk", hoursSource: "attendance");
+
+        var file = result.Should().BeOfType<FileContentResult>().Subject;
+        using var workbook = new XLWorkbook(new MemoryStream(file.FileContents));
+        var exportCoachSheet = workbook.Worksheets.Single(w => w.Cell("I1").GetString() == "Export Coach");
+        var headCoachSheet = workbook.Worksheets.Single(w => w.Cell("I1").GetString() == "Head Coachsky");
+
+        // _start is day 5 of the month; day 1 is row 4 (rowIndexFirstData), so day 5's row is 4+(5-1)=8.
+        // Column H ("od" / start time) is only filled in for a day that actually got a training row.
+        // "Export Coach" attended -> that row has a start time; "Head Coachsky" didn't -> blank.
+        const int day5Row = 8;
+        exportCoachSheet.Cell(day5Row, 8).GetString().Should().Be("18:00");
+        headCoachSheet.Cell(day5Row, 8).GetString().Should().BeNullOrEmpty();
     }
 
     [Fact]
