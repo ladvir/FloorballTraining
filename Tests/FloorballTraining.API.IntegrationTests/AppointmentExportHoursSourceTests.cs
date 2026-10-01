@@ -8,6 +8,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FloorballTraining.API.IntegrationTests;
@@ -96,6 +97,52 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
     }
 
     [Fact]
+    public async Task AttendanceSource_ExcludesTeamEvent_WhenEveryoneWasMarkedAbsent()
+    {
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.AppointmentAttendances.Add(new AppointmentAttendance
+            {
+                AppointmentId = _appointmentId,
+                MemberId = _memberId,
+                Status = 2, // absent
+                RecordedByUserId = _coachUserId,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await Controller(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, hoursSource: "attendance");
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task AttendanceSource_ExcludesTeamEvent_WhenAttendanceStatusIsUnrecorded()
+    {
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            db.AppointmentAttendances.Add(new AppointmentAttendance
+            {
+                AppointmentId = _appointmentId,
+                MemberId = _memberId,
+                Status = 0, // unknown / not expressed
+                RecordedByUserId = _coachUserId,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await Controller(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, hoursSource: "attendance");
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
     public async Task AttendanceSource_IncludesTeamEvent_OnceAttendanceIsRecorded()
     {
         await using (var seedScope = factory.Services.CreateAsyncScope())
@@ -108,6 +155,29 @@ public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory facto
                 Status = 1,
                 RecordedByUserId = _coachUserId,
             });
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var result = await Controller(scope.ServiceProvider)
+            .ExportWorkTime(_start.Year, _start.Month, hoursSource: "attendance");
+
+        var file = result.Should().BeOfType<FileContentResult>().Subject;
+        file.FileContents.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task AttendanceSource_IncludesTeamEvent_WhenAtLeastOnePlayerWasPresent()
+    {
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var db = seedScope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var otherPlayer = new Member { FirstName = "Export", LastName = "PlayerTwo", BirthYear = 2010, ClubId = (await db.Members.FirstAsync(m => m.Id == _memberId)).ClubId };
+            db.Members.Add(otherPlayer);
+            await db.SaveChangesAsync();
+            db.AppointmentAttendances.AddRange(
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = _memberId, Status = 1, RecordedByUserId = _coachUserId },
+                new AppointmentAttendance { AppointmentId = _appointmentId, MemberId = otherPlayer.Id, Status = 2, RecordedByUserId = _coachUserId });
             await db.SaveChangesAsync();
         }
 

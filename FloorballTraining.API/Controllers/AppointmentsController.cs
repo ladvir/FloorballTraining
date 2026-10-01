@@ -512,9 +512,11 @@ public class AppointmentsController(
         });
         var allAppointments = result.Data?.ToList() ?? [];
 
-        // "Podle docházky": drop team events with no recorded attendance — they count as
-        // not having taken place. Personal events (no TeamId, e.g. Příprava) aren't
-        // attendance-tracked, so they're unaffected. Applies to both single and bulk export.
+        // "Podle docházky": drop team events with no one actually marked present (Status == 1) —
+        // an appointment where attendance was never recorded (Status 0 / no row) or where everyone
+        // was marked absent (Status == 2) counts as not having taken place. Personal events (no
+        // TeamId, e.g. Příprava) aren't attendance-tracked, so they're unaffected. Applies to both
+        // single and bulk export.
         if (string.Equals(hoursSource, "attendance", StringComparison.OrdinalIgnoreCase))
         {
             var teamAppointmentIds = allAppointments.Where(a => a.TeamId != null).Select(a => a.Id).ToList();
@@ -522,7 +524,7 @@ public class AppointmentsController(
             if (teamAppointmentIds.Count > 0)
             {
                 attendedSet = (await context.AppointmentAttendances
-                    .Where(a => teamAppointmentIds.Contains(a.AppointmentId))
+                    .Where(a => teamAppointmentIds.Contains(a.AppointmentId) && a.Status == 1)
                     .Select(a => a.AppointmentId)
                     .Distinct()
                     .ToListAsync())
