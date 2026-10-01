@@ -519,6 +519,85 @@ public class SeasonGoalTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task Report_excludes_the_teams_coach_and_a_deactivated_player_from_rankings()
+    {
+        var trainingDate = new DateTime(2020, 9, 20);
+        int deactivatedMemberId;
+        int appointmentId;
+        int coachMemberId;
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+
+            coachMemberId = await db.TeamMembers
+                .Where(tm => tm.TeamId == _teamId && tm.IsCoach)
+                .Select(tm => tm.MemberId)
+                .FirstAsync();
+
+            var deactivated = new Member
+            {
+                FirstName = "Bývalý", LastName = $"Hráč-{Guid.NewGuid():N}", BirthYear = 2008,
+                ClubId = _clubId, IsActive = false,
+            };
+            db.Members.Add(deactivated);
+            await db.SaveChangesAsync();
+            deactivatedMemberId = deactivated.Id;
+            db.TeamMembers.Add(new TeamMember { TeamId = _teamId, MemberId = deactivatedMemberId, IsPlayer = true });
+
+            var appointment = new Appointment
+            {
+                AppointmentType = AppointmentType.Training, TeamId = _teamId, LocationId = 1,
+                Start = trainingDate, End = trainingDate.AddHours(1),
+            };
+            db.Appointments.Add(appointment);
+            await db.SaveChangesAsync();
+            appointmentId = appointment.Id;
+
+            // Present: the coach, the deactivated ex-player, and a real active player.
+            db.AppointmentAttendances.AddRange(
+                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = coachMemberId, Status = 1, RecordedAt = trainingDate },
+                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = deactivatedMemberId, Status = 1, RecordedAt = trainingDate },
+                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = _memberId1, Status = 1, RecordedAt = trainingDate });
+
+            db.XpEvents.Add(new XpEvent
+            {
+                MemberId = deactivatedMemberId, Type = XpEventType.TrainingAttendance, Points = 999,
+                SeasonId = _seasonId, SourceKind = XpSourceKind.Attendance, OccurredAt = trainingDate,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            var client = await CreateClientAsync(_coachEmail);
+            var report = (await client.GetFromJsonAsync<TeamSeasonReportDto>($"/SeasonGoals/team/{_teamId}/report"))!;
+
+            // The real player shows up with 100% attendance...
+            report.SeasonTotal!.TopAttendance.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 100);
+            // ...but the coach and the deactivated ex-player never appear in any ranking, despite
+            // both having an attendance record (and the ex-player a huge XP total) for this team.
+            report.SeasonTotal!.TopAttendance.Should().NotContain(r => r.MemberId == coachMemberId || r.MemberId == deactivatedMemberId);
+            report.SeasonTotal!.TopXp.Should().NotContain(r => r.MemberId == coachMemberId || r.MemberId == deactivatedMemberId);
+        }
+        finally
+        {
+            await using var scope = _factory.Services.CreateAsyncScope();
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            db.AppointmentAttendances.RemoveRange(db.AppointmentAttendances.Where(a => a.AppointmentId == appointmentId));
+            db.XpEvents.RemoveRange(db.XpEvents.Where(e => e.MemberId == deactivatedMemberId));
+            await db.SaveChangesAsync();
+            db.Appointments.RemoveRange(db.Appointments.Where(a => a.Id == appointmentId));
+            db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => tm.MemberId == deactivatedMemberId));
+            await db.SaveChangesAsync();
+            db.Members.RemoveRange(db.Members.Where(m => m.Id == deactivatedMemberId));
+            await db.SaveChangesAsync();
+        }
+    }
+
     // ── Club rollup ─────────────────────────────────────────────────────────
 
     [Fact]

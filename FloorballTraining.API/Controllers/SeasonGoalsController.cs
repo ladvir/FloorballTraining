@@ -204,8 +204,11 @@ public class SeasonGoalsController(
             return Ok(dto);
         }
 
+        // Active players of THIS team only — a team's coaches never count (even if they also play for
+        // another team), and a player who's since been deactivated drops out, even if they still have
+        // historical XP/stats/attendance rows.
         var rosterMemberIds = await context.TeamMembers
-            .Where(tm => tm.TeamId == teamId && tm.IsPlayer)
+            .Where(tm => tm.TeamId == teamId && tm.IsPlayer && tm.Member!.IsActive)
             .Select(tm => tm.MemberId)
             .Distinct().ToListAsync();
 
@@ -232,6 +235,7 @@ public class SeasonGoalsController(
         var scoringRaw = await context.StatTrackerEntries.AsNoTracking()
             .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker != null
                         && e.StatTracker.TeamId == teamId && e.StatTracker.EventCategory == 0
+                        && rosterMemberIds.Contains(e.Participant!.MemberId)
                         && e.StatTracker.CreatedAt >= seasonStart && e.StatTracker.CreatedAt < reportEndExcl
                         && e.Metric != null && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
             .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta, e.StatTracker!.CreatedAt))
@@ -239,6 +243,7 @@ public class SeasonGoalsController(
 
         var attendanceRaw = await context.AppointmentAttendances.AsNoTracking()
             .Where(a => a.Appointment != null && a.Appointment.TeamId == teamId
+                        && rosterMemberIds.Contains(a.MemberId)
                         && a.Appointment.Start >= seasonStart && a.Appointment.Start < reportEndExcl)
             .Select(a => new AttendanceRow(a.MemberId, a.Status, a.Appointment!.Start))
             .ToListAsync();
