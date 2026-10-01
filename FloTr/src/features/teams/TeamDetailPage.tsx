@@ -257,7 +257,7 @@ export function TeamDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-4 flex gap-6 border-b border-gray-200 overflow-x-auto">
+      <div className="mb-4 flex flex-wrap gap-x-5 gap-y-1.5 border-b border-gray-200">
         <TabButton active={activeTab === 'roster'} onClick={() => setActiveTab('roster')}>
           {t('teams.tabMembers')} ({players.length})
         </TabButton>
