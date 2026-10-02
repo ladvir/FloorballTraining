@@ -264,6 +264,8 @@
     "filterFrom": "Von:",
     "filterTo": "Bis:",
     "filterClearDate": "Datumsfilter zurücksetzen",
+    "filterMonth": "Monat:",
+    "filterMonthClear": "Monatsfilter zurücksetzen",
     "filterAssignedToMe": "Mir zugewiesen",
     "filterAssignedToMeTitle": "Nur mir zugewiesene Ereignisse anzeigen",
     "allSeasons": "Alle Saisons",

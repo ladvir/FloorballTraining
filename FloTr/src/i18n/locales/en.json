@@ -264,6 +264,8 @@
     "filterFrom": "From:",
     "filterTo": "To:",
     "filterClearDate": "Clear date filter",
+    "filterMonth": "Month:",
+    "filterMonthClear": "Clear month filter",
     "filterAssignedToMe": "Assigned to me",
     "filterAssignedToMeTitle": "Show only events assigned to me",
     "allSeasons": "All seasons",

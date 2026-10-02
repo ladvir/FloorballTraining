@@ -266,6 +266,8 @@
     "filterFrom": "Od:",
     "filterTo": "Do:",
     "filterClearDate": "Zrušiť filter dátumu",
+    "filterMonth": "Mesiac:",
+    "filterMonthClear": "Zrušiť filter mesiaca",
     "filterAssignedToMe": "Pridelené mne",
     "filterAssignedToMeTitle": "Zobraziť len udalosti priradené mne",
     "allSeasons": "Všetky sezóny",

@@ -476,6 +476,11 @@ export interface AppointmentDto {
   assignedMemberIds?: number[]
   opponentId?: number | null
   opponentName?: string
+  attendanceRecorded?: boolean
+  attendancePresentCount?: number
+  attendanceAbsentCount?: number
+  attendanceExcusedCount?: number
+  attendanceUndeclaredCount?: number
 }
 
 // Opponent (per-club catalog, Match events)

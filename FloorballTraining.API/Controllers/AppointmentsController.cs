@@ -240,6 +240,27 @@ public class AppointmentsController(
                         CompletedAt = a.CompletedAt,
                     }).ToList();
                 }
+
+                // Batch-load attendance summaries so the list/calendar can show "recorded /
+                // present / absent / undeclared" per event without a request per appointment.
+                var attendanceRows = await context.AppointmentAttendances
+                    .Where(a => filteredIds.Contains(a.AppointmentId))
+                    .Select(a => new { a.AppointmentId, a.Status })
+                    .ToListAsync();
+
+                var attendanceByAppointment = attendanceRows
+                    .GroupBy(a => a.AppointmentId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                foreach (var dto in filtered)
+                {
+                    if (!attendanceByAppointment.TryGetValue(dto.Id, out var rows)) continue;
+                    dto.AttendanceRecorded = rows.Count > 0;
+                    dto.AttendancePresentCount = rows.Count(r => r.Status == 1);
+                    dto.AttendanceAbsentCount = rows.Count(r => r.Status == 2);
+                    dto.AttendanceExcusedCount = rows.Count(r => r.Status == 3);
+                    dto.AttendanceUndeclaredCount = rows.Count(r => r.Status == 0);
+                }
             }
         }
 

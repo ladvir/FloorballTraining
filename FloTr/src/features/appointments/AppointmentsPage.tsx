@@ -32,6 +32,9 @@ import {
   HelpCircle,
   UserCheck,
   Target,
+  Check,
+  X,
+  AlertTriangle,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -161,6 +164,7 @@ export function AppointmentsPage() {
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
   const [filterAssignedToMe, setFilterAssignedToMe] = useState(false)
   const [showPlanOverlay, setShowPlanOverlay] = useState<boolean>(() => {
     try {
@@ -284,6 +288,14 @@ export function AppointmentsPage() {
     else localStorage.removeItem(TEAM_KEY)
   }
 
+  const handleMonthFilterChange = (value: string) => {
+    setFilterMonth(value)
+    if (value) {
+      const [y, m] = value.split('-').map(Number)
+      setCurrentMonth(new Date(y, m - 1, 1))
+    }
+  }
+
   const handleSeasonChange = (seasonId: number) => {
     setCurrentSeasonId(seasonId)
     if (seasonId) localStorage.setItem(SEASON_KEY, String(seasonId))
@@ -307,11 +319,22 @@ export function AppointmentsPage() {
       const to = new Date(filterTo + 'T23:59:59')
       items = items.filter((a) => new Date(a.start) <= to)
     }
+    if (filterMonth) {
+      items = items.filter((a) => format(parseISO(a.start), 'yyyy-MM') === filterMonth)
+    }
     if (filterAssignedToMe) {
       items = items.filter((a) => a.isAssignedToMe)
     }
     return items
-  }, [allAppointments, currentTeamId, currentLocationId, filterFrom, filterTo, filterAssignedToMe])
+  }, [
+    allAppointments,
+    currentTeamId,
+    currentLocationId,
+    filterFrom,
+    filterTo,
+    filterMonth,
+    filterAssignedToMe,
+  ])
 
   const listAppointments = useMemo(() => {
     const now = new Date()
@@ -558,6 +581,27 @@ export function AppointmentsPage() {
 
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
           <label className="text-sm font-medium text-gray-700">
+            {t('appointments.filterMonth')}
+          </label>
+          <input
+            type="month"
+            value={filterMonth}
+            onChange={(e) => handleMonthFilterChange(e.target.value)}
+            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          />
+          {filterMonth && (
+            <button
+              onClick={() => setFilterMonth('')}
+              className="text-xs text-gray-400 hover:text-gray-600"
+              title={t('appointments.filterMonthClear')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <label className="text-sm font-medium text-gray-700">
             {t('appointments.filterFrom')}
           </label>
           <input
@@ -711,6 +755,54 @@ function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
     >
       <Star className="h-2.5 w-2.5" />
       {avg}
+    </span>
+  )
+}
+
+/** A team event tracks attendance only when nobody was individually assigned to it (see AppointmentDetailModal). */
+function isAttendanceTracked(apt: AppointmentDto) {
+  return !!apt.teamId && (apt.memberAssignments?.length ?? 0) === 0
+}
+
+/** Present/absent/undeclared counts, or a "not recorded yet" note — shown to coaches for past events. */
+function AttendanceSummary({ apt }: { apt: AppointmentDto }) {
+  const { t } = useTranslation()
+  if (!apt.attendanceRecorded) {
+    return (
+      <span
+        className="flex items-center gap-1 text-xs text-gray-400"
+        title={t('attendance.noData')}
+      >
+        <AlertTriangle className="h-3 w-3" />
+        {t('attendance.noData')}
+      </span>
+    )
+  }
+  return (
+    <span className="flex items-center gap-2 text-xs" title={t('attendance.title')}>
+      <span
+        className="flex items-center gap-0.5 text-green-600 font-medium"
+        title={t('attendance.present')}
+      >
+        <Check className="h-3 w-3" />
+        {apt.attendancePresentCount}
+      </span>
+      <span
+        className="flex items-center gap-0.5 text-red-600 font-medium"
+        title={t('attendance.absent')}
+      >
+        <X className="h-3 w-3" />
+        {apt.attendanceAbsentCount}
+      </span>
+      {!!apt.attendanceUndeclaredCount && (
+        <span
+          className="flex items-center gap-0.5 text-amber-600 font-medium"
+          title={t('attendance.unset')}
+        >
+          <HelpCircle className="h-3 w-3" />
+          {apt.attendanceUndeclaredCount}
+        </span>
+      )}
     </span>
   )
 }
@@ -956,6 +1048,9 @@ function ListView({
                           )}
                         </span>
                       )}
+                      {isCoach && isPast && isAttendanceTracked(apt) && (
+                        <AttendanceSummary apt={apt} />
+                      )}
                     </div>
                     {cyc && (
                       <CycleTag
@@ -1176,6 +1271,13 @@ function CalendarView({
                   {dayAppointments.slice(0, MAX_VISIBLE_DAY_EVENTS).map((apt, j) => {
                     const isVirtual = isRecurringOccurrence(apt)
                     const hasRating = ratingAverages?.[apt.id] != null
+                    const attendanceApplies = isCoach && apt.isPast && isAttendanceTracked(apt)
+                    const attendanceMissing = attendanceApplies && !apt.attendanceRecorded
+                    const attendanceTitle = !attendanceApplies
+                      ? ''
+                      : apt.attendanceRecorded
+                        ? ` • ${t('attendance.title')}: ${t('attendance.present')} ${apt.attendancePresentCount}, ${t('attendance.absent')} ${apt.attendanceAbsentCount}${apt.attendanceUndeclaredCount ? `, ${t('attendance.unset')} ${apt.attendanceUndeclaredCount}` : ''}`
+                        : ` • ${t('attendance.noData')}`
                     const scope = getEventScope(apt, isCoach)
                     const scopeLabel =
                       scope === 'assigned'
@@ -1205,10 +1307,13 @@ function CalendarView({
                           onAppointmentClick(apt)
                         }}
                         className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium leading-tight transition-colors ${scopeColorClass(scope, apt.appointmentType)} ${isVirtual ? 'border-l-2 border-current' : scope === 'has-assignments' ? 'border-l-2 border-orange-400' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
-                        title={`[${scopeLabel}] ${aptDisplayName(apt, typeLabels)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ` (${t('appointments.recurringOccurrence')})` : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages![apt.id]}` : ` ★ ${t('appointments.rated')}`) : ''}`}
+                        title={`[${scopeLabel}] ${aptDisplayName(apt, typeLabels)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ` (${t('appointments.recurringOccurrence')})` : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages![apt.id]}` : ` ★ ${t('appointments.rated')}`) : ''}${attendanceTitle}`}
                       >
                         {hasRating && (
                           <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />
+                        )}
+                        {attendanceMissing && (
+                          <AlertTriangle className="mr-0.5 inline h-2.5 w-2.5 text-amber-500" />
                         )}
                         {scope === 'personal' && <span className="mr-0.5 opacity-60">os.</span>}
                         {scope === 'assigned' && <span className="mr-0.5">→</span>}
@@ -1219,6 +1324,21 @@ function CalendarView({
                             className={`ml-0.5 inline-flex items-center gap-0.5 rounded-full px-1 text-[9px] font-bold text-white ${gradeColor(ratingAverages![apt.id])}`}
                           >
                             {ratingAverages![apt.id]}
+                          </span>
+                        )}
+                        {attendanceApplies && apt.attendanceRecorded && (
+                          <span className="ml-0.5 inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-1 text-[9px] font-bold">
+                            <span className="text-green-700">{apt.attendancePresentCount}</span>
+                            <span className="text-gray-400">/</span>
+                            <span className="text-red-700">{apt.attendanceAbsentCount}</span>
+                            {!!apt.attendanceUndeclaredCount && (
+                              <>
+                                <span className="text-gray-400">/</span>
+                                <span className="text-amber-700">
+                                  {apt.attendanceUndeclaredCount}
+                                </span>
+                              </>
+                            )}
                           </span>
                         )}
                       </button>
@@ -1259,6 +1379,12 @@ function CalendarView({
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-3 rounded border-l-2 border-orange-400 bg-sky-100" />
             {t('appointments.hasAssignments')}
+          </span>
+        )}
+        {isCoach && (
+          <span className="flex items-center gap-1">
+            <AlertTriangle className="h-2.5 w-2.5 text-amber-500" />
+            {t('attendance.noData')}
           </span>
         )}
       </div>

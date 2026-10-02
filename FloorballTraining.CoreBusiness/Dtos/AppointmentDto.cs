@@ -51,6 +51,14 @@ public class AppointmentDto : BaseEntityDto
     /// <summary>Completion status for the current user's assignment (null = not assigned).</summary>
     public bool? MyAssignmentCompleted { get; set; }
 
+    /// <summary>True when at least one attendance record exists for this event (read, server-populated).</summary>
+    public bool AttendanceRecorded { get; set; }
+    public int AttendancePresentCount { get; set; }
+    public int AttendanceAbsentCount { get; set; }
+    public int AttendanceExcusedCount { get; set; }
+    /// <summary>Members with a recorded-but-unset (status 0) attendance row — i.e. nobody declared them present/absent/excused.</summary>
+    public int AttendanceUndeclaredCount { get; set; }
+
 
     public void Merge(AppointmentDto e)
     {

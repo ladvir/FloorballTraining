@@ -267,6 +267,8 @@
     "filterFrom": "Od:",
     "filterTo": "Do:",
     "filterClearDate": "Zrušit filtr data",
+    "filterMonth": "Měsíc:",
+    "filterMonthClear": "Zrušit filtr měsíce",
     "filterAssignedToMe": "Přiděleno mně",
     "filterAssignedToMeTitle": "Zobrazit jen události přiřazené mně",
     "allSeasons": "Všechny sezóny",
