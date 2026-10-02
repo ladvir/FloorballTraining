@@ -177,13 +177,14 @@ public class XpService(FloorballTrainingContext context)
             var memberId = e.Participant?.MemberId;
             if (memberId == null) continue;
 
-            // Type + signed units (× the resolved rate in Add); a -1 undo entry cancels its earlier +1.
+            // Type + signed units (× the resolved rate in Add); a -1 correction/undo entry cancels its
+            // earlier +1. "minus" (bad on-ice) deliberately earns no XP at all — XP must never go negative,
+            // only "plus" contributes, so a player's PlusMinus XP can only ever go up.
             (XpEventType type, int units)? mapped = e.Metric?.Code switch
             {
                 "goals" => (XpEventType.Goal, e.Delta),
                 "assists" => (XpEventType.Assist, e.Delta),
                 "plus" => (XpEventType.PlusMinus, e.Delta),
-                "minus" => (XpEventType.PlusMinus, -e.Delta),
                 _ => null
             };
             if (mapped == null) continue;

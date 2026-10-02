@@ -13,7 +13,8 @@ public static class XpRules
     public const int MatchAttendance = 20;
     public const int Goal = 15;
     public const int Assist = 10;
-    /// <summary>Magnitude per plus/minus entry; sign comes from the entry direction at derivation.</summary>
+    /// <summary>Points per "plus" (on-ice for a team goal) entry. "Minus" earns no XP — XP must never go
+    /// negative, so only the positive side of the plus/minus stat is derived into the ledger.</summary>
     public const int PlusMinus = 2;
     public const int SkillGradeImprovement = 25;
     public const int SkillTargetReached = 50;

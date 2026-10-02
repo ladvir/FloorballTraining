@@ -246,6 +246,40 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
     }
 
     [Fact]
+    public async Task DeriveStats_MinusMetric_EarnsNoXp_OnlyPlusContributesPositiveXp()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var xp = scope.ServiceProvider.GetRequiredService<XpService>();
+
+        var teamId = await db.TeamMembers.Where(tm => tm.MemberId == _memberId && tm.IsPlayer)
+            .Select(tm => tm.TeamId!.Value).FirstAsync();
+        var tracker = new StatTracker { EventCategory = 0, TeamId = teamId, SeasonId = _seasonId, CreatedAt = _now, UpdatedAt = _now };
+        db.StatTrackers.Add(tracker);
+        await db.SaveChangesAsync();
+        var participant = new StatTrackerParticipant { StatTrackerId = tracker.Id, MemberId = _memberId };
+        var plus = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "plus", Name = "Plus" };
+        var minus = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "minus", Name = "Minus" };
+        db.StatTrackerParticipants.Add(participant);
+        db.StatTrackerMetrics.AddRange(plus, minus);
+        await db.SaveChangesAsync();
+        db.StatTrackerEntries.AddRange(
+            new StatTrackerEntry { StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id, StatTrackerMetricId = plus.Id, Delta = 1, CreatedAt = _now },
+            new StatTrackerEntry { StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id, StatTrackerMetricId = minus.Id, Delta = 1, CreatedAt = _now });
+        await db.SaveChangesAsync();
+
+        await xp.RecomputeAllAsync();
+
+        // Only "plus" derives XP; "minus" must never produce a negative XpEvent.
+        var summary = await xp.GetSummaryAsync(_memberId);
+        summary.TotalXp.Should().Be(ExpectedTotal + XpRules.PlusMinus);
+        summary.ByType.Should().ContainSingle(b => b.Type == nameof(XpEventType.PlusMinus) && b.Xp == XpRules.PlusMinus);
+
+        var events = await db.XpEvents.Where(e => e.MemberId == _memberId).ToListAsync();
+        events.Should().OnlyContain(e => e.Points >= 0);
+    }
+
+    [Fact]
     public async Task Endpoint_ReturnsLifetimeAndSeasonXp()
     {
         await using (var scope = factory.Services.CreateAsyncScope())
