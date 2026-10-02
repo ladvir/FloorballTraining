@@ -24,9 +24,10 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
     private int _seasonId;
     private int _memberId;
 
-    // Expected XP for the one player, one of each source (see XpRules):
-    // training 10 + match 20 + goal 15 + assist 10 + skill improve 25 + target 50 + test PR 20 = 150
-    private const int ExpectedTotal = 150;
+    // Expected XP for the one player, one of each source (see XpRules). Match attendance earns no
+    // XP — matches track participation via the lineup/nomination, not attendance:
+    // training 10 + goal 15 + assist 10 + skill improve 25 + target 50 + test PR 20 = 130
+    private const int ExpectedTotal = 130;
 
     public async Task InitializeAsync()
     {
@@ -106,6 +107,13 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
         return await db.XpEvents.CountAsync(e => e.MemberId == _memberId);
     }
 
+    private async Task<bool> HasMatchAttendanceXpAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        return await db.XpEvents.AnyAsync(e => e.MemberId == _memberId && e.Type == XpEventType.MatchAttendance);
+    }
+
     [Fact]
     public async Task Recompute_DerivesAllFourSources_AndIsIdempotent()
     {
@@ -113,20 +121,22 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
         var xp = scope.ServiceProvider.GetRequiredService<XpService>();
 
         var firstInserted = await xp.RecomputeAllAsync();
-        firstInserted.Should().BeGreaterThanOrEqualTo(7); // at least this player's 7 events
+        firstInserted.Should().BeGreaterThanOrEqualTo(6); // at least this player's 6 events
 
         var summary = await xp.GetSummaryAsync(_memberId);
         summary.TotalXp.Should().Be(ExpectedTotal);
         summary.BySeason.Should().ContainSingle(s => s.SeasonId == _seasonId && s.Xp == ExpectedTotal);
 
-        // Each expected type produced exactly one event for this player.
+        // Each expected type produced exactly one event for this player — except match attendance,
+        // which earns no XP (matches track participation via the lineup/nomination).
         var myEvents = await CountMyEventsAsync();
-        myEvents.Should().Be(7);
+        myEvents.Should().Be(6);
+        (await HasMatchAttendanceXpAsync()).Should().BeFalse();
 
         // Second run must add nothing and leave totals unchanged (idempotence).
         var secondInserted = await xp.RecomputeAllAsync();
         secondInserted.Should().Be(0);
-        (await CountMyEventsAsync()).Should().Be(7);
+        (await CountMyEventsAsync()).Should().Be(6);
         (await xp.GetSummaryAsync(_memberId)).TotalXp.Should().Be(ExpectedTotal);
     }
 
@@ -232,7 +242,7 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
 
         // Only the original player-team events count; the coach-capacity attendance earns nothing extra.
         (await xp.GetSummaryAsync(_memberId)).TotalXp.Should().Be(ExpectedTotal);
-        (await CountMyEventsAsync()).Should().Be(7);
+        (await CountMyEventsAsync()).Should().Be(6);
     }
 
     [Fact]
@@ -249,9 +259,9 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
 
         var summary = await client.GetFromJsonAsync<XpSummaryDto>($"/xp/member/{_memberId}");
         summary!.TotalXp.Should().Be(ExpectedTotal);
-        summary.BySeason.Should().ContainSingle(s => s.SeasonId == _seasonId && s.Xp == ExpectedTotal && s.Stars == 3);
+        summary.BySeason.Should().ContainSingle(s => s.SeasonId == _seasonId && s.Xp == ExpectedTotal && s.Stars == 2);
 
-        // Career (#95): 150 XP → rank Hráč, plus progress toward the next rank/level.
+        // Career (#95): 130 XP → rank Hráč, plus progress toward the next rank/level.
         summary.Career.Rank.Should().Be("Hráč");
         summary.Career.RankIndex.Should().Be(1);
         summary.Career.NextRank.Should().Be("Stálice");

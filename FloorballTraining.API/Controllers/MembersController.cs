@@ -5,6 +5,7 @@ using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases.Members.Interfaces;
@@ -112,8 +113,10 @@ public class MembersController(
             }
         }
 
+        // Attendance stats count trainings only — matches track participation via the lineup/
+        // nomination, not attendance.
         var records = await db.AppointmentAttendances
-            .Where(a => a.MemberId == id)
+            .Where(a => a.MemberId == id && a.Appointment!.AppointmentType == AppointmentType.Training)
             .Select(a => new MemberAttendanceRecordDto
             {
                 Id = a.Id,

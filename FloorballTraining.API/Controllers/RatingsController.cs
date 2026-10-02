@@ -312,15 +312,28 @@ public class RatingsController(
 
         var raterType = await ResolveRaterType(userId, appointment);
 
-        // A player may only rate a team event they were marked present for in attendance (docházka).
-        // Personal events (no TeamId) aren't attendance-tracked and stay self-rateable. Status 1 = Present.
+        // A player may only rate a team event they actually took part in. Trainings use attendance
+        // (docházka, Status 1 = Present); matches use the lineup/nomination instead — attendance isn't
+        // tracked for matches. Personal events (no TeamId) aren't tracked at all and stay self-rateable.
         if (raterType == RaterType.Player && appointment.TeamId != null)
         {
             var member = await context.Members.FirstOrDefaultAsync(m => m.AppUserId == userId);
-            var wasPresent = member != null && await context.AppointmentAttendances
-                .AnyAsync(a => a.AppointmentId == appointment.Id && a.MemberId == member.Id && a.Status == 1);
-            if (!wasPresent)
-                return BadRequest(new { message = "Hodnotit lze jen události, na kterých jste byli podle docházky přítomni." });
+            bool tookPart;
+            string notEligibleMessage;
+            if (appointment.AppointmentType == AppointmentType.Match)
+            {
+                tookPart = member != null && await context.LineupRosters
+                    .AnyAsync(r => r.MatchLineup!.AppointmentId == appointment.Id && r.MemberId == member.Id && r.IsAvailable);
+                notEligibleMessage = "Hodnotit lze jen zápasy, do jejichž sestavy jste byli nominováni.";
+            }
+            else
+            {
+                tookPart = member != null && await context.AppointmentAttendances
+                    .AnyAsync(a => a.AppointmentId == appointment.Id && a.MemberId == member.Id && a.Status == 1);
+                notEligibleMessage = "Hodnotit lze jen události, na kterých jste byli podle docházky přítomni.";
+            }
+            if (!tookPart)
+                return BadRequest(new { message = notEligibleMessage });
         }
 
         var rating = new AppointmentRating

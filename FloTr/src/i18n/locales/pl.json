@@ -2662,7 +2662,7 @@
     "existingConflict": "Frekwencja jest już zapisana dla {{count}} członków — zaktualizować całe wydarzenie?",
     "existingConflictUnknown": "Jeśli frekwencja dla tego wydarzenia już istnieje, zaktualizować ją?",
     "confirmImport": "Potwierdź import",
-    "resultSummary": "Utworzono: {{created}}, zaktualizowano: {{updated}}, pominięto (konflikt): {{skippedConflict}}, pominięto (wybór): {{skippedByChoice}}, nowe wydarzenia: {{appointmentsCreated}}, zaktualizowane wydarzenia: {{appointmentsSynced}}, nowi członkowie: {{membersCreated}}, dodano do drużyny: {{membersAddedToTeam}}, pominięte wydarzenia: {{eventsSkipped}}"
+    "resultSummary": "Utworzono: {{created}}, zaktualizowano: {{updated}}, pominięto (konflikt): {{skippedConflict}}, pominięto (wybór): {{skippedByChoice}}, nowe wydarzenia: {{appointmentsCreated}}, zaktualizowane wydarzenia: {{appointmentsSynced}}, nowi członkowie: {{membersCreated}}, dodano do drużyny: {{membersAddedToTeam}}, pominięte wydarzenia: {{eventsSkipped}}, mecze bez frekwencji: {{matchEventsSkipped}}"
   },
   "workouts": {
     "title": "Plan indywidualny",

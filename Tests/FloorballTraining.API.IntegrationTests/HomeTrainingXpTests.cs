@@ -113,11 +113,9 @@ public class HomeTrainingXpTests(CustomWebApplicationFactory factory) : IAsyncLi
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
-            // Non-home = 20 (one match) → cap = 6. Two confirmed home logs = 16 raw → counted 6.
-            var match = new Appointment { AppointmentType = AppointmentType.Match, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = _teamId };
-            db.Appointments.Add(match);
-            await db.SaveChangesAsync();
-            db.AppointmentAttendances.Add(new AppointmentAttendance { AppointmentId = match.Id, MemberId = _memberId, Status = 1, RecordedAt = _now });
+            // Non-home = 10 (one training; match attendance no longer earns XP — matches track
+            // participation via the lineup/nomination). Two confirmed home logs = 16 raw → capped to 3.
+            await AddTrainingAttendanceAsync(db, _now);
             db.HomeTrainingLogs.AddRange(
                 Log(_now.AddDays(-1), confirmed: true),
                 Log(_now.AddDays(-2), confirmed: true));
@@ -130,11 +128,11 @@ public class HomeTrainingXpTests(CustomWebApplicationFactory factory) : IAsyncLi
             await xp.RecomputeAllAsync();
             var summary = await xp.GetSummaryAsync(_memberId);
 
-            var expectedCap = XpRules.MatchAttendance * XpRules.HomeXpCapPercent / 100; // 6
+            var expectedCap = XpRules.TrainingAttendance * XpRules.HomeXpCapPercent / 100; // 3
             summary.RawHomeXp.Should().Be(2 * XpRules.HomeTraining);   // 16
-            summary.HomeXpCap.Should().Be(expectedCap);                // 6
-            summary.CountedHomeXp.Should().Be(expectedCap);            // capped to 6
-            summary.TotalXp.Should().Be(XpRules.MatchAttendance + expectedCap); // 26
+            summary.HomeXpCap.Should().Be(expectedCap);                // 3
+            summary.CountedHomeXp.Should().Be(expectedCap);            // capped to 3
+            summary.TotalXp.Should().Be(XpRules.TrainingAttendance + expectedCap); // 13
         }
     }
 

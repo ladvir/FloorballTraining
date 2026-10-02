@@ -289,6 +289,46 @@ public class TeamsControllerAttendanceImportTests(CustomWebApplicationFactory fa
     }
 
     [Fact]
+    public async Task Commit_creates_a_match_appointment_but_skips_writing_its_attendance()
+    {
+        // Matches track participation via the lineup/nomination, not attendance (docházka) —
+        // the appointment is still created from the import, but no AppointmentAttendance rows follow.
+        await using var scope = factory.Services.CreateAsyncScope();
+        var newStart = new DateTime(2026, 4, 5, 10, 0, 0);
+        var request = new AttendanceImportCommitRequestDto
+        {
+            Events =
+            [
+                new AttendanceImportEventCommitDto
+                {
+                    CreateNewAppointment = true,
+                    EventTypeRaw = "Zápas",
+                    EventName = "Zápas s Spartou",
+                    Start = newStart,
+                    End = newStart.AddHours(1.5),
+                    Members =
+                    [
+                        new AttendanceImportMemberCommitDto { NameRaw = "Novák Jan", Attended = true, Action = AttendanceImportMemberAction.UseExisting, MemberId = _memberId1 },
+                    ],
+                },
+            ],
+        };
+
+        var actionResult = await Controller(scope.ServiceProvider).ImportAttendanceCommit(_teamId, request);
+
+        var committed = actionResult.Should().BeOfType<OkObjectResult>().Subject.Value
+            .Should().BeOfType<AttendanceImportCommitResultDto>().Subject;
+        committed.AppointmentsCreated.Should().Be(1);
+        committed.MatchEventsSkipped.Should().Be(1);
+        committed.AttendanceCreated.Should().Be(0);
+
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var created = await db.Appointments.SingleAsync(a => a.TeamId == _teamId && a.Start == newStart);
+        created.AppointmentType.Should().Be(AppointmentType.Match);
+        (await db.AppointmentAttendances.AnyAsync(a => a.AppointmentId == created.Id)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Commit_syncs_a_manually_picked_appointment_from_import_data()
     {
         // A second same-day appointment the coach manually pairs the import to, instead of the

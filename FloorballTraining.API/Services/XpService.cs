@@ -139,14 +139,16 @@ public class XpService(FloorballTrainingContext context)
 
     private delegate void AddXp(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt);
 
-    // --- Attendance (Status=1 Present); Match appointments count as match, everything else as training ---
+    // --- Attendance (Status=1 Present), trainings only — matches track participation via the
+    // lineup/nomination, not attendance, so they no longer earn MatchAttendance XP here.
     // Only counts for the team the member attended AS A PLAYER (#134): a coach who is also a player on
     // another team must not earn attendance XP for events they attended in a coaching capacity.
     private Task<List<AppointmentAttendance>> LoadAttendanceAsync(CancellationToken ct) =>
         context.AppointmentAttendances.AsNoTracking()
             .Where(a => a.Status == 1)
             .Include(a => a.Appointment)
-            .Where(a => a.Appointment == null || a.Appointment.TeamId == null ||
+            .Where(a => a.Appointment != null && a.Appointment.AppointmentType == AppointmentType.Training)
+            .Where(a => a.Appointment!.TeamId == null ||
                 context.TeamMembers.Any(tm => tm.MemberId == a.MemberId && tm.TeamId == a.Appointment.TeamId && tm.IsPlayer))
             .ToListAsync(ct);
 
@@ -154,10 +156,8 @@ public class XpService(FloorballTrainingContext context)
     {
         foreach (var a in attendances)
         {
-            var isMatch = a.Appointment?.AppointmentType == AppointmentType.Match;
-            var type = isMatch ? XpEventType.MatchAttendance : XpEventType.TrainingAttendance;
             var when = a.Appointment?.Start ?? a.RecordedAt;
-            add(a.MemberId, type, 1, a.Appointment?.TeamId, XpSourceKind.Attendance, a.Id, when);
+            add(a.MemberId, XpEventType.TrainingAttendance, 1, a.Appointment?.TeamId, XpSourceKind.Attendance, a.Id, when);
         }
     }
 

@@ -2660,7 +2660,7 @@
     "existingConflict": "Dochádzka je už zaznamenaná pre {{count}} členov — aktualizovať celú udalosť?",
     "existingConflictUnknown": "Ak pre túto udalosť už dochádzka existuje, aktualizovať ju?",
     "confirmImport": "Potvrdiť import",
-    "resultSummary": "Vytvorené: {{created}}, aktualizované: {{updated}}, preskočené (konflikt): {{skippedConflict}}, preskočené (voľba): {{skippedByChoice}}, nové udalosti: {{appointmentsCreated}}, aktualizované udalosti: {{appointmentsSynced}}, noví členovia: {{membersCreated}}, pridané do tímu: {{membersAddedToTeam}}, preskočené udalosti: {{eventsSkipped}}"
+    "resultSummary": "Vytvorené: {{created}}, aktualizované: {{updated}}, preskočené (konflikt): {{skippedConflict}}, preskočené (voľba): {{skippedByChoice}}, nové udalosti: {{appointmentsCreated}}, aktualizované udalosti: {{appointmentsSynced}}, noví členovia: {{membersCreated}}, pridané do tímu: {{membersAddedToTeam}}, preskočené udalosti: {{eventsSkipped}}, zápasy bez dochádzky: {{matchEventsSkipped}}"
   },
   "workouts": {
     "title": "Individuálny plán",

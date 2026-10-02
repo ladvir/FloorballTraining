@@ -2658,7 +2658,7 @@
     "existingConflict": "Attendance already recorded for {{count}} members — update the whole event?",
     "existingConflictUnknown": "If attendance is already recorded for this event, update it?",
     "confirmImport": "Confirm import",
-    "resultSummary": "Created: {{created}}, updated: {{updated}}, skipped (conflict): {{skippedConflict}}, skipped (choice): {{skippedByChoice}}, new events: {{appointmentsCreated}}, updated events: {{appointmentsSynced}}, new members: {{membersCreated}}, added to team: {{membersAddedToTeam}}, skipped events: {{eventsSkipped}}"
+    "resultSummary": "Created: {{created}}, updated: {{updated}}, skipped (conflict): {{skippedConflict}}, skipped (choice): {{skippedByChoice}}, new events: {{appointmentsCreated}}, updated events: {{appointmentsSynced}}, new members: {{membersCreated}}, added to team: {{membersAddedToTeam}}, skipped events: {{eventsSkipped}}, matches without attendance: {{matchEventsSkipped}}"
   },
   "workouts": {
     "title": "Individual Plan",

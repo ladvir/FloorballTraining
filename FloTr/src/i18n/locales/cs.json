@@ -2661,7 +2661,7 @@
     "existingConflict": "Docházka je již zaznamenaná pro {{count}} členů — aktualizovat celou událost?",
     "existingConflictUnknown": "Pokud pro tuto událost již docházka existuje, aktualizovat ji?",
     "confirmImport": "Potvrdit import",
-    "resultSummary": "Vytvořeno: {{created}}, aktualizováno: {{updated}}, přeskočeno (konflikt): {{skippedConflict}}, přeskočeno (volba): {{skippedByChoice}}, nové události: {{appointmentsCreated}}, aktualizované události: {{appointmentsSynced}}, noví členové: {{membersCreated}}, přidáno do týmu: {{membersAddedToTeam}}, přeskočené události: {{eventsSkipped}}"
+    "resultSummary": "Vytvořeno: {{created}}, aktualizováno: {{updated}}, přeskočeno (konflikt): {{skippedConflict}}, přeskočeno (volba): {{skippedByChoice}}, nové události: {{appointmentsCreated}}, aktualizované události: {{appointmentsSynced}}, noví členové: {{membersCreated}}, přidáno do týmu: {{membersAddedToTeam}}, přeskočené události: {{eventsSkipped}}, zápasy bez docházky: {{matchEventsSkipped}}"
   },
   "workouts": {
     "title": "Individuální plán",

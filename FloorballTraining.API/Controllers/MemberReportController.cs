@@ -489,8 +489,11 @@ public class MemberReportController(
 
     private async Task<PlayerReportAttendanceDto> BuildAttendanceAsync(int memberId, DateTime windowStart)
     {
+        // Attendance stats count trainings only — matches track participation via the lineup/
+        // nomination, not attendance.
         var statuses = await context.AppointmentAttendances
-            .Where(a => a.MemberId == memberId && a.RecordedAt >= windowStart && a.Status != 0)
+            .Where(a => a.MemberId == memberId && a.RecordedAt >= windowStart && a.Status != 0
+                        && a.Appointment!.AppointmentType == AppointmentType.Training)
             .Select(a => a.Status)
             .ToListAsync();
 

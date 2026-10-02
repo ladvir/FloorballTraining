@@ -86,6 +86,9 @@ public class AttendanceImportCommitResultDto
 {
     public int EventsMatched { get; set; }
     public int EventsSkipped { get; set; }
+    /// <summary>Matched/created but not processed — matches track participation via the lineup/
+    /// nomination, not attendance, so no AppointmentAttendance rows are written for them.</summary>
+    public int MatchEventsSkipped { get; set; }
     public int AppointmentsCreated { get; set; }
     public int AppointmentsSynced { get; set; }
     public int MembersCreated { get; set; }

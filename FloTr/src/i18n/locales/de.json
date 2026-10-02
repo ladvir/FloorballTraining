@@ -2658,7 +2658,7 @@
     "existingConflict": "Anwesenheit für {{count}} Mitglieder bereits erfasst — den ganzen Termin aktualisieren?",
     "existingConflictUnknown": "Falls für diesen Termin bereits Anwesenheit erfasst ist, aktualisieren?",
     "confirmImport": "Import bestätigen",
-    "resultSummary": "Erstellt: {{created}}, aktualisiert: {{updated}}, übersprungen (Konflikt): {{skippedConflict}}, übersprungen (Wahl): {{skippedByChoice}}, neue Termine: {{appointmentsCreated}}, aktualisierte Termine: {{appointmentsSynced}}, neue Mitglieder: {{membersCreated}}, zum Team hinzugefügt: {{membersAddedToTeam}}, übersprungene Termine: {{eventsSkipped}}"
+    "resultSummary": "Erstellt: {{created}}, aktualisiert: {{updated}}, übersprungen (Konflikt): {{skippedConflict}}, übersprungen (Wahl): {{skippedByChoice}}, neue Termine: {{appointmentsCreated}}, aktualisierte Termine: {{appointmentsSynced}}, neue Mitglieder: {{membersCreated}}, zum Team hinzugefügt: {{membersAddedToTeam}}, übersprungene Termine: {{eventsSkipped}}, Spiele ohne Anwesenheit: {{matchEventsSkipped}}"
   },
   "workouts": {
     "title": "Individueller Plan",

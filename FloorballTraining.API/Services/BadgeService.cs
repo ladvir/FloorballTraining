@@ -174,14 +174,18 @@ public class BadgeService(FloorballTrainingContext context)
             .Include(a => a.Appointment)
             .ToListAsync(ct);
 
+        // SeasonAttendancePct (Iron Man badge) counts trainings only — matches track participation
+        // via the lineup/nomination, not attendance. SeasonsPlayed stays based on any presence.
         var seasonTotals = new Dictionary<(int mid, int sid), (int total, int present)>();
+        var seasonsPlayed = new Dictionary<int, HashSet<int>>();
         foreach (var a in attendances)
         {
             var present = a.Status == 1;
             var appt = a.Appointment;
             var when = appt?.Start ?? a.RecordedAt;
+            var isTraining = appt?.AppointmentType == AppointmentType.Training;
 
-            if (present && appt?.AppointmentType == AppointmentType.Training)
+            if (present && isTraining)
                 Get(a.MemberId).TrainingCount++;
             else if (present && appt?.AppointmentType == AppointmentType.Match)
                 Get(a.MemberId).MatchCount++;
@@ -189,17 +193,20 @@ public class BadgeService(FloorballTrainingContext context)
             var sid = ResolveSeason(a.MemberId, when);
             if (sid != null)
             {
-                var key = (a.MemberId, sid.Value);
-                var cur = seasonTotals.GetValueOrDefault(key);
-                seasonTotals[key] = (cur.total + 1, cur.present + (present ? 1 : 0));
+                if (present)
+                    (seasonsPlayed.TryGetValue(a.MemberId, out var set) ? set : seasonsPlayed[a.MemberId] = new()).Add(sid.Value);
+
+                if (isTraining)
+                {
+                    var key = (a.MemberId, sid.Value);
+                    var cur = seasonTotals.GetValueOrDefault(key);
+                    seasonTotals[key] = (cur.total + 1, cur.present + (present ? 1 : 0));
+                }
             }
         }
 
-        var seasonsPlayed = new Dictionary<int, HashSet<int>>();
         foreach (var ((mid, sid), (total, present)) in seasonTotals)
         {
-            if (present > 0)
-                (seasonsPlayed.TryGetValue(mid, out var set) ? set : seasonsPlayed[mid] = new()).Add(sid);
             if (total >= BadgeCatalog.IronManMinAppointments)
                 Get(mid).SeasonAttendancePct[sid] = present * 100.0 / total;
         }

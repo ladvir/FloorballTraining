@@ -241,8 +241,11 @@ public class SeasonGoalsController(
             .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta, e.StatTracker!.CreatedAt))
             .ToListAsync();
 
+        // Attendance stats count trainings only — matches track participation via the lineup/
+        // nomination, not attendance.
         var attendanceRaw = await context.AppointmentAttendances.AsNoTracking()
             .Where(a => a.Appointment != null && a.Appointment.TeamId == teamId
+                        && a.Appointment.AppointmentType == AppointmentType.Training
                         && rosterMemberIds.Contains(a.MemberId)
                         && a.Appointment.Start >= seasonStart && a.Appointment.Start < reportEndExcl)
             .Select(a => new AttendanceRow(a.MemberId, a.Status, a.Appointment!.Start))
@@ -801,7 +804,12 @@ public class SeasonGoalsController(
                 a.AppointmentType == AppointmentType.Training && a.End <= now),
         };
 
-        var apptIds = appts.Select(a => a.Id).ToList();
+        // Attendance rate counts trainings only — matches track participation via the lineup/
+        // nomination, not attendance.
+        var apptIds = appts
+            .Where(a => a.AppointmentType == AppointmentType.Training)
+            .Select(a => a.Id)
+            .ToList();
         if (apptIds.Count > 0)
         {
             var statuses = await context.AppointmentAttendances

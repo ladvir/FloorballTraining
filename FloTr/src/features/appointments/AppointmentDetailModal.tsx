@@ -742,27 +742,31 @@ export function AppointmentDetailModal({
           <VideosSection ownerKind="appointments" ownerId={apt.id} readOnly />
 
           {/* Attendance — coach only, team event without individual assignments
-              (assigned members are recorded in attendance in the background) */}
-          {apt.teamId && canEdit && (apt.memberAssignments?.length ?? 0) === 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  {t('appointments.attendance')}
-                </span>
-                <div className="flex items-center gap-2">
-                  <AttendanceSummaryBadge appointmentId={apt.id} />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    data-testid="record-attendance-btn"
-                    onClick={() => setAttendanceOpen(true)}
-                  >
-                    {t('appointments.attendanceRecord')}
-                  </Button>
+              (assigned members are recorded in attendance in the background). Matches are excluded:
+              they track participation via the lineup/nomination above, not attendance. */}
+          {apt.teamId &&
+            canEdit &&
+            apt.appointmentType !== 3 &&
+            (apt.memberAssignments?.length ?? 0) === 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">
+                    {t('appointments.attendance')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <AttendanceSummaryBadge appointmentId={apt.id} />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      data-testid="record-attendance-btn"
+                      onClick={() => setAttendanceOpen(true)}
+                    >
+                      {t('appointments.attendanceRecord')}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Assignments — coach sees full list, member sees own completion toggle */}
           <AssignmentsSection apt={apt} canEdit={canEdit} />

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -80,6 +81,12 @@ public class KpiController(
 
         var pastAppointments = appointments.Where(a => a.End <= now).ToList();
         var pastIds = pastAppointments.Select(a => a.Id).ToList();
+        // Attendance stats count trainings only — matches track participation via the lineup/
+        // nomination, not attendance.
+        var pastTrainingIds = pastAppointments
+            .Where(a => a.AppointmentType == AppointmentType.Training)
+            .Select(a => a.Id)
+            .ToList();
 
         // Counts
         var eventsThisMonth = appointments.Count(a => a.Start >= startOfMonth && a.End <= now);
@@ -106,11 +113,11 @@ public class KpiController(
             ? (double?)Math.Round(ratings.Average(r => (double)r.Grade), 2)
             : null;
 
-        // Attendance for past events
-        var attendance = pastIds.Count == 0
+        // Attendance for past events (trainings only)
+        var attendance = pastTrainingIds.Count == 0
             ? []
             : await context.AppointmentAttendances
-                .Where(a => pastIds.Contains(a.AppointmentId))
+                .Where(a => pastTrainingIds.Contains(a.AppointmentId))
                 .Select(a => new { a.AppointmentId, a.MemberId, a.Status })
                 .ToListAsync();
 

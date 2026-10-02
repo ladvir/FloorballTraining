@@ -1369,6 +1369,7 @@ export interface AttendanceImportCommitRequestDto {
 export interface AttendanceImportCommitResultDto {
   eventsMatched: number
   eventsSkipped: number
+  matchEventsSkipped: number
   appointmentsCreated: number
   appointmentsSynced: number
   membersCreated: number

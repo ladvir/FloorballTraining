@@ -399,6 +399,7 @@ export function AttendanceImportModal({ isOpen, onClose, teamId, clubId }: Props
                   membersCreated: commitResult.membersCreated,
                   membersAddedToTeam: commitResult.membersAddedToTeam,
                   eventsSkipped: commitResult.eventsSkipped,
+                  matchEventsSkipped: commitResult.matchEventsSkipped,
                 })}
                 {commitResult.errors.length > 0 && (
                   <span className="mt-1 block text-orange-600">

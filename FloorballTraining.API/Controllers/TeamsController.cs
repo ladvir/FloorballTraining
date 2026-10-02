@@ -418,9 +418,11 @@ public class TeamsController(
         if (team == null) return NotFound();
         if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
 
-        // Get appointments for this team that have attendance records (last 20 events)
+        // Get appointments for this team that have attendance records (last 20 events).
+        // Attendance stats count trainings only — matches track participation via the
+        // lineup/nomination, not attendance.
         var appointmentIds = await context.AppointmentAttendances
-            .Where(a => a.Appointment!.TeamId == id)
+            .Where(a => a.Appointment!.TeamId == id && a.Appointment.AppointmentType == AppointmentType.Training)
             .Select(a => a.AppointmentId)
             .Distinct()
             .ToListAsync();
@@ -815,6 +817,18 @@ public class TeamsController(
                 }
 
                 result.EventsMatched++;
+
+                // Matches track participation via the lineup/nomination, not attendance — don't
+                // write AppointmentAttendance rows for them even though the event itself was resolved.
+                var resolvedType = await context.Appointments
+                    .Where(a => a.Id == appointmentId)
+                    .Select(a => a.AppointmentType)
+                    .FirstAsync();
+                if (resolvedType == AppointmentType.Match)
+                {
+                    result.MatchEventsSkipped++;
+                    continue;
+                }
 
                 var currentAttendance = await context.AppointmentAttendances
                     .Where(a => a.AppointmentId == appointmentId)
