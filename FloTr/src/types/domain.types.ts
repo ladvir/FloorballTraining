@@ -1825,6 +1825,13 @@ export interface XpSummaryDto {
   homeXpCap: number
 }
 
+/** One raw XP ledger entry. `type` is the XpEventType enum name (localized via `xp.type.*`). */
+export interface XpEventDto {
+  type: string
+  points: number
+  occurredAt: string
+}
+
 /** Coach 1-click bonus (layer B, #100/#101). Label lives under i18n `xp.type.<type>`. */
 export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
 

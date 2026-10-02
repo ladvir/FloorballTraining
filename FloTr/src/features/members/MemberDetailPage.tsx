@@ -16,6 +16,8 @@ import {
   FileText,
   Target,
   Award,
+  Zap,
+  Gift,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
@@ -37,13 +39,23 @@ import { GuardiansSection } from './GuardiansSection'
 import { PlayerSkillsSection } from './PlayerSkillsSection'
 import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
+import { XpHistory } from './XpHistory'
 import { BadgesCard } from './BadgesCard'
 import { RewardsCard } from './RewardsCard'
 import { ChallengesCard } from './ChallengesCard'
 import { cn } from '../../utils/cn'
 import { formatFullName } from '../../utils/name'
 
-type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats' | 'skills' | 'xp'
+type TabId =
+  | 'info'
+  | 'tests'
+  | 'attendance'
+  | 'workouts'
+  | 'stats'
+  | 'skills'
+  | 'xp'
+  | 'badges'
+  | 'rewards'
 
 interface Tab {
   id: TabId
@@ -59,7 +71,9 @@ const TABS: Tab[] = [
   { id: 'workouts', labelKey: 'members.tabPlan', icon: Dumbbell },
   { id: 'stats', labelKey: 'members.tabStats', icon: BarChart2 },
   { id: 'skills', labelKey: 'members.tabSkills', icon: Target },
-  { id: 'xp', labelKey: 'members.tabXp', icon: Award },
+  { id: 'xp', labelKey: 'members.tabXp', icon: Zap },
+  { id: 'badges', labelKey: 'members.tabBadges', icon: Award },
+  { id: 'rewards', labelKey: 'members.tabRewards', icon: Gift },
 ]
 
 interface Props {
@@ -365,6 +379,14 @@ export function MemberDetailPage({ selfView = false }: Props) {
       {activeTab === 'xp' && (
         <div className="space-y-6">
           <XpCareerCard memberId={member.id} />
+          <ChallengesCard memberId={member.id} isOwner={isOwner} />
+          <XpHistory memberId={member.id} />
+          <XpBreakdown memberId={member.id} />
+        </div>
+      )}
+
+      {activeTab === 'badges' && (
+        <div className="space-y-6">
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -379,9 +401,12 @@ export function MemberDetailPage({ selfView = false }: Props) {
             </div>
             <BadgesCard memberId={member.id} />
           </div>
+        </div>
+      )}
+
+      {activeTab === 'rewards' && (
+        <div className="space-y-6">
           <RewardsCard memberId={member.id} />
-          <ChallengesCard memberId={member.id} isOwner={isOwner} />
-          <XpBreakdown memberId={member.id} />
         </div>
       )}
 

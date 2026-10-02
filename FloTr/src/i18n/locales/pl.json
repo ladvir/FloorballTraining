@@ -1735,7 +1735,9 @@
     "filterAllRoles": "Wszystkie role",
     "filterCoaches": "Trenerzy",
     "filterPlayers": "Zawodnicy",
-    "tabXp": "XP / Kariera"
+    "tabXp": "XP / Kariera",
+    "tabBadges": "Odznaki",
+    "tabRewards": "Nagrody"
   },
   "clubs": {
     "title": "Kluby",
@@ -3333,6 +3335,11 @@
     "rank12": "Legenda",
     "rank13": "Nieśmiertelny",
     "breakdown": "Skąd pochodzi Twoje XP",
+    "history": {
+      "title": "Historia XP według miesiąca",
+      "month": "Miesiąc",
+      "empty": "W tym miesiącu brak XP"
+    },
     "type": {
       "TrainingAttendance": "Obecność na treningu",
       "MatchAttendance": "Obecność na meczu",

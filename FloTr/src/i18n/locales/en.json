@@ -1731,7 +1731,9 @@
     "filterAllRoles": "All roles",
     "filterCoaches": "Coaches",
     "filterPlayers": "Players",
-    "tabXp": "XP / Career"
+    "tabXp": "XP / Career",
+    "tabBadges": "Badges",
+    "tabRewards": "Rewards"
   },
   "clubs": {
     "title": "Clubs",
@@ -3325,6 +3327,11 @@
     "rank12": "Legend",
     "rank13": "Immortal",
     "breakdown": "Where your XP came from",
+    "history": {
+      "title": "XP history by month",
+      "month": "Month",
+      "empty": "No XP this month"
+    },
     "type": {
       "TrainingAttendance": "Training attendance",
       "MatchAttendance": "Match attendance",

@@ -26,6 +26,15 @@ public class XpByTypeDto
     public int Xp { get; set; }
 }
 
+/// <summary>One raw XP ledger entry — backs the member-detail history view, filterable by month on the client.</summary>
+public class XpEventDto
+{
+    /// <summary><see cref="Enums.XpEventType"/> name (i18n'd via xp.type.*).</summary>
+    public string Type { get; set; } = "";
+    public int Points { get; set; }
+    public DateTime OccurredAt { get; set; }
+}
+
 /// <summary>A coach 1-click bonus (layer B, #100). <see cref="Type"/> is the <see cref="Enums.AwardType"/> name.</summary>
 public class XpAwardDto
 {

@@ -33,6 +33,20 @@ public class XpController(
         return Ok(await xp.GetSummaryAsync(memberId));
     }
 
+    /// <summary>GET /xp/member/{memberId}/history — the raw XP ledger (type + points + date), newest
+    /// first. The client groups/filters this by month to show "how much XP, and for what" per month.</summary>
+    [HttpGet("member/{memberId:int}/history")]
+    public async Task<IActionResult> MemberHistory(int memberId, CancellationToken ct)
+    {
+        if (!await CanSeeMemberAsync(memberId)) return NotFound();
+        var events = await context.XpEvents.AsNoTracking()
+            .Where(e => e.MemberId == memberId)
+            .OrderByDescending(e => e.OccurredAt)
+            .Select(e => new XpEventDto { Type = e.Type.ToString(), Points = e.Points, OccurredAt = e.OccurredAt })
+            .ToListAsync(ct);
+        return Ok(events);
+    }
+
     /// <summary>
     /// POST /xp/recompute — manual admin trigger. Enqueues the same idempotent, serialized recompute
     /// job used by the instant on-write trigger, so it can never run concurrently and never double-awards.

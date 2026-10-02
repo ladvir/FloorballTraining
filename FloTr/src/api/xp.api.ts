@@ -9,6 +9,7 @@ import type {
   UpdateXpRulesRequest,
   XpAwardDto,
   XpCountFromDto,
+  XpEventDto,
   XpRuleCatalogItemDto,
   XpRuleConfigDto,
   XpSummaryDto,
@@ -18,6 +19,10 @@ import type {
 export const xpApi = {
   getSummary: (memberId: number) =>
     apiClient.get<XpSummaryDto>(`/xp/member/${memberId}`).then((r) => r.data),
+
+  /** Raw XP ledger, newest first — the client filters/groups this by month for the history view. */
+  getHistory: (memberId: number) =>
+    apiClient.get<XpEventDto[]>(`/xp/member/${memberId}/history`).then((r) => r.data),
 
   getBadges: (memberId: number) =>
     apiClient.get<BadgeStatusDto[]>(`/xp/badges/${memberId}`).then((r) => r.data),

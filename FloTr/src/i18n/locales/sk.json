@@ -1733,7 +1733,9 @@
     "filterAllRoles": "Všetky roly",
     "filterCoaches": "Tréneri",
     "filterPlayers": "Hráči",
-    "tabXp": "XP / Kariéra"
+    "tabXp": "XP / Kariéra",
+    "tabBadges": "Odznaky",
+    "tabRewards": "Odmeny"
   },
   "clubs": {
     "title": "Kluby",
@@ -3330,6 +3332,11 @@
     "rank12": "Legenda",
     "rank13": "Nesmrteľný",
     "breakdown": "Odkiaľ prišlo XP",
+    "history": {
+      "title": "História XP podľa mesiaca",
+      "month": "Mesiac",
+      "empty": "V tomto mesiaci žiadne XP"
+    },
     "type": {
       "TrainingAttendance": "Účasť na tréningu",
       "MatchAttendance": "Účasť na zápase",
