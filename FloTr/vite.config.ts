@@ -66,15 +66,9 @@ export default defineConfig(({ mode }) => {
               handler: 'StaleWhileRevalidate',
               options: { cacheName: 'assets', expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 } },
             },
-            {
-              // Stable GET API responses (seasons, teams, clubs…): stale-while-revalidate.
-              // RegExp instead of a function: the pattern must also match `/flotr/api/…`
-              // in production, and functions cannot close over `base` (they are
-              // serialized into the generated service worker).
-              urlPattern: /\/api\/(?!notifications|hubs)/,
-              handler: 'StaleWhileRevalidate',
-              options: { cacheName: 'api-stable', expiration: { maxAgeSeconds: 60 * 5 } },
-            },
+            // API GETs are deliberately NOT cached here: stale-while-revalidate made every
+            // refetch after a save return the pre-save response (edits "vanished" until a
+            // second reload). React Query already handles client-side caching.
           ],
         },
       }),

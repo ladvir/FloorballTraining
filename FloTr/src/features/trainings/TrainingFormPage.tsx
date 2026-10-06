@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useState, useRef } from 'react'
+import { Fragment, useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from '../../utils/toast'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -1012,7 +1012,15 @@ export function TrainingFormPage() {
 
   const unsavedGuard = useUnsavedChangesGuard()
 
-  const { fields, append, remove, move } = useFieldArray({ control, name: 'trainingParts' })
+  const { fields, append, insert, remove, move } = useFieldArray({ control, name: 'trainingParts' })
+  const newPart = (order: number) => ({
+    id: -Date.now(),
+    name: '',
+    description: '',
+    duration: 10,
+    order,
+    trainingGroups: [{ id: -Date.now(), activityId: null }],
+  })
 
   // Pre-fill from existing training (edit mode)
   useEffect(() => {
@@ -1144,11 +1152,14 @@ export function TrainingFormPage() {
           description: p.description ?? '',
           duration: p.duration,
           order: i + 1,
-          trainingGroups: (p.trainingGroups ?? []).map((g) => ({
-            id: g.id > 0 ? g.id : 0,
-            activity:
-              g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined,
-          })) as TrainingGroupDto[],
+          trainingGroups: (p.trainingGroups ?? []).map((g) => {
+            const activity =
+              g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined
+            // Never silently drop a chosen activity: the server would save the group with no activity.
+            if (g.activityId != null && !activity)
+              throw new Error(t('trainings.formActivityMissing'))
+            return { id: g.id > 0 ? g.id : 0, activity }
+          }) as TrainingGroupDto[],
         })) as TrainingPartDto[],
         personsMin: data.personsMin !== '' ? Number(data.personsMin) : undefined,
         personsMax: data.personsMax !== '' ? Number(data.personsMax) : undefined,
@@ -1184,7 +1195,9 @@ export function TrainingFormPage() {
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        t('trainings.formSaveFailed')
+        (err instanceof Error && err.message === t('trainings.formActivityMissing')
+          ? err.message
+          : t('trainings.formSaveFailed'))
       toast.error(msg)
     },
   })
@@ -1815,7 +1828,7 @@ export function TrainingFormPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 space-y-3">
+      <div className="sticky -top-4 z-20 -mx-4 -mt-4 mb-6 space-y-3 border-b border-gray-200 bg-gray-50 px-4 pb-3 pt-4 lg:-top-6 lg:-mx-6 lg:-mt-6 lg:px-6 lg:pt-6">
         {/* Title row */}
         <div className="flex items-center gap-2 min-w-0">
           <button
@@ -2296,16 +2309,7 @@ export function TrainingFormPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    append({
-                      id: -(fields.length + 1),
-                      name: '',
-                      description: '',
-                      duration: 10,
-                      order: fields.length + 1,
-                      trainingGroups: [{ id: -Date.now(), activityId: null }],
-                    })
-                  }
+                  onClick={() => append(newPart(fields.length + 1))}
                 >
                   <Plus className="h-4 w-4" />
                   {t('trainings.formAddPart')}
@@ -2381,24 +2385,36 @@ export function TrainingFormPage() {
                 >
                   <div className="space-y-2">
                     {fields.map((field, index) => (
-                      <SortablePartRow
-                        key={field.id}
-                        id={field.id}
-                        index={index}
-                        register={register}
-                        errors={errors}
-                        onRemove={() => remove(index)}
-                        control={control}
-                        allActivities={allActivities}
-                        setValue={setValue}
-                        showImages={showImages}
-                        showAllImages={showAllImages}
-                        onDrawActivity={handleStartDrawActivity}
-                        onViewActivity={setDetailActivityId}
-                        onEditActivity={setEditActivityId}
-                        dropHighlight={dragOverPartId === field.id}
-                        newActivityDefaults={newActivityDefaults}
-                      />
+                      <Fragment key={field.id}>
+                        <SortablePartRow
+                          id={field.id}
+                          index={index}
+                          register={register}
+                          errors={errors}
+                          onRemove={() => remove(index)}
+                          control={control}
+                          allActivities={allActivities}
+                          setValue={setValue}
+                          showImages={showImages}
+                          showAllImages={showAllImages}
+                          onDrawActivity={handleStartDrawActivity}
+                          onViewActivity={setDetailActivityId}
+                          onEditActivity={setEditActivityId}
+                          dropHighlight={dragOverPartId === field.id}
+                          newActivityDefaults={newActivityDefaults}
+                        />
+                        <div className="flex justify-center">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => insert(index + 1, newPart(index + 2))}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {t('trainings.formAddPart')}
+                          </Button>
+                        </div>
+                      </Fragment>
                     ))}
                   </div>
                 </SortableContext>

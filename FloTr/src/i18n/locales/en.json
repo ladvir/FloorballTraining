@@ -751,6 +751,7 @@
     "formSave": "Save Training",
     "formSaveChanges": "Save Changes",
     "formSaved": "Training saved.",
+    "formActivityMissing": "An activity in this training is no longer in the activity list. Reload the page and save again — nothing was saved.",
     "formSaveFailed": "Save failed. Please try again.",
     "formCopyFailed": "Failed to copy training.",
     "formDeleteTitle": "Delete training",

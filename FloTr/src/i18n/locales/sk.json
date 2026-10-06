@@ -753,6 +753,7 @@
     "formSave": "Uložiť tréning",
     "formSaveChanges": "Uložiť zmeny",
     "formSaved": "Tréning uložený.",
+    "formActivityMissing": "Niektorá aktivita v tréningu už nie je v zozname aktivít. Obnovte stránku a skúste uložiť znova — nič sa neuložilo.",
     "formSaveFailed": "Uloženie zlyhalo. Skúste to prosím znova.",
     "formCopyFailed": "Nepodarilo sa skopírovať tréning.",
     "formDeleteTitle": "Vymazať tréning",

@@ -755,6 +755,7 @@
     "formSave": "Zapisz trening",
     "formSaveChanges": "Zapisz zmiany",
     "formSaved": "Trening zapisany.",
+    "formActivityMissing": "Jedna z aktywności w treningu nie znajduje się już na liście aktywności. Odśwież stronę i zapisz ponownie — nic nie zapisano.",
     "formSaveFailed": "Zapisywanie nie powiodło się. Spróbuj ponownie.",
     "formCopyFailed": "Nie udało się skopiować treningu.",
     "formDeleteTitle": "Usuń trening",

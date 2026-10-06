@@ -751,6 +751,7 @@
     "formSave": "Training speichern",
     "formSaveChanges": "Änderungen speichern",
     "formSaved": "Training gespeichert.",
+    "formActivityMissing": "Eine Aktivität im Training ist nicht mehr in der Aktivitätenliste. Seite neu laden und erneut speichern — es wurde nichts gespeichert.",
     "formSaveFailed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "formCopyFailed": "Kopieren des Trainings fehlgeschlagen.",
     "formDeleteTitle": "Training löschen",
