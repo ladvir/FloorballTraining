@@ -163,6 +163,7 @@ public class SeasonGoalTests : IAsyncLifetime
             db.StatTrackerParticipants.Where(p => p.StatTracker!.TeamId == _teamId));
         await db.SaveChangesAsync();
         db.StatTrackers.RemoveRange(db.StatTrackers.Where(s => s.TeamId == _teamId));
+        db.Appointments.RemoveRange(db.Appointments.Where(a => a.TeamId == _teamId));
         db.TestResults.RemoveRange(
             db.TestResults.Where(r => r.Member != null && r.Member.ClubId == _clubId));
         await db.SaveChangesAsync();
@@ -461,6 +462,48 @@ public class SeasonGoalTests : IAsyncLifetime
         var otherClient = await CreateClientAsync(_otherCoachEmail);
         (await otherClient.GetAsync($"/SeasonGoals/team/{_teamId}/report"))
             .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Report_TopScoring_buckets_by_match_date_not_by_when_the_tracker_was_created()
+    {
+        var matchDate = new DateTime(2020, 9, 15);
+        var enteredLater = new DateTime(2020, 11, 20);
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var appointment = new Appointment
+            {
+                AppointmentType = AppointmentType.Match, TeamId = _teamId, LocationId = 1,
+                Start = matchDate, End = matchDate.AddHours(1),
+            };
+            db.Appointments.Add(appointment);
+            await db.SaveChangesAsync();
+            var tracker = new StatTracker
+            {
+                EventCategory = 0, TeamId = _teamId, SeasonId = _seasonId, AppointmentId = appointment.Id,
+                CreatedAt = enteredLater, UpdatedAt = enteredLater,
+            };
+            db.StatTrackers.Add(tracker);
+            await db.SaveChangesAsync();
+            var participant = new StatTrackerParticipant { StatTrackerId = tracker.Id, MemberId = _memberId1 };
+            var goalsMetric = new StatTrackerMetric { StatTrackerId = tracker.Id, Code = "goals", Name = "Góly" };
+            db.StatTrackerParticipants.Add(participant);
+            db.StatTrackerMetrics.Add(goalsMetric);
+            await db.SaveChangesAsync();
+            db.StatTrackerEntries.Add(new StatTrackerEntry
+            {
+                StatTrackerId = tracker.Id, Kind = 0, StatTrackerParticipantId = participant.Id,
+                StatTrackerMetricId = goalsMetric.Id, Delta = 1, CreatedAt = enteredLater,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var client = await CreateClientAsync(_coachEmail);
+        var report = (await client.GetFromJsonAsync<TeamSeasonReportDto>($"/SeasonGoals/team/{_teamId}/report"))!;
+        report.Months.Single(m => m.Label == "2020-09").TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1);
+        report.Months.Single(m => m.Label == "2020-11").TopScoring.Should().BeEmpty();
     }
 
     [Fact]

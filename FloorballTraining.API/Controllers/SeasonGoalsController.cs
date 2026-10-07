@@ -161,6 +161,7 @@ public class SeasonGoalsController(
     private const int RankTakeCount = 7;
 
     private sealed record XpRow(int MemberId, int Points, DateTime When);
+    /// <summary>When = the match's date (appointment start), not when the tracker was created — trackers are often entered days later.</summary>
     private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When);
     private sealed record AttendanceRow(int MemberId, int Status, DateTime When);
     private sealed record EarnRow(int MemberId, DateTime When);
@@ -236,9 +237,11 @@ public class SeasonGoalsController(
             .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker != null
                         && e.StatTracker.TeamId == teamId && e.StatTracker.EventCategory == 0
                         && rosterMemberIds.Contains(e.Participant!.MemberId)
-                        && e.StatTracker.CreatedAt >= seasonStart && e.StatTracker.CreatedAt < reportEndExcl
+                        && (e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt) >= seasonStart
+                        && (e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt) < reportEndExcl
                         && e.Metric != null && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
-            .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta, e.StatTracker!.CreatedAt))
+            .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta,
+                e.StatTracker!.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt))
             .ToListAsync();
 
         // Attendance stats count trainings only — matches track participation via the lineup/
