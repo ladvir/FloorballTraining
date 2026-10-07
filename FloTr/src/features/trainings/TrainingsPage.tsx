@@ -9,7 +9,6 @@ import {
   CalendarPlus,
   FileDown,
   RefreshCw,
-  User,
   Eye,
   Search,
   X,
@@ -26,7 +25,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { Card, CardContent } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
@@ -35,6 +34,7 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { SkillCategoryCheckboxList } from '../../components/shared/SkillCategoryCheckboxList'
 import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
+import { AuthorChip, CardIconButton } from '../../components/shared/CardParts'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
 import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
@@ -363,33 +363,50 @@ export function TrainingsPage() {
   const renderCard = (training: TrainingDto, keyPrefix: string) => (
     <Card
       key={`${keyPrefix}${training.id}`}
-      className={`hover:shadow-md transition-shadow cursor-pointer ${compareSelected.has(training.id) ? 'ring-2 ring-sky-400' : ''}`}
+      className={`group flex cursor-pointer flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg ${compareSelected.has(training.id) ? 'ring-2 ring-sky-400' : ''}`}
       onClick={() => setDetailTrainingId(training.id)}
     >
-      <CardContent className="py-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-start gap-2 min-w-0">
-            <input
-              type="checkbox"
-              checked={compareSelected.has(training.id)}
-              onChange={() => toggleCompare(training.id)}
-              onClick={(e) => e.stopPropagation()}
-              title={t('trainings.selectToCompare')}
-              className="mt-1 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-            />
-            <h3 className="font-medium text-gray-900 truncate">{training.name}</h3>
-          </div>
-          <div className="mt-0.5 flex flex-shrink-0 items-center gap-1.5">
-            {training.isIndividual && (
-              <span title={t('trainings.individual')}>
-                <UserCheck className="h-3.5 w-3.5 text-sky-500" />
-              </span>
-            )}
-            <span
-              title={training.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
-              className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
-            />
-          </div>
+      <div
+        className={`flex items-start gap-2 border-b px-2.5 py-1.5 ${training.isIndividual ? 'border-violet-100 bg-violet-50 text-violet-900' : 'border-sky-100 bg-sky-50 text-sky-900'}`}
+      >
+        <input
+          type="checkbox"
+          checked={compareSelected.has(training.id)}
+          onChange={() => toggleCompare(training.id)}
+          onClick={(e) => e.stopPropagation()}
+          title={t('trainings.selectToCompare')}
+          className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+        />
+        <h3 className="min-w-0 flex-1 text-sm font-semibold leading-snug line-clamp-2">
+          {training.name}
+        </h3>
+        {training.isIndividual && (
+          <span title={t('trainings.individual')} className="mt-0.5 flex-shrink-0">
+            <UserCheck className="h-4 w-4 text-violet-500" />
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-1.5 px-2.5 py-2">
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          {training.duration > 0 && (
+            <span className="flex items-center gap-1 font-medium text-gray-700">
+              <Clock className="h-3.5 w-3.5" />
+              {training.duration} min
+            </span>
+          )}
+          {training.personsMin != null && training.personsMin > 0 && (
+            <span className="flex items-center gap-1" title={t('trainings.players')}>
+              <Users className="h-3.5 w-3.5" />
+              {training.personsMin}
+              {training.personsMax ? `–${training.personsMax}` : '+'}
+            </span>
+          )}
+          {training.createdByUserName && (
+            <span className="ml-auto">
+              <AuthorChip name={training.createdByUserName} compact />
+            </span>
+          )}
         </div>
 
         <SkillColorStripes
@@ -410,92 +427,57 @@ export function TrainingsPage() {
           ].filter((id): id is number => id != null)}
         />
 
-        {training.description && (
-          <p className="mt-1 text-sm text-gray-500 line-clamp-2">{training.description}</p>
-        )}
-
-        <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
-          {training.duration > 0 && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {training.duration} min
-            </span>
-          )}
-          {training.personsMin != null && training.personsMin > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {training.personsMin}
-              {training.personsMax ? `–${training.personsMax}` : '+'} {t('trainings.players')}
-            </span>
-          )}
-          {training.createdByUserName && (
-            <span className="flex items-center gap-1 ml-auto">
-              <User className="h-3 w-3" />
-              {training.createdByUserName}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation()
-              setDetailTrainingId(training.id)
-            }}
+        <div className="mt-auto flex items-center gap-1">
+          <span
+            title={training.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
+            className="flex min-w-0 flex-1 items-center gap-1 truncate text-[11px] text-gray-400"
           >
-            <Eye className="h-3.5 w-3.5" /> {t('common.detail')}
-          </Button>
+            <span
+              className={`h-2 w-2 rounded-full ${training.isDraft ? 'bg-amber-300' : 'bg-emerald-300'}`}
+            />
+            {training.isDraft && t('trainings.statusDraft')}
+          </span>
+          <CardIconButton
+            title={t('common.detail')}
+            onClick={() => setDetailTrainingId(training.id)}
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </CardIconButton>
           {canEdit(training) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/trainings/${training.id}/edit`)
-              }}
+            <CardIconButton
+              title={t('common.edit')}
+              onClick={() => navigate(`/trainings/${training.id}/edit`)}
             >
-              <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
-            </Button>
+              <Pencil className="h-3.5 w-3.5" />
+            </CardIconButton>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation()
-              setScheduleTarget(training)
-            }}
+          <CardIconButton
+            title={t('trainings.schedule')}
+            onClick={() => setScheduleTarget(training)}
           >
-            <CalendarPlus className="h-3.5 w-3.5" /> {t('trainings.schedule')}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            loading={downloadingId === training.id}
-            onClick={(e) => {
-              e.stopPropagation()
-              setPdfTarget(training)
-            }}
+            <CalendarPlus className="h-3.5 w-3.5" />
+          </CardIconButton>
+          <CardIconButton
+            title="PDF"
+            disabled={downloadingId === training.id}
+            onClick={() => setPdfTarget(training)}
           >
-            <FileDown className="h-3.5 w-3.5" /> PDF
-          </Button>
+            <FileDown className="h-3.5 w-3.5" />
+          </CardIconButton>
           {isAdmin && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation()
+            <CardIconButton
+              tone="danger"
+              title={t('common.delete')}
+              onClick={() => {
                 setDeleteError(null)
                 setDeleteTarget(training)
               }}
-              className="text-red-500 hover:bg-red-50 hover:text-red-600"
             >
-              <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
-            </Button>
+              <Trash2 className="h-3.5 w-3.5" />
+            </CardIconButton>
           )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 
@@ -977,7 +959,7 @@ export function TrainingsPage() {
                       {t('trainings.noGroupTrainings')}
                     </div>
                   ) : viewMode === 'grid' ? (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-[repeat(auto-fill,14rem)] justify-center gap-2 sm:justify-start">
                       {sectionTrainings.map((training) => renderCard(training, keyPrefix))}
                     </div>
                   ) : (
@@ -1013,7 +995,7 @@ export function TrainingsPage() {
           }
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fill,14rem)] justify-center gap-2 sm:justify-start">
           {filteredTrainings.map((training) => renderCard(training, ''))}
         </div>
       ) : (

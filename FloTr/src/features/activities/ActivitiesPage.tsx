@@ -24,7 +24,6 @@ import {
   X,
   ChevronDown,
   Eye,
-  User,
   FileDown,
   LayoutGrid,
   List,
@@ -37,7 +36,7 @@ import {
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { Card, CardContent } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
@@ -46,6 +45,7 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { SkillCategoryCheckboxList } from '../../components/shared/SkillCategoryCheckboxList'
 import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
+import { AuthorChip, CardIconButton } from '../../components/shared/CardParts'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, aiApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -94,16 +94,15 @@ function DraggableActivityCard({
     (thumbnailSrc.includes('image/svg+xml') || thumbnail?.name?.endsWith('.svg'))
 
   return (
-    <div ref={setNodeRef} className={`relative ${isDragging ? 'opacity-40' : ''}`}>
+    <div ref={setNodeRef} className={`relative h-full ${isDragging ? 'opacity-40' : ''}`}>
       <Card
-        className={`hover:shadow-md transition-shadow overflow-hidden cursor-pointer flex flex-col ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
+        className={`group flex h-full cursor-pointer flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
         onClick={onDetail}
       >
-        {/* Drag handle + select button overlay */}
-        <div className="absolute top-2 left-2 z-10 flex gap-1">
+        <div className="flex items-start gap-1.5 border-b border-emerald-100 bg-emerald-50 px-2 py-1.5 text-emerald-900">
           <button
             type="button"
-            className="rounded bg-white/80 p-1 text-gray-400 hover:bg-white hover:text-gray-600 shadow-sm cursor-grab touch-none"
+            className="mt-0.5 flex-shrink-0 cursor-grab touch-none text-emerald-300 hover:text-emerald-600"
             title={t('activities.dragToSelection')}
             onClick={(e) => e.stopPropagation()}
             {...attributes}
@@ -111,9 +110,12 @@ function DraggableActivityCard({
           >
             <GripVertical className="h-4 w-4" />
           </button>
+          <h3 className="min-w-0 flex-1 text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem]">
+            {activity.name}
+          </h3>
           <button
             type="button"
-            className={`rounded p-1 shadow-sm ${isSelected ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-white/80 text-gray-400 hover:bg-white hover:text-sky-600'}`}
+            className={`mt-0.5 flex-shrink-0 rounded p-0.5 ${isSelected ? 'bg-sky-500 text-white hover:bg-sky-600' : 'text-emerald-400 hover:bg-emerald-100 hover:text-emerald-600'}`}
             title={
               isSelected ? t('activities.removeFromSelection') : t('activities.addToSelection')
             }
@@ -126,16 +128,18 @@ function DraggableActivityCard({
           </button>
         </div>
 
-        <div className="h-40 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div className="relative flex h-24 items-center justify-center overflow-hidden bg-gray-50">
           {thumbnailSrc ? (
             <img
               src={thumbnailSrc}
               alt={activity.name}
-              className={`h-full w-full bg-white ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
+              loading="lazy"
+              decoding="async"
+              className={`h-full w-full bg-white ${isSvg ? 'object-contain p-1' : 'object-cover'}`}
             />
           ) : (
             <svg
-              className="h-16 w-16 text-gray-300"
+              className="h-10 w-10 text-gray-300"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -150,108 +154,73 @@ function DraggableActivityCard({
             </svg>
           )}
         </div>
-        <CardContent className="py-4">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-gray-900 truncate">{activity.name}</h3>
+
+        <div className="flex flex-1 flex-col gap-1.5 px-2.5 py-2">
+          <div className="flex min-h-6 items-center gap-3 text-xs text-gray-500">
+            {(activity.durationMin || activity.durationMax) && (
+              <span className="flex items-center gap-1 font-medium text-gray-700">
+                <Clock className="h-3.5 w-3.5" />
+                {activity.durationMin}–{activity.durationMax} min
+              </span>
+            )}
+            {activity.personsMin != null && activity.personsMin > 0 && (
+              <span className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5" />
+                {activity.personsMin}
+                {activity.personsMax ? `–${activity.personsMax}` : '+'}
+              </span>
+            )}
+            {activity.createdByUserName && (
+              <span className="ml-auto">
+                <AuthorChip name={activity.createdByUserName} compact />
+              </span>
+            )}
+          </div>
+
+          <div className="h-5">
+            <SkillColorStripes
+              skills={(activity.activitySkills ?? [])
+                .filter((s) => s.skillId != null)
+                .map((s) => ({
+                  skillId: s.skillId!,
+                  skillName: s.skillName ?? '',
+                  skillCategoryId: s.skillCategoryId ?? 0,
+                }))}
+            />
+          </div>
+
+          <div className="mt-auto flex items-center gap-1">
             <span
               title={
                 activity.isDraft !== false
                   ? t('activities.statusDraft')
                   : t('activities.statusComplete')
               }
-              className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
-            />
-          </div>
-
-          <SkillColorStripes
-            skills={(activity.activitySkills ?? [])
-              .filter((s) => s.skillId != null)
-              .map((s) => ({
-                skillId: s.skillId!,
-                skillName: s.skillName ?? '',
-                skillCategoryId: s.skillCategoryId ?? 0,
-              }))}
-          />
-
-          {activity.description && (
-            <p className="mt-1 text-sm text-gray-500 line-clamp-2">{activity.description}</p>
-          )}
-
-          <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
-            {(activity.durationMin || activity.durationMax) && (
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {activity.durationMin}–{activity.durationMax} min
-              </span>
-            )}
-            {activity.personsMin != null && activity.personsMin > 0 && (
-              <span className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {activity.personsMin}
-                {activity.personsMax ? `–${activity.personsMax}` : '+'}
-              </span>
-            )}
-            {activity.createdByUserName && (
-              <span className="flex items-center gap-1 ml-auto">
-                <User className="h-3 w-3" />
-                {activity.createdByUserName}
-              </span>
-            )}
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDetail()
-              }}
+              className="flex min-w-0 flex-1 items-center gap-1 truncate text-[11px] text-gray-400"
             >
+              <span
+                className={`h-2 w-2 rounded-full ${activity.isDraft !== false ? 'bg-amber-300' : 'bg-emerald-300'}`}
+              />
+              {activity.isDraft !== false && t('activities.statusDraft')}
+            </span>
+            <CardIconButton title={t('activities.detail')} onClick={onDetail}>
               <Eye className="h-3.5 w-3.5" />
-              {t('activities.detail')}
-            </Button>
+            </CardIconButton>
             {canEdit && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit()
-                }}
-              >
+              <CardIconButton title={t('common.edit')} onClick={onEdit}>
                 <Pencil className="h-3.5 w-3.5" />
-                {t('common.edit')}
-              </Button>
+              </CardIconButton>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              loading={downloadingPdfId === activity.id}
-              onClick={(e) => {
-                e.stopPropagation()
-                onPdf()
-              }}
-            >
+            <CardIconButton title="PDF" disabled={downloadingPdfId === activity.id} onClick={onPdf}>
               <FileDown className="h-3.5 w-3.5" />
-              PDF
-            </Button>
+            </CardIconButton>
             {canDelete && onDelete && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete()
-                }}
-                className="text-red-500 hover:bg-red-50 hover:text-red-600"
-              >
+              <CardIconButton tone="danger" title={t('common.delete')} onClick={onDelete}>
                 <Trash2 className="h-3.5 w-3.5" />
-                {t('common.delete')}
-              </Button>
+              </CardIconButton>
             )}
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   )
@@ -1158,7 +1127,7 @@ export function ActivitiesPage() {
                         {t('activities.noActivities')}
                       </div>
                     ) : viewMode === 'grid' ? (
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="grid grid-cols-[repeat(auto-fill,12rem)] justify-center gap-2 sm:justify-start">
                         {sectionActivities.map((activity) => (
                           <DraggableActivityCard
                             key={activity.id}
@@ -1253,7 +1222,7 @@ export function ActivitiesPage() {
             }
           />
         ) : viewMode === 'grid' ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-[repeat(auto-fill,12rem)] justify-center gap-2 sm:justify-start">
             {filteredActivities.map((activity) => (
               <DraggableActivityCard
                 key={activity.id}
