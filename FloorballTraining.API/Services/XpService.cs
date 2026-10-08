@@ -23,14 +23,14 @@ public class XpService(FloorballTrainingContext context)
     public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
     {
         var existingEvents = await context.XpEvents
-            .Select(e => new { e.Id, e.Type, e.SourceKind, e.SourceId, e.Points })
+            .Select(e => new { e.Id, e.Type, e.SourceKind, e.SourceId, e.Points, e.OccurredAt })
             .ToListAsync(ct);
         var persisted = existingEvents
             .Select(e => (e.Type, e.SourceKind, e.SourceId))
             .ToHashSet();
         // (Type, SourceKind, SourceId) is a unique index → one existing row per key.
         var persistedById = existingEvents
-            .ToDictionary(e => (e.Type, e.SourceKind, e.SourceId), e => (e.Id, e.Points));
+            .ToDictionary(e => (e.Type, e.SourceKind, e.SourceId), e => (e.Id, e.Points, e.OccurredAt));
 
         var memberClub = await context.Members.AsNoTracking()
             .ToDictionaryAsync(m => m.Id, m => m.ClubId, ct);
@@ -66,6 +66,8 @@ public class XpService(FloorballTrainingContext context)
         var desired = new HashSet<(XpEventType, XpSourceKind, int?)>();
         var toAdd = new List<XpEvent>();
         var toUpdate = new List<(int Id, int Points)>(); // existing events whose price changed (re-pricing)
+        // Stat-entry events written before they were dated by the match (they used the log time).
+        var toRedate = new List<(int Id, DateTime OccurredAt, int? SeasonId)>();
         // `units` is the count/sign (1 for flat events, ±Delta for stats); the money value is units ×
         // the resolved per-club/team rate, so a rate change re-prices every event of that type here.
         void Add(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt)
@@ -79,6 +81,8 @@ public class XpService(FloorballTrainingContext context)
             if (persistedById.TryGetValue(key, out var existing))
             {
                 if (existing.Points != points) toUpdate.Add((existing.Id, points)); // re-price in place
+                if (kind == XpSourceKind.StatTrackerEntry && existing.OccurredAt != occurredAt)
+                    toRedate.Add((existing.Id, occurredAt, ResolveSeason(memberId, occurredAt)));
                 return;
             }
             toAdd.Add(new XpEvent
@@ -129,12 +133,21 @@ public class XpService(FloorballTrainingContext context)
                 .ExecuteUpdateAsync(s => s.SetProperty(e => e.Points, g.Key), ct);
         }
 
+        // Matches are tracked in few sittings, so dates (and seasons) repeat → a handful of set-based UPDATEs.
+        foreach (var g in toRedate.GroupBy(u => (u.OccurredAt, u.SeasonId)))
+        {
+            var ids = g.Select(u => u.Id).ToList();
+            var (when, seasonId) = g.Key;
+            await context.XpEvents.Where(e => ids.Contains(e.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.OccurredAt, when).SetProperty(e => e.SeasonId, seasonId), ct);
+        }
+
         if (toAdd.Count > 0)
         {
             context.XpEvents.AddRange(toAdd);
             await context.SaveChangesAsync(ct);
         }
-        return toAdd.Count + toUpdate.Count;
+        return toAdd.Count + toUpdate.Count + toRedate.Count;
     }
 
     private delegate void AddXp(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt);
@@ -167,7 +180,7 @@ public class XpService(FloorballTrainingContext context)
             .Where(e => e.Kind == 0 && e.StatTrackerParticipantId != null && e.StatTrackerMetricId != null)
             .Include(e => e.Metric)
             .Include(e => e.Participant)
-            .Include(e => e.StatTracker)
+            .Include(e => e.StatTracker).ThenInclude(s => s!.Appointment)
             .ToListAsync(ct);
 
     private static void DeriveStats(List<StatTrackerEntry> entries, AddXp add)
@@ -189,7 +202,8 @@ public class XpService(FloorballTrainingContext context)
             };
             if (mapped == null) continue;
 
-            add(memberId.Value, mapped.Value.type, mapped.Value.units, e.StatTracker?.TeamId, XpSourceKind.StatTrackerEntry, e.Id, e.CreatedAt);
+            add(memberId.Value, mapped.Value.type, mapped.Value.units, e.StatTracker?.TeamId, XpSourceKind.StatTrackerEntry, e.Id,
+                e.StatTracker?.Appointment?.Start ?? e.CreatedAt); // match date, not when it was logged
         }
     }
 

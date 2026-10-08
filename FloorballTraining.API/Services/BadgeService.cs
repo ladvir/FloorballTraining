@@ -10,8 +10,9 @@ namespace FloorballTraining.API.Services;
 /// Derives collectible milestone badges (#97) from the same coach-entered records as XP — attendance,
 /// match stats and seasons — so they are unfalsifiable. Idempotent: a badge is written once per
 /// (member, code, season) and a re-run inserts nothing new. Mirrors <see cref="XpService"/>.
-/// ponytail: EarnedAt = derivation-run time (stable after first award), not the exact crossing date.
-/// Recompute the crossing date only if a badge timeline is ever needed.
+/// EarnedAt = the date the metric crossed the badge threshold (match / training date, not when it was
+/// logged or derived), so month reports bucket badges correctly. Season-scoped badges (Iron Man) have no
+/// single crossing event and keep the derivation-run time.
 /// </summary>
 public class BadgeService(FloorballTrainingContext context)
 {
@@ -20,11 +21,9 @@ public class BadgeService(FloorballTrainingContext context)
     {
         var stats = await ComputeStatsAsync(ct);
 
-        var existing = (await context.MemberBadges
-                .Select(b => new { b.MemberId, b.Code, b.SeasonId })
-                .ToListAsync(ct))
-            .Select(b => (b.MemberId, b.Code, b.SeasonId))
-            .ToHashSet();
+        var existingBadges = await context.MemberBadges.ToListAsync(ct);
+        var existing = existingBadges.Select(b => (b.MemberId, b.Code, b.SeasonId)).ToHashSet();
+        var existingByKey = existingBadges.ToDictionary(b => (b.MemberId, b.Code, b.SeasonId));
 
         var toAdd = new List<MemberBadge>();
         foreach (var s in stats.Values)
@@ -37,18 +36,26 @@ public class BadgeService(FloorballTrainingContext context)
                         if (pct >= def.Threshold && existing.Add((s.MemberId, def.Code, seasonId)))
                             toAdd.Add(new MemberBadge { MemberId = s.MemberId, Code = def.Code, SeasonId = seasonId });
                 }
-                else if (s.Value(def.Metric) >= def.Threshold && existing.Add((s.MemberId, def.Code, (int?)null)))
+                else if (s.Value(def.Metric) >= def.Threshold)
                 {
-                    toAdd.Add(new MemberBadge { MemberId = s.MemberId, Code = def.Code });
+                    var crossed = s.CrossedAt(def.Metric, def.Threshold);
+                    if (existing.Add((s.MemberId, def.Code, (int?)null)))
+                    {
+                        var badge = new MemberBadge { MemberId = s.MemberId, Code = def.Code };
+                        if (crossed != null) badge.EarnedAt = crossed.Value;
+                        toAdd.Add(badge);
+                    }
+                    else if (crossed != null && existingByKey.TryGetValue((s.MemberId, def.Code, (int?)null), out var old)
+                             && old.EarnedAt != crossed.Value)
+                    {
+                        old.EarnedAt = crossed.Value; // back-date badges stamped with the run time
+                    }
                 }
             }
         }
 
-        if (toAdd.Count > 0)
-        {
-            context.MemberBadges.AddRange(toAdd);
-            await context.SaveChangesAsync(ct);
-        }
+        context.MemberBadges.AddRange(toAdd);
+        await context.SaveChangesAsync(ct); // also persists back-dated EarnedAt
         return toAdd.Count;
     }
 
@@ -123,6 +130,23 @@ public class BadgeService(FloorballTrainingContext context)
         public int ChallengeCount;
         public int CareerXp;
 
+        // Dated increments per metric → the date a threshold was crossed.
+        private readonly Dictionary<BadgeMetric, List<(DateTime When, int Amount)>> _timeline = new();
+        public void Track(BadgeMetric m, DateTime when, int amount = 1) =>
+            (_timeline.TryGetValue(m, out var l) ? l : _timeline[m] = new()).Add((when, amount));
+
+        /// <summary>First date the metric reached <paramref name="threshold"/>; null if no dated source.</summary>
+        public DateTime? CrossedAt(BadgeMetric m, int threshold)
+        {
+            if (!_timeline.TryGetValue(m, out var l)) return null;
+            if (m == BadgeMetric.MaxGoalsInMatch) // single-match peak, not cumulative
+                return l.Where(x => x.Amount >= threshold).Select(x => (DateTime?)x.When).Min();
+            var sum = 0;
+            foreach (var (when, amount) in l.OrderBy(x => x.When))
+                if ((sum += amount) >= threshold) return when;
+            return null;
+        }
+
         public int Value(BadgeMetric m) => m switch
         {
             BadgeMetric.TrainingCount => TrainingCount,
@@ -186,9 +210,15 @@ public class BadgeService(FloorballTrainingContext context)
             var isTraining = appt?.AppointmentType == AppointmentType.Training;
 
             if (present && isTraining)
+            {
                 Get(a.MemberId).TrainingCount++;
+                Get(a.MemberId).Track(BadgeMetric.TrainingCount, when);
+            }
             else if (present && appt?.AppointmentType == AppointmentType.Match)
+            {
                 Get(a.MemberId).MatchCount++;
+                Get(a.MemberId).Track(BadgeMetric.MatchCount, when);
+            }
 
             var sid = ResolveSeason(a.MemberId, when);
             if (sid != null)
@@ -220,36 +250,45 @@ public class BadgeService(FloorballTrainingContext context)
             .Where(e => memberId == null || e.Participant!.MemberId == memberId)
             .Include(e => e.Metric)
             .Include(e => e.Participant)
+            .Include(e => e.StatTracker).ThenInclude(t => t!.Appointment)
             .ToListAsync(ct);
 
-        var goalsPerMatch = new Dictionary<(int mid, int tracker), int>();
+        var goalsPerMatch = new Dictionary<(int mid, int tracker), (int Goals, DateTime When)>();
         foreach (var e in statEntries)
         {
             var mid = e.Participant?.MemberId;
             if (mid == null) continue;
             var s = Get(mid.Value);
+            var when = e.StatTracker?.Appointment?.Start ?? e.StatTracker?.CreatedAt ?? e.CreatedAt;
             switch (e.Metric!.Code)
             {
                 case "goals":
                     s.GoalCount += e.Delta;
+                    s.Track(BadgeMetric.GoalCount, when, e.Delta);
+                    s.Track(BadgeMetric.GoalsPlusAssists, when, e.Delta);
                     var key = (mid.Value, e.StatTrackerId);
-                    goalsPerMatch[key] = goalsPerMatch.GetValueOrDefault(key) + e.Delta;
+                    goalsPerMatch[key] = (goalsPerMatch.GetValueOrDefault(key).Goals + e.Delta, when);
                     break;
                 case "assists":
                     s.AssistCount += e.Delta;
+                    s.Track(BadgeMetric.AssistCount, when, e.Delta);
+                    s.Track(BadgeMetric.GoalsPlusAssists, when, e.Delta);
                     break;
                 case "plus":
                     s.NetPlusMinus += e.Delta;
+                    s.Track(BadgeMetric.NetPlusMinus, when, e.Delta);
                     break;
                 case "minus":
                     s.NetPlusMinus -= e.Delta;
+                    s.Track(BadgeMetric.NetPlusMinus, when, -e.Delta);
                     break;
             }
         }
-        foreach (var ((mid, _), goals) in goalsPerMatch)
+        foreach (var ((mid, _), (goals, when)) in goalsPerMatch)
         {
             var s = Get(mid);
             s.MaxGoalsInMatch = Math.Max(s.MaxGoalsInMatch, goals);
+            s.Track(BadgeMetric.MaxGoalsInMatch, when, goals);
         }
 
         // --- Career expansion (10-season plan): counts derived from the XP ledger (XpEvent), which is
@@ -261,26 +300,30 @@ public class BadgeService(FloorballTrainingContext context)
         // visibly ahead of the displayed rank/level because of it.
         var xpEvents = await context.XpEvents.AsNoTracking()
             .Where(e => memberId == null || e.MemberId == memberId)
-            .Select(e => new { e.MemberId, e.Type, e.Points })
+            .Select(e => new { e.MemberId, e.Type, e.Points, e.OccurredAt })
             .ToListAsync(ct);
         foreach (var group in xpEvents.GroupBy(e => e.MemberId))
         {
             var s = Get(group.Key);
             s.CareerXp = group.Sum(e => e.Points);
+            foreach (var e in group) s.Track(BadgeMetric.CareerXp, e.OccurredAt, e.Points);
             foreach (var byType in group.GroupBy(e => e.Type))
             {
                 var count = byType.Count();
+                BadgeMetric? metric = null;
                 switch (byType.Key)
                 {
-                    case XpEventType.HomeTraining: s.HomeTrainingCount = count; break;
-                    case XpEventType.SkillGradeImprovement: s.SkillImprovementCount = count; break;
-                    case XpEventType.SkillTargetReached: s.SkillTargetCount = count; break;
-                    case XpEventType.TestPersonalRecord: s.TestRecordCount = count; break;
-                    case XpEventType.PlayerOfTraining: s.PlayerOfTrainingCount = count; break;
-                    case XpEventType.FairPlay: s.FairPlayCount = count; break;
-                    case XpEventType.FamilyCheered: s.FamilyCheeredCount = count; break;
-                    case XpEventType.ChallengeReward: s.ChallengeCount = count; break;
+                    case XpEventType.HomeTraining: s.HomeTrainingCount = count; metric = BadgeMetric.HomeTrainingCount; break;
+                    case XpEventType.SkillGradeImprovement: s.SkillImprovementCount = count; metric = BadgeMetric.SkillImprovementCount; break;
+                    case XpEventType.SkillTargetReached: s.SkillTargetCount = count; metric = BadgeMetric.SkillTargetCount; break;
+                    case XpEventType.TestPersonalRecord: s.TestRecordCount = count; metric = BadgeMetric.TestRecordCount; break;
+                    case XpEventType.PlayerOfTraining: s.PlayerOfTrainingCount = count; metric = BadgeMetric.PlayerOfTrainingCount; break;
+                    case XpEventType.FairPlay: s.FairPlayCount = count; metric = BadgeMetric.FairPlayCount; break;
+                    case XpEventType.FamilyCheered: s.FamilyCheeredCount = count; metric = BadgeMetric.FamilyCheeredCount; break;
+                    case XpEventType.ChallengeReward: s.ChallengeCount = count; metric = BadgeMetric.ChallengeCount; break;
                 }
+                if (metric != null)
+                    foreach (var e in byType) s.Track(metric.Value, e.OccurredAt);
             }
         }
 

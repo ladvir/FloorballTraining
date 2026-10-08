@@ -152,6 +152,29 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
     }
 
     [Fact]
+    public async Task Recompute_DatesBadgeByWhenThresholdWasCrossed_AndBackdatesRunTimeStamps()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var svc = scope.ServiceProvider.GetRequiredService<BadgeService>();
+        await svc.RecomputeAllAsync();
+
+        // Attendance10 crossed at the 10th present training (day 9), not at derivation time.
+        (await BadgesOf(_achieverId)).Single(b => b.Code == BadgeCode.Attendance10)
+            .EarnedAt.Should().Be(_now.AddDays(9));
+
+        // A badge stamped with the run time earlier is corrected on the next recompute.
+        await using (var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>().CreateDbContext())
+        {
+            await db.MemberBadges.Where(b => b.MemberId == _achieverId && b.Code == BadgeCode.Attendance10)
+                .ExecuteUpdateAsync(u => u.SetProperty(b => b.EarnedAt, DateTime.UtcNow.AddYears(1)));
+        }
+        await using var scope2 = factory.Services.CreateAsyncScope(); // fresh context, like the job
+        await scope2.ServiceProvider.GetRequiredService<BadgeService>().RecomputeAllAsync();
+        (await BadgesOf(_achieverId)).Single(b => b.Code == BadgeCode.Attendance10)
+            .EarnedAt.Should().Be(_now.AddDays(9));
+    }
+
+    [Fact]
     public async Task GetBadges_ReportsEarnedAndInProgress()
     {
         await using var scope = factory.Services.CreateAsyncScope();
