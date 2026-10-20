@@ -13,6 +13,11 @@ export const lineupsApi = {
     apiClient.post<MatchLineupDto>('/lineups', data).then((r) => r.data),
   update: (id: number, data: Partial<MatchLineupDto>) =>
     apiClient.put<MatchLineupDto>(`/lineups/${id}`, data).then((r) => r.data),
+  /** Give an event its own independent copy of an existing lineup (replaces the event's current one). */
+  copyToAppointment: (sourceId: number, appointmentId: number) =>
+    apiClient
+      .post<MatchLineupDto>(`/lineups/${sourceId}/copy`, null, { params: { appointmentId } })
+      .then((r) => r.data),
   delete: (id: number) => apiClient.delete(`/lineups/${id}`),
 }
 

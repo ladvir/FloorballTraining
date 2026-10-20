@@ -256,19 +256,18 @@ export function AttendanceModal({
         else await xpApi.createAward({ appointmentId, ...action })
         return
       }
-      const mine = server.find(
-        (a) => a.memberId === action.memberId && a.type === 'PlayerOfTraining'
-      )
+      const potType = isMatch ? 'PlayerOfMatch' : 'PlayerOfTraining'
+      const mine = server.find((a) => a.memberId === action.memberId && a.type === potType)
       if (mine) {
         await xpApi.deleteAward(mine.id)
         return
       }
-      const other = server.find((a) => a.type === 'PlayerOfTraining')
+      const other = server.find((a) => a.type === potType)
       if (other) await xpApi.deleteAward(other.id) // 1/event index → free the slot first
       await xpApi.createAward({
         appointmentId,
         memberId: action.memberId,
-        type: 'PlayerOfTraining',
+        type: potType,
       })
     },
     // ponytail: optimistic cache patch; rapid conflicting taps self-heal on onSettled refetch.
@@ -396,10 +395,19 @@ export function AttendanceModal({
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     <AwardPill
-                      active={hasAward(row.memberId, 'PlayerOfTraining')}
+                      active={hasAward(
+                        row.memberId,
+                        isMatch ? 'PlayerOfMatch' : 'PlayerOfTraining'
+                      )}
                       icon={<Star className="h-3 w-3" />}
-                      label={t('xp.type.PlayerOfTraining')}
-                      onClick={() => awardMutation.mutate({ kind: 'pot', memberId: row.memberId })}
+                      label={t(isMatch ? 'xp.type.PlayerOfMatch' : 'xp.type.PlayerOfTraining')}
+                      onClick={() =>
+                        awardMutation.mutate({
+                          kind: 'pot',
+                          memberId: row.memberId,
+                          type: isMatch ? 'PlayerOfMatch' : 'PlayerOfTraining',
+                        })
+                      }
                     />
                     <AwardPill
                       active={hasAward(row.memberId, 'FairPlay')}

@@ -5462,7 +5462,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("AppointmentId")
                         .IsUnique()
-                        .HasFilter("[Type] = 0");
+                        .HasFilter("[Type] IN (0, 3)");
 
                     b.HasIndex("MemberId");
 

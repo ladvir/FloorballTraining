@@ -124,6 +124,15 @@ public class LineupsController(
         .Include(l => l.Roster).ThenInclude(r => r.Member)
         .Include(l => l.Formations).ThenInclude(f => f.Slots);
 
+    /// <summary>Lineup name derived from its event — "{event name} {d.M.yyyy}" (date only when the event is unnamed).</summary>
+    private async Task<string?> EventLineupNameAsync(int appointmentId)
+    {
+        var appt = await context.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == appointmentId);
+        if (appt == null) return null;
+        var date = appt.Start.ToString("d.M.yyyy");
+        return string.IsNullOrWhiteSpace(appt.Name) ? $"Zápas {date}" : $"{appt.Name} {date}";
+    }
+
     /// <summary>GET /lineups?teamId=X — list lineups for a team</summary>
     [HttpGet]
     public async Task<IActionResult> GetByTeam([FromQuery] int teamId)
@@ -207,11 +216,12 @@ public class LineupsController(
         }
 
         var now = DateTime.UtcNow;
+        var eventName = dto.AppointmentId.HasValue ? await EventLineupNameAsync(dto.AppointmentId.Value) : null;
         var lineup = new MatchLineup
         {
             TeamId = dto.TeamId,
             AppointmentId = dto.AppointmentId,
-            Name = string.IsNullOrWhiteSpace(dto.Name) ? "Nová sestava" : dto.Name,
+            Name = eventName ?? (string.IsNullOrWhiteSpace(dto.Name) ? "Nová sestava" : dto.Name),
             FormationTemplateId = template.Id,
             FormationCount = Math.Clamp(dto.FormationCount, 1, 5),
             IsShared = dto.IsShared,
@@ -382,6 +392,87 @@ public class LineupsController(
         await context.SaveChangesAsync();
         var reloaded = await LineupQuery().FirstAsync(l => l.Id == id);
         return Ok(await ToDtoAsync(reloaded));
+    }
+
+    /// <summary>
+    /// POST /lineups/{sourceId}/copy?appointmentId=X — give event X its own copy of an existing lineup (a template or
+    /// another event's lineup). The copy is independent: editing it never touches the source or other events.
+    /// A lineup already attached to X is replaced.
+    /// </summary>
+    [HttpPost("{sourceId:int}/copy")]
+    public async Task<IActionResult> CopyToAppointment(int sourceId, [FromQuery] int appointmentId)
+    {
+        var scope = await GetScopeAsync();
+        var info = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+
+        var source = await LineupQuery().AsNoTracking().FirstOrDefaultAsync(l => l.Id == sourceId);
+        if (source == null) return NotFound();
+        if (source.Team == null || !CanEditTeam(scope, source.Team, info.EffectiveRole)) return Forbid();
+
+        var appt = await context.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == appointmentId);
+        if (appt == null || appt.TeamId != source.TeamId)
+            return BadRequest(new { message = "Zápas nepatří k tomuto týmu." });
+
+        // One lineup per event: drop the current one (the DB has no cascade from roster/formations here).
+        var existing = await context.MatchLineups
+            .Include(l => l.Roster)
+            .Include(l => l.Formations).ThenInclude(f => f.Slots)
+            .Where(l => l.AppointmentId == appointmentId && l.Id != sourceId)
+            .ToListAsync();
+        foreach (var e in existing)
+        {
+            context.LineupSlots.RemoveRange(e.Formations.SelectMany(f => f.Slots));
+            context.LineupFormations.RemoveRange(e.Formations);
+            context.LineupRosters.RemoveRange(e.Roster);
+            context.MatchLineups.Remove(e);
+        }
+
+        var now = DateTime.UtcNow;
+        var copy = new MatchLineup
+        {
+            TeamId = source.TeamId,
+            AppointmentId = appointmentId,
+            Name = await EventLineupNameAsync(appointmentId) ?? source.Name,
+            FormationTemplateId = source.FormationTemplateId,
+            FormationCount = source.FormationCount,
+            IsShared = source.IsShared,
+            CreatedByUserId = GetCurrentUserId(),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        var rosterMap = new Dictionary<int, LineupRoster>();
+        foreach (var r in source.Roster.OrderBy(r => r.SortOrder))
+        {
+            var entity = new LineupRoster
+            {
+                MemberId = r.MemberId,
+                ManualName = r.ManualName,
+                IsAvailable = r.IsAvailable,
+                SortOrder = r.SortOrder
+            };
+            copy.Roster.Add(entity);
+            rosterMap[r.Id] = entity;
+        }
+        foreach (var f in source.Formations.OrderBy(f => f.Index))
+        {
+            copy.Formations.Add(new LineupFormation
+            {
+                Index = f.Index,
+                Label = f.Label,
+                ColorKey = f.ColorKey,
+                Slots = f.Slots.Select(sl => new LineupSlot
+                {
+                    Position = sl.Position,
+                    Roster = sl.RosterId.HasValue && rosterMap.TryGetValue(sl.RosterId.Value, out var r) ? r : null
+                }).ToList()
+            });
+        }
+
+        context.MatchLineups.Add(copy);
+        await context.SaveChangesAsync();
+
+        var saved = await LineupQuery().FirstAsync(l => l.Id == copy.Id);
+        return Ok(await ToDtoAsync(saved));
     }
 
     /// <summary>DELETE /lineups/{id}</summary>

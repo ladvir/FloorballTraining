@@ -759,9 +759,9 @@ function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
   )
 }
 
-/** A team event tracks attendance only when nobody was individually assigned to it (see AppointmentDetailModal). */
+/** A team event tracks attendance only when nobody was individually assigned to it (see AppointmentDetailModal). Matches never track attendance (lineup instead). */
 function isAttendanceTracked(apt: AppointmentDto) {
-  return !!apt.teamId && (apt.memberAssignments?.length ?? 0) === 0
+  return apt.appointmentType !== 3 && !!apt.teamId && (apt.memberAssignments?.length ?? 0) === 0
 }
 
 /** Present/absent/undeclared counts, or a "not recorded yet" note — shown to coaches for past events. */

@@ -8,5 +8,7 @@ public enum AwardType
     /// <summary>Fair play / helping / captaincy — training or match.</summary>
     FairPlay,
     /// <summary>The player's family came to cheer — match only.</summary>
-    FamilyCheered
+    FamilyCheered,
+    /// <summary>Best player of a match, picked from the match lineup — max one per appointment.</summary>
+    PlayerOfMatch
 }

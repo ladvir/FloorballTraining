@@ -177,7 +177,7 @@ function MatchCard({
                       )}
                     </div>
                   )}
-                  <RatingSection appointmentId={appointment.id} />
+                  <RatingSection appointmentId={appointment.id} matchTeamId={appointment.teamId} />
                 </>
               ) : (
                 <>

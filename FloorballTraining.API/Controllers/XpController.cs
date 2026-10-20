@@ -459,10 +459,17 @@ public class XpController(
         var appt = await context.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == dto.AppointmentId, ct);
         if (appt == null) return NotFound("Appointment not found.");
         if (!await CanManageAppointmentAsync(appt)) return Forbid();
-        if (type == AwardType.FamilyCheered && appt.AppointmentType != AppointmentType.Match)
-            return BadRequest("FamilyCheered can only be awarded on a match.");
+        if (type is AwardType.FamilyCheered or AwardType.PlayerOfMatch && appt.AppointmentType != AppointmentType.Match)
+            return BadRequest($"{type} can only be awarded on a match.");
+        if (type == AwardType.PlayerOfTraining && appt.AppointmentType == AppointmentType.Match)
+            return BadRequest("Use PlayerOfMatch for a match.");
         if (!await context.Members.AnyAsync(m => m.Id == dto.MemberId, ct))
             return NotFound("Member not found.");
+        // Best player of a match is picked from the match lineup only.
+        if (type == AwardType.PlayerOfMatch &&
+            !await context.LineupRosters.AnyAsync(r => r.MemberId == dto.MemberId && r.IsAvailable &&
+                r.MatchLineup!.AppointmentId == dto.AppointmentId, ct))
+            return BadRequest("Best player of a match must be in the match lineup.");
 
         var award = new XpCoachAward
         {

@@ -39,6 +39,7 @@ import { useConfirm } from '../../store/confirmStore'
 import { AttendanceModal } from '../attendance/AttendanceModal'
 import { AttendanceSummaryBadge } from '../attendance/AttendanceSummaryBadge'
 import { RatingForm } from './RatingForm'
+import { PlayerOfMatchSelect } from './PlayerOfMatchSelect'
 import { useLiveTrainingStore } from '../../store/liveTrainingStore'
 import { primeAudio } from '../../utils/sound'
 import type { AppointmentDto } from '../../types/domain.types'
@@ -316,7 +317,14 @@ const gradeColors = [
   'bg-red-500', // 5
 ]
 
-export function RatingSection({ appointmentId }: { appointmentId: number }) {
+export function RatingSection({
+  appointmentId,
+  matchTeamId,
+}: {
+  appointmentId: number
+  /** Set for a match with a team — enables the coach's player-of-the-match pick. */
+  matchTeamId?: number | null
+}) {
   const { t } = useTranslation()
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
@@ -359,6 +367,10 @@ export function RatingSection({ appointmentId }: { appointmentId: number }) {
           </Button>
         )}
       </div>
+
+      {matchTeamId ? (
+        <PlayerOfMatchSelect appointmentId={appointmentId} teamId={matchTeamId} />
+      ) : null}
 
       {/* Add rating form */}
       {showForm && !myRating && (
@@ -777,7 +789,12 @@ export function AppointmentDetailModal({
           )}
 
           {/* Rating section — only for past events */}
-          {apt.isPast && <RatingSection appointmentId={apt.id} />}
+          {apt.isPast && (
+            <RatingSection
+              appointmentId={apt.id}
+              matchTeamId={apt.appointmentType === 3 ? apt.teamId : null}
+            />
+          )}
           {!apt.isPast && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center gap-2 text-xs text-gray-400">

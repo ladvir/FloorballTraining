@@ -50,7 +50,7 @@ public class CreateXpAwardDto
 {
     public int AppointmentId { get; set; }
     public int MemberId { get; set; }
-    /// <summary><see cref="Enums.AwardType"/> name: PlayerOfTraining | FairPlay | FamilyCheered.</summary>
+    /// <summary><see cref="Enums.AwardType"/> name: PlayerOfTraining | PlayerOfMatch | FairPlay | FamilyCheered.</summary>
     public string Type { get; set; } = "";
 }
 

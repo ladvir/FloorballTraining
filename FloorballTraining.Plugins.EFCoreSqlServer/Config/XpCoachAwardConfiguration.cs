@@ -28,9 +28,9 @@ public class XpCoachAwardConfiguration : IEntityTypeConfiguration<XpCoachAward>
         // Anti-abuse: at most one of each bonus per (event, member, type).
         builder.HasIndex(e => new { e.AppointmentId, e.MemberId, e.Type }).IsUnique();
 
-        // Anti-abuse: only ONE "Player of the training" per event (AwardType.PlayerOfTraining = 0).
+        // Anti-abuse: only ONE "Player of the training" (AwardType 0) / "Player of the match" (3) per event.
         builder.HasIndex(e => e.AppointmentId)
             .IsUnique()
-            .HasFilter("[Type] = 0");
+            .HasFilter("[Type] IN (0, 3)");
     }
 }

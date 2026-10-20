@@ -43,7 +43,9 @@ public enum BadgeMetric
     ChallengeCount,
     /// <summary>Lifetime XP total (unrounded sum of every XpEvent — see BadgeService for the
     /// simplification this makes vs. XpService's capped/displayed total).</summary>
-    CareerXp
+    CareerXp,
+    /// <summary>Lifetime count of "player of the match" coach awards.</summary>
+    PlayerOfMatchCount
 }
 
 /// <summary>
@@ -126,6 +128,7 @@ public static class BadgeCatalog
         new(BadgeCode.Challenges50,        "badges/challenges50.png",        BadgeMetric.ChallengeCount, 50),
         new(BadgeCode.CareerXp5000,        "badges/careerxp5000.png",        BadgeMetric.CareerXp, 5000),
         new(BadgeCode.CareerXp15000,       "badges/careerxp15000.png",       BadgeMetric.CareerXp, 15000),
-        new(BadgeCode.CareerXp30000,       "badges/careerxp30000.png",       BadgeMetric.CareerXp, 30000)
+        new(BadgeCode.CareerXp30000,       "badges/careerxp30000.png",       BadgeMetric.CareerXp, 30000),
+        new(BadgeCode.PlayerOfMatch3,      "badges/playerofmatch3.png",      BadgeMetric.PlayerOfMatchCount, 3)
     ];
 }

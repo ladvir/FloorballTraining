@@ -4,6 +4,7 @@ import { LayoutGrid, Plus, Pencil, Eye } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { lineupsApi } from '../../api/index'
+import { useConfirm } from '../../store/confirmStore'
 import { useAuthStore } from '../../store/authStore'
 import type { MatchLineupDto } from '../../types/domain.types'
 
@@ -16,6 +17,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const confirm = useConfirm()
   const { effectiveRole, user } = useAuthStore()
   const coachTeamIds = user?.coachTeamIds ?? []
 
@@ -45,7 +47,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
       lineupsApi.create({
         teamId,
         appointmentId,
-        name: t('lineups.newLineup'),
+        name: '', // server names it after the event
         formationTemplateId: 1,
         formationCount: 3,
         isShared: false,
@@ -59,15 +61,10 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
     },
   })
 
-  // Attach the chosen lineup to this appointment. Full DTO is sent so roster + formations are
-  // preserved; any lineup already attached here is detached first (a lineup links to one event).
+  // The event gets its own independent copy of the chosen lineup (named after the event), so editing it
+  // never changes the source or any other event. A lineup already on this event is replaced.
   const chooseMutation = useMutation({
-    mutationFn: async (chosen: MatchLineupDto) => {
-      if (lineup && lineup.id !== chosen.id) {
-        await lineupsApi.update(lineup.id, { ...lineup, appointmentId: null })
-      }
-      return lineupsApi.update(chosen.id, { ...chosen, appointmentId })
-    },
+    mutationFn: (chosen: MatchLineupDto) => lineupsApi.copyToAppointment(chosen.id, appointmentId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['appointment-lineup', appointmentId] })
       qc.invalidateQueries({ queryKey: ['lineups', 'team', teamId] })
@@ -76,14 +73,14 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
 
   if (isLoading) return null
 
-  // Unattached lineups (not tied to another event), excluding the one already attached here.
-  const selectableLineups = (teamLineups ?? []).filter(
-    (l) => l.appointmentId == null && l.id !== lineup?.id
-  )
+  // Any team lineup (templates and other events') except the one already on this event can be copied.
+  const selectableLineups = (teamLineups ?? []).filter((l) => l.id !== lineup?.id)
 
   const onSelectExisting = (value: string) => {
     const chosen = (teamLineups ?? []).find((l) => l.id === Number(value))
-    if (chosen) chooseMutation.mutate(chosen)
+    if (!chosen) return
+    if (lineup) confirm(t('lineups.replaceConfirm'), () => chooseMutation.mutate(chosen))
+    else chooseMutation.mutate(chosen)
   }
 
   return (

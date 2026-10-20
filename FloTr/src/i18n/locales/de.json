@@ -2038,6 +2038,9 @@
     "noLineups": "Keine Aufstellungen",
     "noLineupsDesc": "Es wurden noch keine Aufstellungen erstellt.",
     "selectExisting": "Aufstellung wählen",
+    "replaceConfirm": "Die Aufstellung dieses Termins durch eine Kopie der gewählten Aufstellung ersetzen?",
+    "bestPlayer": "Spieler des Spiels",
+    "bestPlayerNone": "— niemand —",
     "formName": "Name der Aufstellung",
     "formTeam": "Mannschaft",
     "formEvent": "Termin",
@@ -3343,6 +3346,7 @@
       "SkillTargetReached": "Fähigkeitsziel erreicht",
       "TestPersonalRecord": "Persönlicher Testrekord",
       "PlayerOfTraining": "Bester Spieler",
+      "PlayerOfMatch": "Spieler des Spiels",
       "FairPlay": "Fair Play",
       "FamilyCheered": "Familie hat angefeuert",
       "HomeTraining": "Heimtraining"
@@ -3355,6 +3359,7 @@
         "Assist": "Bereite ein Tor im Spiel vor.",
         "PlusMinus": "Sei auf dem Feld, wenn dein Team trifft.",
         "PlayerOfTraining": "Werde zum besten Spieler des Trainings gewählt.",
+        "PlayerOfMatch": "Werde zum besten Spieler eines Spiels gewählt.",
         "FairPlay": "Fairplay, Mithilfe, Führung.",
         "FamilyCheered": "Deine Familie kommt zum Spiel und feuert dich an.",
         "SkillGradeImprovement": "Verbessere eine Fähigkeitsnote gegenüber der letzten Bewertung.",
@@ -3453,6 +3458,7 @@
       "name": "Spieler des Trainings II",
       "desc": "20× Spieler des Trainings"
     },
+    "PlayerOfMatch3": { "name": "Spieler des Spiels", "desc": "3× Spieler des Spiels" },
     "FairPlay5": { "name": "Fair Play I", "desc": "5× Fair-Play-Auszeichnung" },
     "FairPlay20": { "name": "Fair Play II", "desc": "20× Fair-Play-Auszeichnung" },
     "FamilyCheered10": {

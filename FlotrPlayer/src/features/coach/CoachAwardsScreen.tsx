@@ -22,14 +22,16 @@ interface CoachAwardsParams {
 }
 
 type AwardAction = { kind: 'toggle'; type: 'FairPlay' | 'FamilyCheered' } | { kind: 'pot' }
+type PotType = 'PlayerOfTraining' | 'PlayerOfMatch'
 
 /** Pure next-state for one event's awards list — mirrors FloTr web's reduceAwards. PlayerOfTraining
- * is 1-per-event, so setting it for one member clears it from whoever held it. */
+ * (PlayerOfMatch on a match) is 1-per-event, so setting it for one member clears it from whoever held it. */
 function reduceLocalAward(
   list: XpAwardDto[],
   action: AwardAction,
   memberId: number,
   appointmentId: number,
+  potType: PotType,
 ): XpAwardDto[] {
   const temp = (type: AwardType): XpAwardDto => ({
     id: -Date.now(),
@@ -43,9 +45,9 @@ function reduceLocalAward(
     const ex = list.find((a) => a.memberId === memberId && a.type === action.type)
     return ex ? list.filter((a) => a !== ex) : [...list, temp(action.type)]
   }
-  const mine = list.find((a) => a.memberId === memberId && a.type === 'PlayerOfTraining')
+  const mine = list.find((a) => a.memberId === memberId && a.type === potType)
   if (mine) return list.filter((a) => a !== mine)
-  return [...list.filter((a) => a.type !== 'PlayerOfTraining'), temp('PlayerOfTraining')]
+  return [...list.filter((a) => a.type !== potType), temp(potType)]
 }
 
 // Coach 1-click bonuses (#100/#110), moved off every player's card to a single per-event screen
@@ -55,6 +57,7 @@ export function CoachAwardsScreen() {
   const navigation = useNavigation()
   const { appointmentId, title, isMatch } = useRoute().params as CoachAwardsParams
   const queryClient = useQueryClient()
+  const potType: PotType = isMatch ? 'PlayerOfMatch' : 'PlayerOfTraining'
 
   const rosterQuery = useQuery({ queryKey: ['playerskills', 'roster'], queryFn: playerSkillsApi.getRoster })
 
@@ -80,14 +83,14 @@ export function CoachAwardsScreen() {
         else await xpApi.createAward({ appointmentId, memberId, type: action.type })
         return
       }
-      const mine = server.find((a) => a.memberId === memberId && a.type === 'PlayerOfTraining')
+      const mine = server.find((a) => a.memberId === memberId && a.type === potType)
       if (mine) {
         await xpApi.deleteAward(mine.id)
         return
       }
-      const other = server.find((a) => a.type === 'PlayerOfTraining')
+      const other = server.find((a) => a.type === potType)
       if (other) await xpApi.deleteAward(other.id) // 1/event index → free the slot first
-      await xpApi.createAward({ appointmentId, memberId, type: 'PlayerOfTraining' })
+      await xpApi.createAward({ appointmentId, memberId, type: potType })
     },
     // ponytail: optimistic cache patch; rapid conflicting taps self-heal on the onSettled refetch
     // (the unique index is the real guardrail, same tradeoff as FloTr web's AttendanceModal).
@@ -95,7 +98,7 @@ export function CoachAwardsScreen() {
       await queryClient.cancelQueries({ queryKey: awardsKey })
       const prev = queryClient.getQueryData<XpAwardDto[]>(awardsKey)
       queryClient.setQueryData<XpAwardDto[]>(awardsKey, (old = []) =>
-        reduceLocalAward(old, action, memberId, appointmentId),
+        reduceLocalAward(old, action, memberId, appointmentId, potType),
       )
       return { prev }
     },
@@ -142,9 +145,9 @@ export function CoachAwardsScreen() {
               {p.teams.length > 0 && <Text style={styles.playerTeams}>{p.teams.join(', ')}</Text>}
               <View style={styles.pillRow}>
                 <AwardPill
-                  active={hasAward(p.memberId, 'PlayerOfTraining')}
+                  active={hasAward(p.memberId, potType)}
                   icon="star"
-                  labelKey="xpHowto.name.PlayerOfTraining"
+                  labelKey={isMatch ? 'xpHowto.name.PlayerOfMatch' : 'xpHowto.name.PlayerOfTraining'}
                   onPress={() => awardMutation.mutate({ memberId: p.memberId, action: { kind: 'pot' } })}
                 />
                 <AwardPill

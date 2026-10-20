@@ -21,6 +21,7 @@ public static class XpRules
     public const int TestPersonalRecord = 20;
     // Layer B — coach 1-click bonuses (#100).
     public const int PlayerOfTraining = 10;
+    public const int PlayerOfMatch = 10;
     public const int FairPlay = 10;
     public const int FamilyCheered = 5;
     /// <summary>Family Fan XP per guardian check-in (#103) — a live family aggregate, not a child's career XP.</summary>
@@ -45,6 +46,7 @@ public static class XpRules
         XpEventType.SkillTargetReached => SkillTargetReached,
         XpEventType.TestPersonalRecord => TestPersonalRecord,
         XpEventType.PlayerOfTraining => PlayerOfTraining,
+        XpEventType.PlayerOfMatch => PlayerOfMatch,
         XpEventType.FairPlay => FairPlay,
         XpEventType.FamilyCheered => FamilyCheered,
         XpEventType.HomeTraining => HomeTraining,
@@ -60,7 +62,7 @@ public static class XpRules
     public static readonly IReadOnlyList<XpEventType> ConfigurableTypes = new[]
     {
         XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
-        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.FairPlay, XpEventType.FamilyCheered,
+        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.PlayerOfMatch, XpEventType.FairPlay, XpEventType.FamilyCheered,
         XpEventType.SkillGradeImprovement, XpEventType.SkillTargetReached, XpEventType.TestPersonalRecord,
         XpEventType.HomeTraining,
     };
@@ -72,7 +74,7 @@ public static class XpRules
     public static readonly IReadOnlySet<XpEventType> TeamScopableTypes = new HashSet<XpEventType>
     {
         XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
-        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.FairPlay, XpEventType.FamilyCheered,
+        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.PlayerOfMatch, XpEventType.FairPlay, XpEventType.FamilyCheered,
     };
 
     // ── Member-facing "How to earn XP" catalog metadata (#107) ──────────────────────────────
@@ -81,7 +83,7 @@ public static class XpRules
     /// "C" capped self-report (home training).</summary>
     public static string LayerOf(XpEventType type) => type switch
     {
-        XpEventType.PlayerOfTraining or XpEventType.FairPlay or XpEventType.FamilyCheered => "B",
+        XpEventType.PlayerOfTraining or XpEventType.PlayerOfMatch or XpEventType.FairPlay or XpEventType.FamilyCheered => "B",
         XpEventType.HomeTraining => "C",
         _ => "A",
     };
@@ -89,7 +91,7 @@ public static class XpRules
     /// <summary>Who triggers the reward: the player themselves, a "coach", or the family/"parent".</summary>
     public static string TriggerOf(XpEventType type) => type switch
     {
-        XpEventType.PlayerOfTraining or XpEventType.FairPlay => "coach",
+        XpEventType.PlayerOfTraining or XpEventType.PlayerOfMatch or XpEventType.FairPlay => "coach",
         XpEventType.FamilyCheered => "parent",
         _ => "player",
     };
@@ -102,6 +104,7 @@ public static class XpRules
     public static XpEventType EventTypeFor(AwardType award) => award switch
     {
         AwardType.PlayerOfTraining => XpEventType.PlayerOfTraining,
+        AwardType.PlayerOfMatch => XpEventType.PlayerOfMatch,
         AwardType.FairPlay => XpEventType.FairPlay,
         AwardType.FamilyCheered => XpEventType.FamilyCheered,
         _ => throw new ArgumentOutOfRangeException(nameof(award))

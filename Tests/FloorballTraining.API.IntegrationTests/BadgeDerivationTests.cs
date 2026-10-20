@@ -284,7 +284,15 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
             var match = new Appointment { AppointmentType = AppointmentType.Match, Start = _now.AddDays(20), End = _now.AddDays(20).AddHours(1), LocationId = 1, TeamId = _teamId };
             db.Appointments.Add(match);
             await db.SaveChangesAsync();
-            db.AppointmentAttendances.Add(new AppointmentAttendance { AppointmentId = match.Id, MemberId = _achieverId, Status = 1, RecordedAt = match.Start });
+            // Matches are counted from the lineup roster, not attendance.
+            var formation = new FormationTemplate { Name = "t" };
+            db.FormationTemplates.Add(formation);
+            await db.SaveChangesAsync();
+            db.MatchLineups.Add(new MatchLineup
+            {
+                TeamId = _teamId, AppointmentId = match.Id, Name = "L", FormationTemplateId = formation.Id,
+                Roster = [new LineupRoster { MemberId = _achieverId }],
+            });
 
             // Two confirmed home trainings (HomeTrainingCount metric — HomeTraining10/50/150).
             for (var i = 0; i < 2; i++)

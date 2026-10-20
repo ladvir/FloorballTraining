@@ -229,6 +229,8 @@ export type StringKey =
   | 'badge.PlayerOfTraining5.desc'
   | 'badge.PlayerOfTraining20.name'
   | 'badge.PlayerOfTraining20.desc'
+  | 'badge.PlayerOfMatch3.name'
+  | 'badge.PlayerOfMatch3.desc'
   | 'badge.FairPlay5.name'
   | 'badge.FairPlay5.desc'
   | 'badge.FairPlay20.name'
@@ -358,6 +360,7 @@ export type StringKey =
   | 'xpHowto.name.SkillTargetReached'
   | 'xpHowto.name.TestPersonalRecord'
   | 'xpHowto.name.PlayerOfTraining'
+  | 'xpHowto.name.PlayerOfMatch'
   | 'xpHowto.name.FairPlay'
   | 'xpHowto.name.FamilyCheered'
   | 'xpHowto.name.HomeTraining'
@@ -370,6 +373,7 @@ export type StringKey =
   | 'xpHowto.desc.SkillTargetReached'
   | 'xpHowto.desc.TestPersonalRecord'
   | 'xpHowto.desc.PlayerOfTraining'
+  | 'xpHowto.desc.PlayerOfMatch'
   | 'xpHowto.desc.FairPlay'
   | 'xpHowto.desc.FamilyCheered'
   | 'xpHowto.desc.HomeTraining'
@@ -674,6 +678,8 @@ const cs: Record<StringKey, string> = {
   'badge.PlayerOfTraining5.desc': '5× hráč tréninku',
   'badge.PlayerOfTraining20.name': 'Hráč tréninku II',
   'badge.PlayerOfTraining20.desc': '20× hráč tréninku',
+  'badge.PlayerOfMatch3.name': 'Hráč zápasu',
+  'badge.PlayerOfMatch3.desc': '3× hráč zápasu',
   'badge.FairPlay5.name': 'Fair play I',
   'badge.FairPlay5.desc': '5× ocenění za fair play',
   'badge.FairPlay20.name': 'Fair play II',
@@ -804,6 +810,7 @@ const cs: Record<StringKey, string> = {
   'xpHowto.name.SkillTargetReached': 'Splněný cíl dovednosti',
   'xpHowto.name.TestPersonalRecord': 'Osobní rekord v testu',
   'xpHowto.name.PlayerOfTraining': 'Nejlepší hráč',
+  'xpHowto.name.PlayerOfMatch': 'Hráč zápasu',
   'xpHowto.name.FairPlay': 'Fair play',
   'xpHowto.name.FamilyCheered': 'Rodina fandila',
   'xpHowto.name.HomeTraining': 'Domácí trénink',
@@ -816,6 +823,7 @@ const cs: Record<StringKey, string> = {
   'xpHowto.desc.SkillTargetReached': 'Dosáhni cílové známky u dovednosti.',
   'xpHowto.desc.TestPersonalRecord': 'Překonej svůj nejlepší výsledek v testu.',
   'xpHowto.desc.PlayerOfTraining': 'Buď vybrán jako nejlepší hráč tréninku.',
+  'xpHowto.desc.PlayerOfMatch': 'Buď vybrán jako nejlepší hráč zápasu.',
   'xpHowto.desc.FairPlay': 'Fair play, pomoc spoluhráčům, vedení týmu.',
   'xpHowto.desc.FamilyCheered': 'Tvoje rodina přijde fandit na zápas.',
   'xpHowto.desc.HomeTraining': 'Zapiš potvrzený domácí trénink (se stropem).',

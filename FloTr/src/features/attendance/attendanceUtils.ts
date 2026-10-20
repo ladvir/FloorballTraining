@@ -6,7 +6,7 @@ export type AttendanceStatus = 0 | 1 | 2 | 3
 /** Intent of one coach bonus tap (#101). `pot` = player-of-training (single-select, 1/event). */
 export type AwardAction =
   | { kind: 'toggle'; memberId: number; type: AwardType }
-  | { kind: 'pot'; memberId: number }
+  | { kind: 'pot'; memberId: number; type?: 'PlayerOfTraining' | 'PlayerOfMatch' }
 
 const tempAward = (memberId: number, type: AwardType, appointmentId: number): XpAwardDto => ({
   id: -Date.now(),
@@ -29,13 +29,11 @@ export function reduceAwards(
       ? list.filter((a) => a !== ex)
       : [...list, tempAward(action.memberId, action.type, appointmentId)]
   }
-  // Player of training: single-select across the roster (tap again = clear).
-  const mine = list.find((a) => a.memberId === action.memberId && a.type === 'PlayerOfTraining')
+  // Player of training / match: single-select across the roster (tap again = clear).
+  const pot = action.type ?? 'PlayerOfTraining'
+  const mine = list.find((a) => a.memberId === action.memberId && a.type === pot)
   if (mine) return list.filter((a) => a !== mine)
-  return [
-    ...list.filter((a) => a.type !== 'PlayerOfTraining'),
-    tempAward(action.memberId, 'PlayerOfTraining', appointmentId),
-  ]
+  return [...list.filter((a) => a.type !== pot), tempAward(action.memberId, pot, appointmentId)]
 }
 
 export interface AttendanceRecord {

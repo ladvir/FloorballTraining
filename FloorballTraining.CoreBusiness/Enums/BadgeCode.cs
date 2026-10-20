@@ -65,5 +65,6 @@ public enum BadgeCode
     Challenges50,
     CareerXp5000,
     CareerXp15000,
-    CareerXp30000
+    CareerXp30000,
+    PlayerOfMatch3
 }

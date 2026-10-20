@@ -1833,7 +1833,7 @@ export interface XpEventDto {
 }
 
 /** Coach 1-click bonus (layer B, #100/#101). Label lives under i18n `xp.type.<type>`. */
-export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
+export type AwardType = 'PlayerOfTraining' | 'PlayerOfMatch' | 'FairPlay' | 'FamilyCheered'
 
 export interface XpAwardDto {
   id: number

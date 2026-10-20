@@ -150,4 +150,48 @@ public class XpCoachAwardTests(CustomWebApplicationFactory factory) : IAsyncLife
         var list = await client.GetFromJsonAsync<List<XpAwardDto>>($"/xp/awards?appointmentId={_trainingId}");
         list.Should().ContainSingle(a => a.MemberId == _memberId && a.Type == "PlayerOfTraining");
     }
+
+    [Fact]
+    public async Task PlayerOfMatch_MustBeInLineup_AndAwardsXp()
+    {
+        int teamId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            teamId = (await db.Appointments.FirstAsync(a => a.Id == _matchId)).TeamId!.Value;
+            var formation = new FormationTemplate { Name = "t" };
+            db.FormationTemplates.Add(formation);
+            await db.SaveChangesAsync();
+            db.MatchLineups.Add(new MatchLineup
+            {
+                TeamId = teamId, AppointmentId = _matchId, Name = "L", FormationTemplateId = formation.Id,
+                Roster = [new LineupRoster { MemberId = _memberId }],
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", await LoginHelper.GetAdminTokenAsync(client));
+
+        // Not in the lineup → rejected; PlayerOfTraining is not allowed on a match; in the lineup → accepted.
+        (await client.PostAsJsonAsync("/xp/awards", new CreateXpAwardDto { AppointmentId = _matchId, MemberId = _member2Id, Type = "PlayerOfMatch" }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync("/xp/awards", new CreateXpAwardDto { AppointmentId = _matchId, MemberId = _memberId, Type = "PlayerOfTraining" }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync("/xp/awards", new CreateXpAwardDto { AppointmentId = _matchId, MemberId = _memberId, Type = "PlayerOfMatch" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await MemberTotalAsync(_memberId)).Should().Be(XpRules.PlayerOfMatch);
+
+        await using var scope2 = factory.Services.CreateAsyncScope();
+        var ctx = scope2.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        (await ctx.XpEvents.AnyAsync(e => e.MemberId == _memberId && e.Type == XpEventType.PlayerOfMatch)).Should().BeTrue();
+        (await ctx.XpEvents.AnyAsync(e => e.MemberId == _memberId && e.Type == XpEventType.PlayerOfTraining)).Should().BeFalse();
+
+        // Own badge metric: 1 of 3 "player of the match" awards, and the training badge is untouched.
+        var badges = scope2.ServiceProvider.GetRequiredService<BadgeService>();
+        var status = await badges.GetBadgesAsync(_memberId);
+        status.Single(b => b.Code == nameof(BadgeCode.PlayerOfMatch3)).Current.Should().Be(1);
+        status.Single(b => b.Code == nameof(BadgeCode.PlayerOfTraining5)).Current.Should().Be(0);
+    }
 }

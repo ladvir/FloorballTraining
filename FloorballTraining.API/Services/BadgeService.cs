@@ -125,6 +125,7 @@ public class BadgeService(FloorballTrainingContext context)
         public int SkillTargetCount;
         public int TestRecordCount;
         public int PlayerOfTrainingCount;
+        public int PlayerOfMatchCount;
         public int FairPlayCount;
         public int FamilyCheeredCount;
         public int ChallengeCount;
@@ -162,6 +163,7 @@ public class BadgeService(FloorballTrainingContext context)
             BadgeMetric.SkillTargetCount => SkillTargetCount,
             BadgeMetric.TestRecordCount => TestRecordCount,
             BadgeMetric.PlayerOfTrainingCount => PlayerOfTrainingCount,
+            BadgeMetric.PlayerOfMatchCount => PlayerOfMatchCount,
             BadgeMetric.FairPlayCount => FairPlayCount,
             BadgeMetric.FamilyCheeredCount => FamilyCheeredCount,
             BadgeMetric.ChallengeCount => ChallengeCount,
@@ -214,11 +216,6 @@ public class BadgeService(FloorballTrainingContext context)
                 Get(a.MemberId).TrainingCount++;
                 Get(a.MemberId).Track(BadgeMetric.TrainingCount, when);
             }
-            else if (present && appt?.AppointmentType == AppointmentType.Match)
-            {
-                Get(a.MemberId).MatchCount++;
-                Get(a.MemberId).Track(BadgeMetric.MatchCount, when);
-            }
 
             var sid = ResolveSeason(a.MemberId, when);
             if (sid != null)
@@ -233,6 +230,23 @@ public class BadgeService(FloorballTrainingContext context)
                     seasonTotals[key] = (cur.total + 1, cur.present + (present ? 1 : 0));
                 }
             }
+        }
+
+        // MatchCount: a match counts when the member is an available player in the match's lineup
+        // (matches don't track attendance). One count per member per match even with several lineups.
+        var lineupMatches = (await context.LineupRosters.AsNoTracking()
+            .Where(r => r.MemberId != null && r.IsAvailable && (memberId == null || r.MemberId == memberId))
+            .Where(r => r.MatchLineup!.Appointment != null && r.MatchLineup.Appointment.AppointmentType == AppointmentType.Match)
+            .Select(r => new { MemberId = r.MemberId!.Value, AppointmentId = r.MatchLineup!.AppointmentId!.Value, r.MatchLineup.Appointment!.Start })
+            .ToListAsync(ct))
+            .DistinctBy(r => (r.MemberId, r.AppointmentId));
+        foreach (var m in lineupMatches)
+        {
+            Get(m.MemberId).MatchCount++;
+            Get(m.MemberId).Track(BadgeMetric.MatchCount, m.Start);
+            var msid = ResolveSeason(m.MemberId, m.Start);
+            if (msid != null)
+                (seasonsPlayed.TryGetValue(m.MemberId, out var mset) ? mset : seasonsPlayed[m.MemberId] = new()).Add(msid.Value);
         }
 
         foreach (var ((mid, sid), (total, present)) in seasonTotals)
@@ -318,6 +332,7 @@ public class BadgeService(FloorballTrainingContext context)
                     case XpEventType.SkillTargetReached: s.SkillTargetCount = count; metric = BadgeMetric.SkillTargetCount; break;
                     case XpEventType.TestPersonalRecord: s.TestRecordCount = count; metric = BadgeMetric.TestRecordCount; break;
                     case XpEventType.PlayerOfTraining: s.PlayerOfTrainingCount = count; metric = BadgeMetric.PlayerOfTrainingCount; break;
+                    case XpEventType.PlayerOfMatch: s.PlayerOfMatchCount = count; metric = BadgeMetric.PlayerOfMatchCount; break;
                     case XpEventType.FairPlay: s.FairPlayCount = count; metric = BadgeMetric.FairPlayCount; break;
                     case XpEventType.FamilyCheered: s.FamilyCheeredCount = count; metric = BadgeMetric.FamilyCheeredCount; break;
                     case XpEventType.ChallengeReward: s.ChallengeCount = count; metric = BadgeMetric.ChallengeCount; break;

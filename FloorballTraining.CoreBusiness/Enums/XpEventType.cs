@@ -20,5 +20,7 @@ public enum XpEventType
     // Etapa 6 — self-completable challenge bonus (#108), derived from a ChallengeCompletion.
     ChallengeReward,
     // #156 — team challenge bonus, derived from a TeamChallengeCompletion (one per rostered player).
-    TeamChallengeReward
+    TeamChallengeReward,
+    // Coach pick of the best player of a match (separate from PlayerOfTraining), derived from XpCoachAward.
+    PlayerOfMatch
 }
