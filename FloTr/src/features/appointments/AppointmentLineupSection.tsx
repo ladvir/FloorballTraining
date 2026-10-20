@@ -73,12 +73,14 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
 
   if (isLoading) return null
 
-  // Any team lineup (templates and other events') except the one already on this event can be copied.
+  // Any team lineup (templates and other events') can be copied; the event's own lineup is listed too
+  // (marked as selected) so the current choice is visible.
   const selectableLineups = (teamLineups ?? []).filter((l) => l.id !== lineup?.id)
+  const listedLineups = lineup ? [lineup, ...selectableLineups] : selectableLineups
 
   const onSelectExisting = (value: string) => {
     const chosen = (teamLineups ?? []).find((l) => l.id === Number(value))
-    if (!chosen) return
+    if (!chosen || chosen.id === lineup?.id) return
     if (lineup) confirm(t('lineups.replaceConfirm'), () => chooseMutation.mutate(chosen))
     else chooseMutation.mutate(chosen)
   }
@@ -86,31 +88,31 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
   return (
     <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50 p-4">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <LayoutGrid className="h-4 w-4 text-violet-600" />
           <span className="text-sm font-medium text-violet-800">{t('lineups.title')}</span>
         </div>
         {canEdit ? (
-          <div className="flex items-center gap-2">
-            {selectableLineups.length > 0 && (
+          <div className="flex w-full flex-wrap items-center gap-2">
+            {listedLineups.length > 0 && (
               <select
                 aria-label={t('lineups.selectExisting')}
-                value=""
+                value={lineup?.id ?? ''}
                 onChange={(e) => onSelectExisting(e.target.value)}
                 disabled={chooseMutation.isPending}
-                className="rounded-md border border-violet-300 bg-white px-2 py-1 text-xs text-violet-800 focus:border-violet-500 focus:outline-none"
+                className="min-w-0 flex-1 rounded-md border border-violet-300 bg-white px-2 py-1 text-xs text-violet-800 focus:border-violet-500 focus:outline-none"
               >
                 <option value="" disabled>
                   {t('lineups.selectExisting')}
                 </option>
-                {selectableLineups.map((l) => (
+                {listedLineups.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.name}
+                    {l.id === lineup?.id ? `✓ ${l.name}` : l.name}
                   </option>
                 ))}
               </select>
             )}
-            {lineup ? (
+            {lineup && (
               <button
                 onClick={() => navigate(`/lineups/${lineup.id}/edit`)}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
@@ -118,16 +120,19 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
                 <Pencil className="h-3 w-3" />
                 {t('common.edit')}
               </button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => createMutation.mutate()}
-                loading={createMutation.isPending}
-              >
-                <Plus className="h-3 w-3" /> {t('common.create')}
-              </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                lineup
+                  ? confirm(t('lineups.replaceConfirm'), () => createMutation.mutate())
+                  : createMutation.mutate()
+              }
+              loading={createMutation.isPending}
+            >
+              <Plus className="h-3 w-3" /> {t('lineups.newLineup')}
+            </Button>
           </div>
         ) : lineup ? (
           <button

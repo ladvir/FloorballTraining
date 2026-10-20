@@ -134,3 +134,12 @@ public class TeamSeasonReportDto
     public List<MonthlyTeamReportDto> Months { get; set; } = [];
     public MonthlyTeamReportDto? SeasonTotal { get; set; }
 }
+
+/// <summary>A team the current user can open the season report for, with the capacity they have in it.</summary>
+public class MyReportTeamDto
+{
+    public int TeamId { get; set; }
+    public string TeamName { get; set; } = "";
+    /// <summary>"coach" (coach / head coach / club admin / admin of the team) or "player".</summary>
+    public string Role { get; set; } = "player";
+}

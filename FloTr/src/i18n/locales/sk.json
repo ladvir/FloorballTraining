@@ -2040,7 +2040,8 @@
     "noLineups": "Žiadne zostavy",
     "noLineupsDesc": "Zatiaľ neboli vytvorené žiadne zostavy.",
     "selectExisting": "Vybrať zostavu",
-    "replaceConfirm": "Nahradiť existujúcu zostavu tejto udalosti kópiou vybranej zostavy?",
+    "backToEvent": "Späť na udalosť",
+    "replaceConfirm": "Nahradiť existujúcu zostavu tejto udalosti?",
     "bestPlayer": "Hráč zápasu",
     "bestPlayerNone": "— nikto —",
     "formName": "Názov zostavy",
@@ -3719,6 +3720,9 @@
     "clubEmptyHint": "Vyberte sezónu, v ktorej tímy klubu hrajú."
   },
   "seasonReport": {
+    "team": "Tím",
+    "asCoach": "Ako tréner",
+    "asPlayer": "Ako hráč",
     "title": "Sezónny report",
     "bestPlayers": "Najlepší hráči",
     "wholeSeason": "Celá sezóna",

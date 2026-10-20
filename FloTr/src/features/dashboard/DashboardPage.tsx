@@ -38,10 +38,10 @@ import { useLiveTrainingStore } from '../../store/liveTrainingStore'
 import { primeAudio } from '../../utils/sound'
 import { XpCareerCard } from '../members/XpCareerCard'
 import { ChallengesCard } from '../members/ChallengesCard'
-import { RecentAchievementsCard } from './RecentAchievementsCard'
 import { PendingRewardsCard } from '../members/RewardsCard'
 import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
 import { SeasonGoalsCard } from '../planning/SeasonGoalsCard'
+import { SeasonReportCard } from './SeasonReportCard'
 import { UpcomingMatchesCard } from './UpcomingMatchesCard'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
@@ -247,6 +247,9 @@ export function DashboardPage() {
           <PendingRewardsCard memberId={myMemberId} />
         </div>
       )}
+
+      {/* Season report of a team I coach or play in — opens on the current month; self-hides without a team */}
+      {!isGuardian && <SeasonReportCard />}
 
       {/* Equal-width dashboard cards (#104). The home-training queue self-hides when empty; the
           recent trainings/activities cards hide for guardians and when nothing is 14-days-recent. */}
@@ -469,13 +472,6 @@ export function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* Players' recent badges & level/rank-ups — Coach and above */}
-      {isCoach && (
-        <div className="mb-6 lg:w-1/2">
-          <RecentAchievementsCard clubId={activeClubId} />
-        </div>
-      )}
 
       {/* Recent logins widget — Admin only */}
       {isAdmin && (

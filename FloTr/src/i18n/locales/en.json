@@ -2038,7 +2038,8 @@
     "noLineups": "No lineups",
     "noLineupsDesc": "No lineups have been created yet.",
     "selectExisting": "Select lineup",
-    "replaceConfirm": "Replace this event's lineup with a copy of the selected lineup?",
+    "backToEvent": "Back to event",
+    "replaceConfirm": "Replace this event's current lineup?",
     "bestPlayer": "Player of the match",
     "bestPlayerNone": "— none —",
     "formName": "Lineup Name",
@@ -3714,6 +3715,9 @@
     "clubEmptyHint": "Pick a season the club teams play in."
   },
   "seasonReport": {
+    "team": "Team",
+    "asCoach": "As coach",
+    "asPlayer": "As player",
     "title": "Season report",
     "bestPlayers": "Best players",
     "wholeSeason": "Whole season",

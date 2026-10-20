@@ -124,6 +124,23 @@ public class LineupsController(
         .Include(l => l.Roster).ThenInclude(r => r.Member)
         .Include(l => l.Formations).ThenInclude(f => f.Slots);
 
+    /// <summary>One lineup per event: drop the lineup(s) currently on it (the DB has no cascade from roster/formations here).</summary>
+    private async Task RemoveEventLineupsAsync(int appointmentId, int? exceptId = null)
+    {
+        var existing = await context.MatchLineups
+            .Include(l => l.Roster)
+            .Include(l => l.Formations).ThenInclude(f => f.Slots)
+            .Where(l => l.AppointmentId == appointmentId && l.Id != exceptId)
+            .ToListAsync();
+        foreach (var e in existing)
+        {
+            context.LineupSlots.RemoveRange(e.Formations.SelectMany(f => f.Slots));
+            context.LineupFormations.RemoveRange(e.Formations);
+            context.LineupRosters.RemoveRange(e.Roster);
+            context.MatchLineups.Remove(e);
+        }
+    }
+
     /// <summary>Lineup name derived from its event — "{event name} {d.M.yyyy}" (date only when the event is unnamed).</summary>
     private async Task<string?> EventLineupNameAsync(int appointmentId)
     {
@@ -214,6 +231,9 @@ public class LineupsController(
             if (appt == null || appt.TeamId != dto.TeamId)
                 return BadRequest(new { message = "Zápas nepatří k tomuto týmu." });
         }
+
+        // A new lineup for an event replaces the one it had.
+        if (dto.AppointmentId.HasValue) await RemoveEventLineupsAsync(dto.AppointmentId.Value);
 
         var now = DateTime.UtcNow;
         var eventName = dto.AppointmentId.HasValue ? await EventLineupNameAsync(dto.AppointmentId.Value) : null;
@@ -413,19 +433,7 @@ public class LineupsController(
         if (appt == null || appt.TeamId != source.TeamId)
             return BadRequest(new { message = "Zápas nepatří k tomuto týmu." });
 
-        // One lineup per event: drop the current one (the DB has no cascade from roster/formations here).
-        var existing = await context.MatchLineups
-            .Include(l => l.Roster)
-            .Include(l => l.Formations).ThenInclude(f => f.Slots)
-            .Where(l => l.AppointmentId == appointmentId && l.Id != sourceId)
-            .ToListAsync();
-        foreach (var e in existing)
-        {
-            context.LineupSlots.RemoveRange(e.Formations.SelectMany(f => f.Slots));
-            context.LineupFormations.RemoveRange(e.Formations);
-            context.LineupRosters.RemoveRange(e.Roster);
-            context.MatchLineups.Remove(e);
-        }
+        await RemoveEventLineupsAsync(appointmentId, exceptId: sourceId);
 
         var now = DateTime.UtcNow;
         var copy = new MatchLineup

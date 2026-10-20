@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, BarChart3, Save, HelpCircle, Sliders, Users } from 'lucide-react'
+import { ArrowLeft, BarChart3, CalendarDays, Save, HelpCircle, Sliders, Users } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -611,6 +611,16 @@ export function LineupEditorPage() {
               <Users className="h-3.5 w-3.5" /> {t('lineups.roster')}
             </button>
           </div>
+          {state.id > 0 && linkedAppointmentId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/appointments?open=${linkedAppointmentId}`)}
+              title={state.appointmentName ?? undefined}
+            >
+              <CalendarDays className="h-4 w-4" /> {t('lineups.backToEvent')}
+            </Button>
+          ) : null}
           {linkedTracker ? (
             <Button
               size="sm"

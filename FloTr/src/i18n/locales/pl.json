@@ -2042,7 +2042,8 @@
     "noLineups": "Brak składów",
     "noLineupsDesc": "Nie utworzono jeszcze żadnych składów.",
     "selectExisting": "Wybierz skład",
-    "replaceConfirm": "Zastąpić skład tego wydarzenia kopią wybranego składu?",
+    "backToEvent": "Wróć do wydarzenia",
+    "replaceConfirm": "Zastąpić obecny skład tego wydarzenia?",
     "bestPlayer": "Zawodnik meczu",
     "bestPlayerNone": "— nikt —",
     "formName": "Nazwa składu",
@@ -3722,6 +3723,9 @@
     "clubEmptyHint": "Wybierz sezon, w którym grają drużyny klubu."
   },
   "seasonReport": {
+    "team": "Drużyna",
+    "asCoach": "Jako trener",
+    "asPlayer": "Jako zawodnik",
     "title": "Raport sezonu",
     "bestPlayers": "Najlepsi zawodnicy",
     "wholeSeason": "Cały sezon",

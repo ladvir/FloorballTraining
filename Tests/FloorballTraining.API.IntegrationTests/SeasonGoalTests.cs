@@ -703,7 +703,8 @@ public class SeasonGoalTests : IAsyncLifetime
             db.AppointmentAttendances.AddRange(
                 new AppointmentAttendance { AppointmentId = appointmentId, MemberId = coachMemberId, Status = 1, RecordedAt = trainingDate },
                 new AppointmentAttendance { AppointmentId = appointmentId, MemberId = deactivatedMemberId, Status = 1, RecordedAt = trainingDate },
-                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = _memberId1, Status = 1, RecordedAt = trainingDate });
+                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = _memberId1, Status = 1, RecordedAt = trainingDate },
+                new AppointmentAttendance { AppointmentId = appointmentId, MemberId = _memberId2, Status = 2, RecordedAt = trainingDate }); // absent → 0% → hidden
 
             db.XpEvents.Add(new XpEvent
             {
@@ -720,6 +721,7 @@ public class SeasonGoalTests : IAsyncLifetime
 
             // The real player shows up with 100% attendance...
             report.SeasonTotal!.TopAttendance.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 100);
+            report.SeasonTotal!.TopAttendance.Should().NotContain(r => r.MemberId == _memberId2);
             // ...but the coach and the deactivated ex-player never appear in any ranking, despite
             // both having an attendance record (and the ex-player a huge XP total) for this team.
             report.SeasonTotal!.TopAttendance.Should().NotContain(r => r.MemberId == coachMemberId || r.MemberId == deactivatedMemberId);
@@ -800,5 +802,15 @@ public class SeasonGoalTests : IAsyncLifetime
         var client = _factory.CreateClient();
         (await client.GetAsync($"/SeasonGoals/team/{_teamId}"))
             .StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task MyReportTeams_ListsTeamWithRole_CoachAsCoach_PlayerAsPlayer()
+    {
+        var coach = await (await CreateClientAsync(_coachEmail)).GetFromJsonAsync<List<MyReportTeamDto>>("/SeasonGoals/my-teams");
+        coach.Should().Contain(t => t.TeamId == _teamId && t.Role == "coach");
+
+        var player = await (await CreateClientAsync(_playerEmail)).GetFromJsonAsync<List<MyReportTeamDto>>("/SeasonGoals/my-teams");
+        player.Should().Contain(t => t.TeamId == _teamId && t.Role == "player");
     }
 }

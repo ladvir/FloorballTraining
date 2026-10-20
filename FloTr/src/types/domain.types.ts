@@ -658,6 +658,13 @@ export interface MonthlyTeamReportDto {
   topRewards: PlayerRankRowDto[]
 }
 
+export interface MyReportTeamDto {
+  teamId: number
+  teamName: string
+  /** "coach" = coach/head coach/club admin/admin of the team, "player" = member only. */
+  role: 'coach' | 'player'
+}
+
 export interface TeamSeasonReportDto {
   teamId: number
   teamName: string

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Calendar } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -129,12 +129,16 @@ export function LineupReadOnlyPage() {
           <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
             {lineup.teamName && <span>{lineup.teamName}</span>}
             {lineup.appointmentName && (
-              <span className="flex items-center gap-1">
+              <Link
+                to={`/appointments?open=${lineup.appointmentId}`}
+                className="flex items-center gap-1 text-sky-700 hover:underline"
+                title={t('lineups.backToEvent')}
+              >
                 <Calendar className="h-3 w-3" />
                 {lineup.appointmentName}
                 {lineup.appointmentStart &&
                   ` (${format(parseISO(lineup.appointmentStart), 'd.M.yyyy')})`}
-              </span>
+              </Link>
             )}
             <span className="flex items-center gap-1">
               <Eye className="h-3 w-3" /> {t('lineups.shareLineup')}

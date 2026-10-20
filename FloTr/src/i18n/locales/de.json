@@ -2038,7 +2038,8 @@
     "noLineups": "Keine Aufstellungen",
     "noLineupsDesc": "Es wurden noch keine Aufstellungen erstellt.",
     "selectExisting": "Aufstellung wählen",
-    "replaceConfirm": "Die Aufstellung dieses Termins durch eine Kopie der gewählten Aufstellung ersetzen?",
+    "backToEvent": "Zurück zum Termin",
+    "replaceConfirm": "Die aktuelle Aufstellung dieses Termins ersetzen?",
     "bestPlayer": "Spieler des Spiels",
     "bestPlayerNone": "— niemand —",
     "formName": "Name der Aufstellung",
@@ -3723,6 +3724,9 @@
     "clubEmptyHint": "Wähle eine Saison, in der die Vereinsteams spielen."
   },
   "seasonReport": {
+    "team": "Team",
+    "asCoach": "Als Trainer",
+    "asPlayer": "Als Spieler",
     "title": "Saisonbericht",
     "bestPlayers": "Beste Spieler",
     "wholeSeason": "Ganze Saison",

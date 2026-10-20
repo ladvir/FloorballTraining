@@ -18,7 +18,7 @@ public class LineupCopyTests(CustomWebApplicationFactory factory)
     [Fact]
     public async Task CopyToAppointment_CreatesIndependentEventNamedCopy_AndReplacesExisting()
     {
-        int teamId, matchA, matchB, sourceId;
+        int teamId, matchA, matchB, sourceId, formationId;
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
@@ -31,6 +31,7 @@ public class LineupCopyTests(CustomWebApplicationFactory factory)
             db.AddRange(team, member, formation);
             await db.SaveChangesAsync();
             teamId = team.Id;
+            formationId = formation.Id;
 
             var a = new Appointment { Name = "Derby", AppointmentType = AppointmentType.Match, Start = Start, End = Start.AddHours(1), LocationId = 1, TeamId = teamId };
             var b = new Appointment { Name = "Pohár", AppointmentType = AppointmentType.Match, Start = Start.AddDays(7), End = Start.AddDays(7).AddHours(1), LocationId = 1, TeamId = teamId };
@@ -62,6 +63,11 @@ public class LineupCopyTests(CustomWebApplicationFactory factory)
             copy.Name.Should().Be("Pohár 14.3.2026");
             copy.Roster.Should().HaveCount(1);
         }
+
+        // Creating a brand-new lineup for the event replaces its current one too (still one per event).
+        var created = await client.PostAsJsonAsync("/lineups", new MatchLineupDto { TeamId = teamId, AppointmentId = matchB, FormationTemplateId = formationId, Name = "" });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await created.Content.ReadFromJsonAsync<MatchLineupDto>())!.Name.Should().Be("Pohár 14.3.2026");
 
         await using var check = factory.Services.CreateAsyncScope();
         var ctx = check.ServiceProvider.GetRequiredService<FloorballTrainingContext>();

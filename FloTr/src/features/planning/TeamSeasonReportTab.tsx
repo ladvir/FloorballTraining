@@ -23,12 +23,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 interface Props {
   teamId: number
+  /** Bucket to open first — a 'yyyy-MM' month or 'season'. Falls back to the season total when absent. */
+  initialLabel?: string
 }
 
 /** Month-by-month + season-total report: best players by XP level, scoring, attendance, badges and rewards. */
-export function TeamSeasonReportTab({ teamId }: Props) {
+export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) {
   const { t } = useTranslation()
-  const [selectedLabel, setSelectedLabel] = useState<string>('season')
+  const [selectedLabel, setSelectedLabel] = useState<string>(initialLabel)
   const [exporting, setExporting] = useState(false)
   const captureRef = useRef<HTMLDivElement>(null)
 

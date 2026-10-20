@@ -156,6 +156,28 @@ public class SeasonGoalsController(
         return Ok(dto);
     }
 
+    /// <summary>GET /seasongoals/my-teams — teams the user may open the season report for (as coach+ or as player).</summary>
+    [HttpGet("my-teams")]
+    public async Task<IActionResult> GetMyReportTeams()
+    {
+        var ids = await GetAccessibleTeamIdsAsync();
+        var teams = await context.Teams.AsNoTracking()
+            .Where(t => ids.Contains(t.Id) && t.SeasonId != null)
+            .OrderBy(t => t.Name)
+            .Select(t => new { t.Id, t.Name })
+            .ToListAsync();
+
+        var result = new List<MyReportTeamDto>();
+        foreach (var t in teams)
+            result.Add(new MyReportTeamDto
+            {
+                TeamId = t.Id,
+                TeamName = t.Name,
+                Role = await CanManageAsync(t.Id) ? "coach" : "player",
+            });
+        return Ok(result);
+    }
+
     // ── Read: month-by-month + season-total report ──────────────────────────
 
     private const int RankTakeCount = 7;
@@ -381,7 +403,7 @@ public class SeasonGoalsController(
     {
         var ranked = rows.GroupBy(r => r.MemberId)
             .Select(g => new { MemberId = g.Key, Total = g.Count(), Present = g.Count(x => x.Status == 1) })
-            .Where(x => x.Total > 0)
+            .Where(x => x.Present > 0) // only players with non-zero attendance
             .Select(x => new PlayerRankRowDto
             {
                 MemberId = x.MemberId,

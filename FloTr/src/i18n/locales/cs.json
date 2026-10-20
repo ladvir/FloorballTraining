@@ -2041,7 +2041,8 @@
     "noLineups": "Žádné sestavy",
     "noLineupsDesc": "Zatím nebyly vytvořeny žádné sestavy.",
     "selectExisting": "Vybrat sestavu",
-    "replaceConfirm": "Nahradit stávající sestavu této události kopií vybrané sestavy?",
+    "backToEvent": "Zpět na událost",
+    "replaceConfirm": "Nahradit stávající sestavu této události?",
     "bestPlayer": "Hráč zápasu",
     "bestPlayerNone": "— nikdo —",
     "formName": "Název sestavy",
@@ -3720,6 +3721,9 @@
     "clubEmptyHint": "Vyberte sezónu, ve které týmy klubu hrají."
   },
   "seasonReport": {
+    "team": "Tým",
+    "asCoach": "Jako trenér",
+    "asPlayer": "Jako hráč",
     "title": "Sezónní report",
     "bestPlayers": "Nejlepší hráči",
     "wholeSeason": "Celá sezóna",

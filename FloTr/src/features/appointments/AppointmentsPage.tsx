@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   format,
@@ -157,7 +158,12 @@ export function AppointmentsPage() {
   })
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
+  // `?open=<id>` deep-links straight into an event's detail (e.g. back from the lineup editor).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(() => {
+    const id = Number(searchParams.get('open'))
+    return id > 0 ? id : null
+  })
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [icalImportOpen, setIcalImportOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -693,7 +699,10 @@ export function AppointmentsPage() {
 
       <AppointmentDetailModal
         appointmentId={detailAppointmentId}
-        onClose={() => setDetailAppointmentId(null)}
+        onClose={() => {
+          setDetailAppointmentId(null)
+          if (searchParams.has('open')) setSearchParams({}, { replace: true })
+        }}
         onChanged={() => refetchAppointments()}
       />
 
