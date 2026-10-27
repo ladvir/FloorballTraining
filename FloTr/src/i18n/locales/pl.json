@@ -1207,6 +1207,8 @@
     "sortByDurationDesc": "Czas trwania (najdłuższy)",
     "pageTitle": "Aktywności",
     "pageDescription": "Biblioteka aktywności i ćwiczeń unihokejowych",
+    "copy": "Kopiuj",
+    "copyFailed": "Kopiowanie aktywności nie powiodło się.",
     "newActivityBtn": "Nowa aktywność",
     "searchPlaceholderFull": "Szukaj (nazwa, opis, autor)…",
     "cancelSelection": "Anuluj wybór"
@@ -2481,6 +2483,8 @@
     "deleteSelectionLabel": "Usuń zaznaczone",
     "selectionLabel": "Zaznacz",
     "newLabel": "Nowy",
+    "importLabel": "Wczytaj SVG",
+    "importNotFlotr": "Plik nie jest rysunkiem FloTr (brak src=\"flotr\").",
     "fieldBlank": "Puste",
     "fieldOutline": "Kontur",
     "fieldFull2": "Całe",

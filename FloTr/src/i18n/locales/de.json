@@ -1203,6 +1203,8 @@
     "sortByDurationDesc": "Dauer (längste)",
     "pageTitle": "Aktivitäten",
     "pageDescription": "Bibliothek der Floorball-Aktivitäten und -Übungen",
+    "copy": "Kopieren",
+    "copyFailed": "Das Kopieren der Aktivität ist fehlgeschlagen.",
     "newActivityBtn": "Neue Aktivität",
     "searchPlaceholderFull": "Suchen (Name, Beschreibung, Autor)…",
     "cancelSelection": "Auswahl abbrechen"
@@ -2477,6 +2479,8 @@
     "deleteSelectionLabel": "Auswahl löschen",
     "selectionLabel": "Auswählen",
     "newLabel": "Neu",
+    "importLabel": "SVG laden",
+    "importNotFlotr": "Die Datei ist keine FloTr-Zeichnung (src=\"flotr\" fehlt).",
     "fieldBlank": "Leer",
     "fieldOutline": "Umriss",
     "fieldFull2": "Ganz",

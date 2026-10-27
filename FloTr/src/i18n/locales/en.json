@@ -1203,6 +1203,8 @@
     "sortByDurationDesc": "Duration (longest)",
     "pageTitle": "Activities",
     "pageDescription": "Library of floorball activities and drills",
+    "copy": "Copy",
+    "copyFailed": "Copying the activity failed.",
     "newActivityBtn": "New activity",
     "searchPlaceholderFull": "Search (name, description, author)…",
     "cancelSelection": "Cancel selection"
@@ -2477,6 +2479,8 @@
     "deleteSelectionLabel": "Delete selected",
     "selectionLabel": "Select",
     "newLabel": "New",
+    "importLabel": "Load SVG",
+    "importNotFlotr": "The file is not a FloTr drawing (missing src=\"flotr\").",
     "fieldBlank": "Blank",
     "fieldOutline": "Outline",
     "fieldFull2": "Full",

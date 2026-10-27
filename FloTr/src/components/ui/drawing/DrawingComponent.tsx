@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- last-used tool refs are intentionally read during render */
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -52,7 +53,7 @@ import FloatingPanel from './FloatingPanel'
 import FrameStrip from './FrameStrip'
 
 // Utility imports
-import { parseSvgXmlToCollections } from './utils/svgParser'
+import { parseSvgXmlToCollections, extractFlotrState, parseLegacyFlotrSvg } from './utils/svgParser'
 import { getSvgCoordinatesFromEvent, svgToScreenCoordinates } from './utils/svgCoordinates'
 import { generateId } from './utils/idGenerator'
 import {
@@ -1397,20 +1398,17 @@ const DrawingComponentInner = ({
       svg.removeEventListener('touchmove', moveHandler as EventListener)
       svg.removeEventListener('touchend', upHandler as EventListener)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     activeMoveTool,
-    activePlayerTool,
-    activeEquipmentTool,
-    activeDrawTool,
-    activeSelectionTool,
-    activeTextTool,
-    activeNumberTool,
-    activeShapeTool,
-    drawing,
-    startPoint,
-    freehandPoints,
-    selectionRect,
+    // The handlers close over players/selectedItems — they must be re-registered whenever they
+    // change, otherwise a stale handleMoveDown snaps the previously moved object back to the
+    // position it had when the selection was made.
+    handleDown,
+    handleMove,
+    handleUp,
+    handleMoveDown,
+    handleMoveMove,
+    handleMoveUp,
   ])
 
   // Handler pro smazání všech vybraných objektů
@@ -1544,6 +1542,55 @@ const DrawingComponentInner = ({
     setActiveSelectionTool(selectionTools[0])
   }, [undoRedo, safeSetSelectedItems])
 
+  // Načtení kresby z .svg souboru — jen soubory exportované z FloTr (src="flotr")
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const handleImportFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      e.target.value = '' // allow re-importing the same file
+      if (!file) return
+      const text = await file.text()
+      const state = tryParseDrawingState(extractFlotrState(text) ?? undefined)
+      if (state) {
+        handleNew()
+        const items = {
+          players: state.players ?? [],
+          equipment: state.equipment ?? [],
+          lines: state.lines ?? [],
+          freehandLines: state.freehandLines ?? [],
+          texts: state.texts ?? [],
+          numbers: state.numbers ?? [],
+          shapes: state.shapes ?? [],
+        }
+        setSelectedFieldId(state.fieldId)
+        setPlayers(items.players)
+        setEquipment(items.equipment)
+        setLines(items.lines)
+        setFreehandLines(items.freehandLines)
+        setTexts(items.texts)
+        setNumbers(items.numbers)
+        setShapes(items.shapes)
+        setFrames(createInitialFrames(state.frames, items))
+        setActiveFrameIndex(0)
+        onDirtyChange?.(true)
+        return
+      }
+      // Older exports carry no embedded state — rebuild what is recognisable from the shapes.
+      const legacy = parseLegacyFlotrSvg(text)
+      if (!legacy) {
+        window.alert(t('drawing.importNotFlotr'))
+        return
+      }
+      handleNew()
+      setSelectedFieldId('null')
+      setPlayers(legacy.players)
+      setEquipment(legacy.equipment)
+      setLines(legacy.lines)
+      onDirtyChange?.(true)
+    },
+    [handleNew, onDirtyChange, t]
+  )
+
   // Funkce pro zahájení editace existujícího textu
   const startEditExistingText = useCallback(
     (textItem: TextItem, e: React.MouseEvent) => {
@@ -1600,6 +1647,28 @@ const DrawingComponentInner = ({
       <div id="drawing-toolbar">
         <NewSelector onNew={handleNew} setActiveSelectionTool={setActiveSelectionTool} />
         <div className="tool-item">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".svg,image/svg+xml"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          <button onClick={() => importInputRef.current?.click()} title={t('drawing.importLabel')}>
+            <svg
+              width={32}
+              height={32}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#000"
+              strokeWidth={1.5}
+            >
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3" />
+            </svg>
+          </button>
+          <span>{t('drawing.importLabel')}</span>
+        </div>
+        <div className="tool-item">
           <button
             className={isFullscreen ? 'selected' : ''}
             onClick={() => setIsFullscreen((v) => !v)}
@@ -1645,7 +1714,11 @@ const DrawingComponentInner = ({
             <span>{t('drawing.save')}</span>
           </div>
         )}
-        <ExportDrawingButtons svgRef={svgCanvasRef} frames={committedFramesForExport} />
+        <ExportDrawingButtons
+          svgRef={svgCanvasRef}
+          frames={committedFramesForExport}
+          getStateJson={() => serializeDrawing()?.stateJson}
+        />
         <div className="tool-item">
           <button
             onClick={() => {

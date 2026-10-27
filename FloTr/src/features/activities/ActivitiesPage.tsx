@@ -33,6 +33,7 @@ import {
   ArrowRight,
   Tags,
   Trash2,
+  Copy,
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -52,6 +53,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import type { ActivityDto, TagDto } from '../../types/domain.types'
 import { ActivityDetailModal, getDisplaySrc } from './ActivityDetailModal'
+import { useCopyActivity } from './useCopyActivity'
 
 // ── Draggable activity card (grid view) ──────────────────────────────────────
 
@@ -62,6 +64,7 @@ function DraggableActivityCard({
   onDetail,
   onEdit,
   onPdf,
+  onCopy,
   onDelete,
   canEdit,
   canDelete,
@@ -74,6 +77,7 @@ function DraggableActivityCard({
   onDetail: () => void
   onEdit: () => void
   onPdf: () => void
+  onCopy?: () => void
   onDelete?: () => void
   canEdit: boolean
   canDelete?: boolean
@@ -211,6 +215,11 @@ function DraggableActivityCard({
                 <Pencil className="h-3.5 w-3.5" />
               </CardIconButton>
             )}
+            {onCopy && (
+              <CardIconButton title={t('activities.copy')} onClick={onCopy}>
+                <Copy className="h-3.5 w-3.5" />
+              </CardIconButton>
+            )}
             <CardIconButton title="PDF" disabled={downloadingPdfId === activity.id} onClick={onPdf}>
               <FileDown className="h-3.5 w-3.5" />
             </CardIconButton>
@@ -235,6 +244,7 @@ function DraggableActivityRow({
   onDetail,
   onEdit,
   onPdf,
+  onCopy,
   onDelete,
   canEdit,
   canDelete,
@@ -246,6 +256,7 @@ function DraggableActivityRow({
   onDetail: () => void
   onEdit: () => void
   onPdf: () => void
+  onCopy?: () => void
   onDelete?: () => void
   canEdit: boolean
   canDelete?: boolean
@@ -323,6 +334,18 @@ function DraggableActivityRow({
               title="Upravit"
             >
               <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {onCopy && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onCopy()
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title="Kopírovat"
+            >
+              <Copy className="h-3.5 w-3.5" />
             </button>
           )}
           <button
@@ -491,6 +514,7 @@ export function ActivitiesPage() {
   })
   const { selectedActivities, addActivity, removeActivity } = useActivitySelectionStore()
   const navigate = useNavigate()
+  const copyMutation = useCopyActivity()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [validateAllResult, setValidateAllResult] = useState<{
@@ -1138,6 +1162,7 @@ export function ActivitiesPage() {
                             onDetail={() => setDetailActivityId(activity.id)}
                             onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                             onPdf={() => setPdfTarget(activity)}
+                            onCopy={() => copyMutation.mutate(activity.id)}
                             onDelete={() => {
                               setDeleteError(null)
                               setDeleteTarget(activity)
@@ -1183,6 +1208,7 @@ export function ActivitiesPage() {
                                 onDetail={() => setDetailActivityId(activity.id)}
                                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                                 onPdf={() => setPdfTarget(activity)}
+                                onCopy={() => copyMutation.mutate(activity.id)}
                                 onDelete={() => {
                                   setDeleteError(null)
                                   setDeleteTarget(activity)
@@ -1232,6 +1258,7 @@ export function ActivitiesPage() {
                 onDetail={() => setDetailActivityId(activity.id)}
                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                 onPdf={() => setPdfTarget(activity)}
+                onCopy={() => copyMutation.mutate(activity.id)}
                 onDelete={() => {
                   setDeleteError(null)
                   setDeleteTarget(activity)
@@ -1275,6 +1302,7 @@ export function ActivitiesPage() {
                     onDetail={() => setDetailActivityId(activity.id)}
                     onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                     onPdf={() => setPdfTarget(activity)}
+                    onCopy={() => copyMutation.mutate(activity.id)}
                     onDelete={() => {
                       setDeleteError(null)
                       setDeleteTarget(activity)

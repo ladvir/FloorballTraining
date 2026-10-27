@@ -73,6 +73,13 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
             return Task.FromResult(path);
         }
 
+        public string? Copy(string relativePath, VideoOwnerType ownerType, int ownerId)
+        {
+            var path = $"videos/{ownerType.ToString().ToLowerInvariant()}/{ownerId}/{Guid.NewGuid():N}.mp4";
+            Saved.Add(path);
+            return path;
+        }
+
         public void Delete(string relativePath) => Deleted.Add(relativePath);
     }
 
@@ -203,6 +210,38 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         db.Appointments.Add(appt);
         await db.SaveChangesAsync();
         return appt.Id;
+    }
+
+    [Fact]
+    public async Task CopyAsync_duplicates_media_videos_files_and_annotations()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        db.ActivityMedium.Add(new ActivityMedia { ActivityId = activityId, Name = "kresba.svg", Data = "{}", Preview = "<svg/>", IsThumbnail = true });
+        var file = new Video { ActivityId = activityId, VideoType = VideoType.UploadedFile, FilePath = "videos/activity/1/a.mp4", CreatedAt = DateTime.UtcNow };
+        db.Videos.AddRange(file, new Video { ActivityId = activityId, VideoType = VideoType.YouTube, Url = "https://youtu.be/abc123", CreatedAt = DateTime.UtcNow });
+        await db.SaveChangesAsync();
+        db.VideoAnnotations.Add(new VideoAnnotation { VideoId = file.Id, DataJson = "[1]", TrimStartMs = 5, CreatedAt = DateTime.UtcNow });
+        await db.SaveChangesAsync();
+
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+        var result = await controller.Copy(activityId, new ActivityCopyService(db, storage));
+
+        var newId = result.Result.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<ActivityDto>().Subject.Id;
+        newId.Should().NotBe(activityId);
+        var copy = await db.Activities.Include(a => a.ActivityMedium).SingleAsync(a => a.Id == newId);
+        copy.Name.Should().EndWith("(kopie)");
+        copy.ActivityMedium.Should().ContainSingle(m => m.Preview == "<svg/>" && m.IsThumbnail);
+        var copiedVideos = await db.Videos.Where(v => v.ActivityId == newId).ToListAsync();
+        copiedVideos.Should().HaveCount(2);
+        storage.Saved.Should().ContainSingle(); // only the uploaded file is physically copied
+        (await db.VideoAnnotations.SingleAsync(a => copiedVideos.Select(v => v.Id).Contains(a.VideoId)))
+            .Should().Match<VideoAnnotation>(a => a.DataJson == "[1]" && a.TrimStartMs == 5);
     }
 
     [Fact]

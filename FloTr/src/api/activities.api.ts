@@ -9,6 +9,8 @@ export const activitiesApi = {
   create: (data: Partial<ActivityDto>) =>
     apiClient.post<ActivityDto>('/activities', data).then((r) => r.data),
 
+  copy: (id: number) => apiClient.post<ActivityDto>(`/activities/${id}/copy`).then((r) => r.data),
+
   update: (id: number, data: Partial<ActivityDto>) => apiClient.put(`/activities/${id}`, data),
 
   delete: (id: number) => apiClient.delete(`/activities/delete/${id}`),

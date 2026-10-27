@@ -322,6 +322,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDeleteVideoUseCase, DeleteVideoUseCase>();
         services.AddTransient<IViewVideosUseCase, ViewVideosUseCase>();
         services.AddScoped<IVideoUploadService, VideoUploadService>();
+        services.AddScoped<IActivityCopyService, ActivityCopyService>();
         services.AddTransient<IGetVideoAnnotationUseCase, GetVideoAnnotationUseCase>();
         services.AddTransient<ISaveVideoAnnotationUseCase, SaveVideoAnnotationUseCase>();
         services.AddScoped<IVideoAnnotationExportService, VideoAnnotationExportService>();

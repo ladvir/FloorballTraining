@@ -23,9 +23,11 @@ import {
   Plus,
   ListPlus,
   HelpCircle,
+  Copy,
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
+import { useCopyActivity } from './useCopyActivity'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -544,6 +546,7 @@ export function ActivityFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
   const navigate = useNavigate()
+  const copyMutation = useCopyActivity()
   const queryClient = useQueryClient()
   const { isAdmin, user } = useAuthStore()
   const { selectedActivities, addActivity } = useActivitySelectionStore()
@@ -964,6 +967,18 @@ export function ActivityFormPage() {
               >
                 <ListPlus className="h-3.5 w-3.5" />
                 {t('activities.selectForTraining')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={copyMutation.isPending}
+                onClick={() => copyMutation.mutate(Number(id))}
+                title={t('activities.copy')}
+                className="whitespace-nowrap"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                {t('activities.copy')}
               </Button>
               <Button
                 type="button"

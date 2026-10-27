@@ -177,6 +177,22 @@ public class ActivitiesController(
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
 
+    // Any coach-level role may copy an activity; the copy is owned by the caller.
+    [HttpPost("{id}/copy")]
+    public async Task<ActionResult<ActivityDto>> Copy(int id, [FromServices] IActivityCopyService copyService)
+    {
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
+
+        var newId = await copyService.CopyAsync(id, userId);
+        if (newId == null) return NotFound();
+
+        await auditService.LogAsync(AuditActions.ActivityCreated, "Activity", newId.Value.ToString(),
+            details: new { copiedFrom = id });
+        return await Get(newId.Value) is { } dto ? Ok(dto) : NotFound();
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] ActivityDto dto)
     {

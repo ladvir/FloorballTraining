@@ -7,15 +7,23 @@ import {
   rasterizeSvgToCanvas,
   downloadBlob,
 } from './utils/svgExportUtils'
+import { injectSmilAnimation } from './utils/smilGenerator'
+import { embedFlotrState } from './utils/svgParser'
 import { exportAnimatedGif } from './utils/gifExport'
 
 interface ExportDrawingButtonsProps {
   svgRef: React.RefObject<SVGSVGElement> | null
   /** Committed multi-frame storyboard (#121+). >=2 frames enables the GIF export button. */
   frames?: Frame[]
+  /** Full drawing state, embedded into the downloaded SVG so it can be re-imported. */
+  getStateJson?: () => string | null | undefined
 }
 
-const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef, frames }) => {
+const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({
+  svgRef,
+  frames,
+  getStateJson,
+}) => {
   const { t } = useTranslation()
   const [exportingGif, setExportingGif] = useState(false)
 
@@ -29,7 +37,11 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef, fra
     }
 
     const { clone } = prepareSvgClone(svg)
-    const svgString = serializeSvgElement(clone)
+    let svgString = serializeSvgElement(clone)
+    // Storyboard of 2+ frames → animated (SMIL) SVG that plays in any browser.
+    if (frames && frames.length >= 2) svgString = injectSmilAnimation(svgString, frames)
+    const stateJson = getStateJson?.()
+    if (stateJson) svgString = embedFlotrState(svgString, stateJson)
     downloadBlob(new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' }), 'drawing.svg')
   }
 

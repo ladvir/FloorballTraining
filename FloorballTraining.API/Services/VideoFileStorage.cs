@@ -17,6 +17,12 @@ namespace FloorballTraining.API.Services
         /// </summary>
         Task<string> AdoptGeneratedFileAsync(string sourceFilePath, string extension, VideoOwnerType ownerType, int ownerId);
 
+        /// <summary>
+        /// Duplicates a stored file into the given owner's folder (own physical copy, so deleting
+        /// one owner's video never breaks the other). Null if the source file is missing.
+        /// </summary>
+        string? Copy(string relativePath, VideoOwnerType ownerType, int ownerId);
+
         /// <summary>Deletes the file at the given relative path (as returned by SaveAsync). No-op if it's already gone.</summary>
         void Delete(string relativePath);
     }
@@ -45,6 +51,16 @@ namespace FloorballTraining.API.Services
             var fullPath = BuildDestinationPath(ownerType, ownerId, extension, out var relativePath);
             File.Move(sourceFilePath, fullPath);
             return Task.FromResult(relativePath);
+        }
+
+        public string? Copy(string relativePath, VideoOwnerType ownerType, int ownerId)
+        {
+            var source = Path.Combine(env.WebRootPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(source)) return null;
+
+            var fullPath = BuildDestinationPath(ownerType, ownerId, Path.GetExtension(source), out var newRelativePath);
+            File.Copy(source, fullPath);
+            return newRelativePath;
         }
 
         public void Delete(string relativePath)

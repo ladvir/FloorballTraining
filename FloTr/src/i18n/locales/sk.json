@@ -1205,6 +1205,8 @@
     "sortByDurationDesc": "Dĺžka (najdlhšia)",
     "pageTitle": "Aktivity",
     "pageDescription": "Knižnica florbalových aktivít a cvičení",
+    "copy": "Kopírovať",
+    "copyFailed": "Kopírovanie aktivity zlyhalo.",
     "newActivityBtn": "Nová aktivita",
     "searchPlaceholderFull": "Hľadať (názov, popis, autor)…",
     "cancelSelection": "Zrušiť výber"
@@ -2479,6 +2481,8 @@
     "deleteSelectionLabel": "Vymazať vybrané",
     "selectionLabel": "Výber",
     "newLabel": "Nový",
+    "importLabel": "Načítať SVG",
+    "importNotFlotr": "Súbor nie je kresba z FloTr (chýba src=\"flotr\").",
     "fieldBlank": "Prázdne",
     "fieldOutline": "Obrys",
     "fieldFull2": "Celé",
