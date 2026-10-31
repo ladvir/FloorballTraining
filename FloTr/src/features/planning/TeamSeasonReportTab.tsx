@@ -196,7 +196,31 @@ function RankList({
             <li key={r.memberId} className="flex items-center justify-between gap-2 text-sm">
               <span className="flex min-w-0 items-center gap-2">
                 <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
-                <MemberLink memberId={r.memberId} name={r.name} />
+                <HoverTable
+                  trigger={<MemberLink memberId={r.memberId} name={r.name} />}
+                  head={[
+                    t('seasonReport.colDate'),
+                    t('seasonReport.match'),
+                    t('seasonReport.colGoals'),
+                    t('seasonReport.colAssists'),
+                  ]}
+                  rows={(r.matches ?? []).map((m) => [
+                    new Date(m.date).toLocaleDateString(),
+                    m.label || t('seasonReport.match'),
+                    m.goals,
+                    m.assists,
+                  ])}
+                  foot={
+                    r.matches?.length
+                      ? [
+                          t('seasonReport.total'),
+                          '',
+                          r.matches.reduce((s, m) => s + m.goals, 0),
+                          r.matches.reduce((s, m) => s + m.assists, 0),
+                        ]
+                      : undefined
+                  }
+                />
               </span>
               <span className="flex-shrink-0 font-medium tabular-nums text-gray-700">
                 {format(r.value)}
@@ -247,7 +271,15 @@ function XpRankList({
                   ) : (
                     <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
                   )}
-                  <MemberLink memberId={r.memberId} name={r.name} />
+                  <HoverTable
+                    trigger={<MemberLink memberId={r.memberId} name={r.name} />}
+                    head={[t('seasonReport.colReason'), t('seasonReport.colXp')]}
+                    rows={r.breakdown.map((b) => [
+                      t(`xp.type.${b.type}`, { defaultValue: b.type }),
+                      `+${b.points}`,
+                    ])}
+                    foot={[t('seasonReport.total'), `${r.value}`]}
+                  />
                   {isTop && (
                     <span className="whitespace-nowrap rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                       {crownLabel}
@@ -314,6 +346,62 @@ function BadgeList({
         </ol>
       )}
     </div>
+  )
+}
+
+/** Wraps `trigger`; on hover/focus shows a small styled table. Numeric cells are right-aligned. */
+function HoverTable({
+  trigger,
+  head,
+  rows,
+  foot,
+}: {
+  trigger: ReactNode
+  head: string[]
+  rows: (string | number)[][]
+  foot?: (string | number)[]
+}) {
+  const cell = (v: string | number, i: number) => (
+    <td
+      key={i}
+      className={`px-2 py-1 ${typeof v === 'number' || /^\+?\d+$/.test(v) ? 'text-right tabular-nums' : ''}`}
+    >
+      {v}
+    </td>
+  )
+  if (rows.length === 0) return <>{trigger}</>
+  return (
+    <span className="group relative inline-block">
+      {trigger}
+      <div className="invisible absolute left-0 top-full z-20 mt-1 min-w-[12rem] rounded-lg border border-gray-200 bg-white p-1 text-xs text-gray-700 opacity-0 shadow-lg transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+        <table className="w-full whitespace-nowrap">
+          <thead>
+            <tr className="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400">
+              {head.map((h, i) => (
+                <th
+                  key={i}
+                  className={`px-2 py-1 font-medium ${i === 0 ? 'text-left' : 'text-right'}`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {rows.map((row, ri) => (
+              <tr key={ri}>{row.map(cell)}</tr>
+            ))}
+          </tbody>
+          {foot && (
+            <tfoot>
+              <tr className="border-t border-gray-200 bg-gray-50 font-semibold">
+                {foot.map(cell)}
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </span>
   )
 }
 

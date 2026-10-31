@@ -3890,7 +3890,15 @@
     "noData": "Zatiaľ žiadne dáta",
     "saveImage": "Uložiť ako obrázok",
     "exporting": "Ukladám…",
-    "exportFailed": "Uloženie obrázka zlyhalo"
+    "exportFailed": "Uloženie obrázka zlyhalo",
+    "match": "Zápas",
+    "scoringLine": "{{goals}} gólov, {{assists}} asistencií",
+    "colDate": "Dátum",
+    "colGoals": "Góly",
+    "colAssists": "Asistencie",
+    "colReason": "Za čo",
+    "colXp": "XP",
+    "total": "Spolu"
   },
   "teamChallenge": {
     "title": "Tímové výzvy",

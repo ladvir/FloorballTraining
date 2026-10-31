@@ -440,9 +440,11 @@ public class SeasonGoalTests : IAsyncLifetime
         var expectedLevel = XpProgression.Career(xpPoints);
         var september = report.Months.Single(m => m.Label == "2020-09");
         september.TopScoring.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 4); // 2 goals × weight 2
+        september.TopScoring.Single(r => r.MemberId == _memberId1).Matches.Sum(m => m.Goals).Should().Be(2); // per-match tooltip data
         september.TopXp.Should().ContainSingle(r =>
             r.MemberId == _memberId1 && r.Value == xpPoints &&
             r.LevelIndex == expectedLevel.RankIndex && r.LevelName == expectedLevel.Rank);
+        september.TopXp.Single(r => r.MemberId == _memberId1).Breakdown.Sum(b => b.Points).Should().Be(xpPoints); // tooltip adds up to the row
         september.TopBadges.Should().ContainSingle(r =>
             r.MemberId == _memberId2 && r.Code == nameof(BadgeCode.Attendance10) && r.Icon != "");
         september.TopRewards.Should().ContainSingle(r => r.MemberId == _memberId1 && r.Value == 1);

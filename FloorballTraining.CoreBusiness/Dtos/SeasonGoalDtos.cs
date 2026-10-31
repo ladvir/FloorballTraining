@@ -86,6 +86,8 @@ public class PlayerRankRowDto
     public int MemberId { get; set; }
     public string Name { get; set; } = string.Empty;
     public double Value { get; set; }
+    /// <summary>Scoring ranking only: goals/assists per match in the period (hover tooltip).</summary>
+    public List<ScoringMatchDto> Matches { get; set; } = [];
 }
 
 /// <summary>One badge earned by a player — name/description are frontend i18n keys off <see cref="Code"/>.</summary>
@@ -108,6 +110,8 @@ public class XpRankRowDto
     /// <summary>0-based index into <see cref="XpProgression.Ranks"/> — the frontend derives the level icon from it.</summary>
     public int LevelIndex { get; set; }
     public string LevelName { get; set; } = string.Empty;
+    /// <summary>XP earned in the period by event type (largest first) — for the hover tooltip.</summary>
+    public List<XpBreakdownDto> Breakdown { get; set; } = [];
 }
 
 /// <summary>Best players for one calendar month, or for the whole season.</summary>
@@ -142,4 +146,20 @@ public class MyReportTeamDto
     public string TeamName { get; set; } = "";
     /// <summary>"coach" (coach / head coach / club admin / admin of the team) or "player".</summary>
     public string Role { get; set; } = "player";
+}
+
+public class XpBreakdownDto
+{
+    /// <summary>An <see cref="Enums.XpEventType"/> name — frontend i18n key is xp.type.{type}.</summary>
+    public string Type { get; set; } = string.Empty;
+    public int Points { get; set; }
+}
+
+public class ScoringMatchDto
+{
+    public DateTime Date { get; set; }
+    /// <summary>Opponent name, else the appointment name; null when the tracker has no match.</summary>
+    public string? Label { get; set; }
+    public int Goals { get; set; }
+    public int Assists { get; set; }
 }

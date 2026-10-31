@@ -3891,7 +3891,15 @@
     "noData": "Zatím žádná data",
     "saveImage": "Uložit jako obrázek",
     "exporting": "Ukládám…",
-    "exportFailed": "Uložení obrázku se nezdařilo"
+    "exportFailed": "Uložení obrázku se nezdařilo",
+    "match": "Zápas",
+    "scoringLine": "{{goals}} gólů, {{assists}} asistencí",
+    "colDate": "Datum",
+    "colGoals": "Góly",
+    "colAssists": "Asistence",
+    "colReason": "Za co",
+    "colXp": "XP",
+    "total": "Celkem"
   },
   "teamChallenge": {
     "title": "Týmové výzvy",

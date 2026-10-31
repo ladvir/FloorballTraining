@@ -3893,7 +3893,15 @@
     "noData": "Brak danych",
     "saveImage": "Zapisz jako obraz",
     "exporting": "Zapisywanie…",
-    "exportFailed": "Nie udało się zapisać obrazu"
+    "exportFailed": "Nie udało się zapisać obrazu",
+    "match": "Mecz",
+    "scoringLine": "{{goals}} goli, {{assists}} asyst",
+    "colDate": "Data",
+    "colGoals": "Gole",
+    "colAssists": "Asysty",
+    "colReason": "Za co",
+    "colXp": "XP",
+    "total": "Razem"
   },
   "teamChallenge": {
     "title": "Wyzwania zespołowe",

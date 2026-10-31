@@ -182,9 +182,9 @@ public class SeasonGoalsController(
 
     private const int RankTakeCount = 7;
 
-    private sealed record XpRow(int MemberId, int Points, DateTime When);
+    private sealed record XpRow(int MemberId, int Points, DateTime When, XpEventType Type);
     /// <summary>When = the match's date (appointment start), not when the tracker was created — trackers are often entered days later.</summary>
-    private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When);
+    private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When, int TrackerId, string? Label);
     private sealed record AttendanceRow(int MemberId, int Status, DateTime When);
     private sealed record EarnRow(int MemberId, DateTime When);
     private sealed record BadgeEarnRow(int MemberId, string Code, DateTime When);
@@ -252,19 +252,32 @@ public class SeasonGoalsController(
 
         var xpRaw = await context.XpEvents.AsNoTracking()
             .Where(e => rosterMemberIds.Contains(e.MemberId) && e.OccurredAt >= seasonStart && e.OccurredAt < reportEndExcl)
-            .Select(e => new XpRow(e.MemberId, e.Points, e.OccurredAt))
+            .Select(e => new XpRow(e.MemberId, e.Points, e.OccurredAt, e.Type))
             .ToListAsync();
 
-        var scoringRaw = await context.StatTrackerEntries.AsNoTracking()
+        var scoringRaw = (await context.StatTrackerEntries.AsNoTracking()
             .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker != null
                         && e.StatTracker.TeamId == teamId && e.StatTracker.EventCategory == 0
                         && rosterMemberIds.Contains(e.Participant!.MemberId)
                         && (e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt) >= seasonStart
                         && (e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt) < reportEndExcl
                         && e.Metric != null && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
-            .Select(e => new ScoringRow(e.Participant!.MemberId, e.Metric!.Code, e.Delta,
-                e.StatTracker!.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt))
-            .ToListAsync();
+            .Select(e => new
+            {
+                e.Participant!.MemberId,
+                Code = e.Metric!.Code,
+                e.Delta,
+                When = e.StatTracker!.Appointment != null ? e.StatTracker.Appointment.Start : e.StatTracker.CreatedAt,
+                e.StatTrackerId,
+                OpponentName = e.StatTracker.Appointment != null && e.StatTracker.Appointment.Opponent != null
+                    ? e.StatTracker.Appointment.Opponent.Name : null,
+                AppointmentName = e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Name : null,
+            })
+            .ToListAsync())
+            // Names are coalesced here, not in SQL: Opponent.Name and Appointment.Name have different collations.
+            .Select(x => new ScoringRow(x.MemberId, x.Code, x.Delta, x.When, x.StatTrackerId,
+                string.IsNullOrEmpty(x.OpponentName) ? x.AppointmentName : x.OpponentName))
+            .ToList();
 
         // Attendance stats count trainings only — matches track participation via the lineup/
         // nomination, not attendance.
@@ -347,6 +360,10 @@ public class SeasonGoalsController(
                     Value = kv.Value,
                     LevelIndex = career.RankIndex,
                     LevelName = career.Rank,
+                    Breakdown = allRows.Where(r => r.MemberId == kv.Key && r.When >= periodStart && r.When < periodEndExcl)
+                        .GroupBy(r => r.Type)
+                        .Select(g => new XpBreakdownDto { Type = g.Key.ToString(), Points = g.Sum(x => x.Points) })
+                        .Where(b => b.Points != 0).OrderByDescending(b => b.Points).ToList(),
                 };
             })
             .ToList();
@@ -395,6 +412,15 @@ public class SeasonGoalsController(
                 Name = names.GetValueOrDefault(g.Key, "?"),
                 Value = g.Where(x => x.Code == "goals").Sum(x => x.Delta) * GoalWeight
                         + g.Where(x => x.Code == "assists").Sum(x => x.Delta) * AssistWeight,
+                Matches = g.GroupBy(x => x.TrackerId)
+                    .Select(m => new ScoringMatchDto
+                    {
+                        Date = m.Min(x => x.When),
+                        Label = m.First().Label,
+                        Goals = m.Where(x => x.Code == "goals").Sum(x => x.Delta),
+                        Assists = m.Where(x => x.Code == "assists").Sum(x => x.Delta),
+                    })
+                    .Where(m => m.Goals != 0 || m.Assists != 0).OrderBy(m => m.Date).ToList(),
             })
             .Where(r => r.Value != 0)
             .OrderByDescending(r => r.Value)

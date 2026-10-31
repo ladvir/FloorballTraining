@@ -3885,7 +3885,15 @@
     "noData": "No data yet",
     "saveImage": "Save as image",
     "exporting": "Saving…",
-    "exportFailed": "Could not save the image"
+    "exportFailed": "Could not save the image",
+    "match": "Match",
+    "scoringLine": "{{goals}} goals, {{assists}} assists",
+    "colDate": "Date",
+    "colGoals": "Goals",
+    "colAssists": "Assists",
+    "colReason": "Reason",
+    "colXp": "XP",
+    "total": "Total"
   },
   "teamChallenge": {
     "title": "Team challenges",

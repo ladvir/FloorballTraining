@@ -3885,7 +3885,15 @@
     "noData": "Noch keine Daten",
     "saveImage": "Als Bild speichern",
     "exporting": "Wird gespeichert…",
-    "exportFailed": "Bild konnte nicht gespeichert werden"
+    "exportFailed": "Bild konnte nicht gespeichert werden",
+    "match": "Spiel",
+    "scoringLine": "{{goals}} Tore, {{assists}} Assists",
+    "colDate": "Datum",
+    "colGoals": "Tore",
+    "colAssists": "Assists",
+    "colReason": "Wofür",
+    "colXp": "XP",
+    "total": "Gesamt"
   },
   "teamChallenge": {
     "title": "Team-Challenges",

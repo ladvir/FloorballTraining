@@ -628,6 +628,8 @@ export interface PlayerRankRowDto {
   memberId: number
   name: string
   value: number
+  /** Scoring ranking only: goals/assists per match in the period (hover tooltip). */
+  matches?: { date: string; label?: string | null; goals: number; assists: number }[]
 }
 
 export interface XpRankRowDto {
@@ -637,6 +639,8 @@ export interface XpRankRowDto {
   /** 0-based index into the career rank ladder — derive the level icon from it (badges/rank{N}.png). */
   levelIndex: number
   levelName: string
+  /** XP earned in the period by event type, largest first (hover tooltip). */
+  breakdown: { type: string; points: number }[]
 }
 
 export interface BadgeEarnRowDto {
