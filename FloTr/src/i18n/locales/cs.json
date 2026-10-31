@@ -1211,7 +1211,33 @@
     "copyFailed": "Kopírování aktivity se nezdařilo.",
     "newActivityBtn": "Nová aktivita",
     "searchPlaceholderFull": "Hledat (název, popis, autor)…",
-    "cancelSelection": "Zrušit výběr"
+    "cancelSelection": "Zrušit výběr",
+    "fromLink": {
+      "button": "Z odkazu",
+      "title": "Aktivita z odkazu",
+      "subtitle": "Sdílejte příspěvek z Instagramu nebo Facebooku do FloTr (nebo vložte odkaz) a udělejte z něj aktivitu",
+      "pasteTitle": "Vložit odkaz",
+      "pasteHint": "Na Androidu stačí v Instagramu/Facebooku zvolit Sdílet → FloTr. Jinak sem odkaz vložte.",
+      "load": "Načíst příspěvek",
+      "unsupported": "Podporované jsou odkazy z Instagramu a Facebooku.",
+      "openOriginal": "Otevřít originál",
+      "noCaption": "Popis příspěvku se nepodařilo načíst (Instagram/Facebook ho bez přihlášení často neukáže). Aktivitu můžete vyplnit ručně.",
+      "useAi": "Navrhnout pomocí AI",
+      "aiNeedsCaption": "AI potřebuje popis příspěvku",
+      "aiPrompt": "Převeď cvičení popsané v tomto příspěvku ze sociální sítě na florbalovou aktivitu. Zachovej podstatu cvičení, doplň organizaci, průběh a koučovací body. Text příspěvku:",
+      "aiNothing": "AI z příspěvku nic nevytvořila. Zkuste vyplnit aktivitu ručně.",
+      "manual": "Vyplnit ručně",
+      "other": "Jiný odkaz",
+      "defaultName": "Aktivita z {{source}}",
+      "videoHint": "Nic se zatím neukládá. Po uložení formuláře se odkaz automaticky připojí k aktivitě jako video.",
+      "videoPending": "Po uložení se připojí video: {{url}}",
+      "videoAttachFailed": "Aktivita je uložena, ale odkaz na video se nepodařilo připojit. Přidejte ho prosím ručně v sekci Videa.",
+      "source": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "other": "Odkaz"
+      }
+    }
   },
   "videos": {
     "title": "Videa",

@@ -13,6 +13,10 @@ import { apiClient } from '../../api/axios'
 import { setAccessToken } from '../../api/token'
 import { useAuthStore } from '../../store/authStore'
 import type { AuthResponse } from '../../types/domain.types'
+import { hasPendingShare } from '../activities/sharedLink'
+
+/** A link shared into the PWA while signed out resumes after login. */
+const afterLoginPath = () => (hasPendingShare() ? '/activities/from-link' : '/dashboard')
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -38,7 +42,7 @@ export function LoginPage() {
         setUser(r.data)
         queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
-        navigate('/dashboard', { replace: true })
+        navigate(afterLoginPath(), { replace: true })
       })
       .catch(() => {
         setServerError(t('auth.externalLoginFailed'))
@@ -66,7 +70,7 @@ export function LoginPage() {
       setUser(response)
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      navigate('/dashboard')
+      navigate(afterLoginPath())
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: unknown } }
       if (axiosErr.response?.status === 429) {

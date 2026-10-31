@@ -1208,7 +1208,33 @@
     "copyFailed": "Das Kopieren der Aktivität ist fehlgeschlagen.",
     "newActivityBtn": "Neue Aktivität",
     "searchPlaceholderFull": "Suchen (Name, Beschreibung, Autor)…",
-    "cancelSelection": "Auswahl abbrechen"
+    "cancelSelection": "Auswahl abbrechen",
+    "fromLink": {
+      "button": "Aus Link",
+      "title": "Aktivität aus Link",
+      "subtitle": "Teile einen Instagram- oder Facebook-Beitrag mit FloTr (oder füge den Link ein) und mache daraus eine Aktivität",
+      "pasteTitle": "Link einfügen",
+      "pasteHint": "Unter Android in Instagram/Facebook einfach Teilen → FloTr wählen. Sonst den Link hier einfügen.",
+      "load": "Beitrag laden",
+      "unsupported": "Unterstützt werden nur Links von Instagram und Facebook.",
+      "openOriginal": "Original öffnen",
+      "noCaption": "Die Beschreibung des Beitrags konnte nicht geladen werden (Instagram/Facebook zeigen sie ohne Anmeldung oft nicht). Du kannst die Aktivität manuell ausfüllen.",
+      "useAi": "Mit KI vorschlagen",
+      "aiNeedsCaption": "Die KI benötigt die Beschreibung des Beitrags",
+      "aiPrompt": "Wandle die in diesem Social-Media-Beitrag beschriebene Übung in eine Floorball-Aktivität um. Behalte den Kern der Übung bei und ergänze Organisation, Ablauf und Coaching-Punkte. Text des Beitrags:",
+      "aiNothing": "Die KI konnte aus dem Beitrag nichts erstellen. Fülle die Aktivität manuell aus.",
+      "manual": "Manuell ausfüllen",
+      "other": "Anderer Link",
+      "defaultName": "Aktivität aus {{source}}",
+      "videoHint": "Noch wird nichts gespeichert. Nach dem Speichern des Formulars wird der Link als Video an die Aktivität angehängt.",
+      "videoPending": "Nach dem Speichern wird dieses Video angehängt: {{url}}",
+      "videoAttachFailed": "Die Aktivität wurde gespeichert, der Videolink konnte aber nicht angehängt werden. Bitte füge ihn manuell im Bereich Videos hinzu.",
+      "source": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "other": "Link"
+      }
+    }
   },
   "videos": {
     "title": "Videos",

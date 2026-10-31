@@ -1208,7 +1208,33 @@
     "copyFailed": "Copying the activity failed.",
     "newActivityBtn": "New activity",
     "searchPlaceholderFull": "Search (name, description, author)…",
-    "cancelSelection": "Cancel selection"
+    "cancelSelection": "Cancel selection",
+    "fromLink": {
+      "button": "From link",
+      "title": "Activity from a link",
+      "subtitle": "Share an Instagram or Facebook post to FloTr (or paste its link) and turn it into an activity",
+      "pasteTitle": "Paste a link",
+      "pasteHint": "On Android, just tap Share → FloTr in Instagram/Facebook. Otherwise paste the link here.",
+      "load": "Load post",
+      "unsupported": "Only Instagram and Facebook links are supported.",
+      "openOriginal": "Open original",
+      "noCaption": "The post's caption couldn't be loaded (Instagram/Facebook often hide it from signed-out visitors). You can fill in the activity manually.",
+      "useAi": "Suggest with AI",
+      "aiNeedsCaption": "AI needs the post's caption",
+      "aiPrompt": "Turn the drill described in this social media post into a floorball activity. Keep the essence of the drill and add organisation, flow and coaching points. Post text:",
+      "aiNothing": "AI couldn't create anything from the post. Try filling in the activity manually.",
+      "manual": "Fill in manually",
+      "other": "Another link",
+      "defaultName": "Activity from {{source}}",
+      "videoHint": "Nothing is saved yet. Once you save the form, the link is attached to the activity as a video.",
+      "videoPending": "This video will be attached after saving: {{url}}",
+      "videoAttachFailed": "The activity was saved, but the video link couldn't be attached. Please add it manually in the Videos section.",
+      "source": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "other": "Link"
+      }
+    }
   },
   "videos": {
     "title": "Videos",

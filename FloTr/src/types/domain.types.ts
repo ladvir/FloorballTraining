@@ -1685,6 +1685,16 @@ export interface ActivitySuggestionDto {
   equipmentNames: string[]
 }
 
+/** Best-effort Open Graph metadata of a shared Instagram/Facebook post (GET /link-preview). */
+export interface LinkPreviewDto {
+  url: string
+  source: 'instagram' | 'facebook'
+  title?: string | null
+  description?: string | null
+  caption?: string | null
+  imageUrl?: string | null
+}
+
 export interface ActivitySourceDto {
   url: string
   title?: string

@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { ActivityDto, ActivityMediaDto } from '../types/domain.types'
+import type { ActivityDto, ActivityMediaDto, LinkPreviewDto } from '../types/domain.types'
 
 export const activitiesApi = {
   getAll: () => apiClient.get<ActivityDto[]>('/activities/all').then((r) => r.data),
@@ -76,4 +76,8 @@ export const activitiesApi = {
     a.click()
     URL.revokeObjectURL(url)
   },
+
+  /** Instagram/Facebook post metadata for "activity from a shared link". */
+  linkPreview: (url: string) =>
+    apiClient.get<LinkPreviewDto>('/link-preview', { params: { url } }).then((r) => r.data),
 }

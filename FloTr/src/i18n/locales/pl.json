@@ -1212,7 +1212,33 @@
     "copyFailed": "Kopiowanie aktywności nie powiodło się.",
     "newActivityBtn": "Nowa aktywność",
     "searchPlaceholderFull": "Szukaj (nazwa, opis, autor)…",
-    "cancelSelection": "Anuluj wybór"
+    "cancelSelection": "Anuluj wybór",
+    "fromLink": {
+      "button": "Z linku",
+      "title": "Aktywność z linku",
+      "subtitle": "Udostępnij post z Instagrama lub Facebooka do FloTr (albo wklej link) i zrób z niego aktywność",
+      "pasteTitle": "Wklej link",
+      "pasteHint": "Na Androidzie wystarczy w Instagramie/Facebooku wybrać Udostępnij → FloTr. W przeciwnym razie wklej link tutaj.",
+      "load": "Wczytaj post",
+      "unsupported": "Obsługiwane są tylko linki z Instagrama i Facebooka.",
+      "openOriginal": "Otwórz oryginał",
+      "noCaption": "Nie udało się wczytać opisu posta (Instagram/Facebook często go nie pokazują bez logowania). Możesz wypełnić aktywność ręcznie.",
+      "useAi": "Zaproponuj z AI",
+      "aiNeedsCaption": "AI potrzebuje opisu posta",
+      "aiPrompt": "Przekształć ćwiczenie opisane w tym poście z mediów społecznościowych w aktywność unihokejową. Zachowaj istotę ćwiczenia, uzupełnij organizację, przebieg i wskazówki trenerskie. Tekst posta:",
+      "aiNothing": "AI nie utworzyła niczego z posta. Spróbuj wypełnić aktywność ręcznie.",
+      "manual": "Wypełnij ręcznie",
+      "other": "Inny link",
+      "defaultName": "Aktywność z {{source}}",
+      "videoHint": "Na razie nic nie jest zapisywane. Po zapisaniu formularza link zostanie dołączony do aktywności jako wideo.",
+      "videoPending": "Po zapisaniu zostanie dołączone wideo: {{url}}",
+      "videoAttachFailed": "Aktywność została zapisana, ale nie udało się dołączyć linku do wideo. Dodaj go ręcznie w sekcji Wideo.",
+      "source": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "other": "Link"
+      }
+    }
   },
   "videos": {
     "title": "Filmy",

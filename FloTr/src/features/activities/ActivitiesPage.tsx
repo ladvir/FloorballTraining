@@ -34,6 +34,7 @@ import {
   Tags,
   Trash2,
   Copy,
+  Link2,
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -803,6 +804,10 @@ export function ActivitiesPage() {
                   {t('ai.activityImport.button')}
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={() => navigate('/activities/from-link')}>
+                <Link2 className="h-4 w-4" />
+                {t('activities.fromLink.button')}
+              </Button>
               <Button size="sm" onClick={() => navigate('/activities/new')}>
                 <Plus className="h-4 w-4" />
                 {t('activities.newActivityBtn')}

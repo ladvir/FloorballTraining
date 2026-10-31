@@ -46,6 +46,15 @@ export default defineConfig(({ mode }) => {
             },
             { src: 'icon-512.svg', sizes: 'any', type: 'image/svg+xml' },
           ],
+          // Web Share Target: the installed PWA appears in Android's share sheet, so an
+          // Instagram/Facebook post can be shared straight into "activity from a link".
+          // GET keeps it a plain navigation (no SW handler needed); apps put the link in
+          // url, text or title, ShareTargetPage looks in all three. Not supported on iOS.
+          share_target: {
+            action: `${base}share-target`,
+            method: 'GET',
+            params: { title: 'title', text: 'text', url: 'url' },
+          },
         },
         workbox: {
           // Adds push/notificationclick handling to the generated SW — generateSW mode

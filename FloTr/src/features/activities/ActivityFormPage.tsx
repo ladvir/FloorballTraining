@@ -37,6 +37,7 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { VideosSection } from '../../components/shared/VideosSection'
 import { activitiesApi } from '../../api/activities.api'
+import { videosApi } from '../../api/videos.api'
 import { tagsApi, ageGroupsApi, equipmentApi, playerSkillsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useAiActivityStore } from '../../store/aiActivityStore'
@@ -682,6 +683,11 @@ export function ActivityFormPage() {
   const [aiSuggestion] = useState(() =>
     !id ? useAiActivityStore.getState().consumeSuggestion() : null
   )
+  // Link shared from Instagram/Facebook (/activities/from-link): attached as a video once
+  // the activity exists — videos can only be added to a saved activity.
+  const [pendingVideoLink] = useState(() =>
+    !id ? useAiActivityStore.getState().consumeVideoLink() : null
+  )
   useEffect(() => {
     if (!isEdit && aiSuggestion) {
       formReady.current = false
@@ -809,7 +815,7 @@ export function ActivityFormPage() {
         isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)
       ) as Promise<unknown>
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       unsavedGuard.markClean()
 
@@ -817,6 +823,18 @@ export function ActivityFormPage() {
       // form stays in create mode and a second "Uložit" click creates a duplicate.
       if (!isEdit) {
         const createdId = (result as { id?: number } | undefined)?.id
+        if (createdId && pendingVideoLink) {
+          try {
+            await videosApi.addLink(
+              'activities',
+              createdId,
+              pendingVideoLink.url,
+              pendingVideoLink.title
+            )
+          } catch {
+            toast.error(t('activities.fromLink.videoAttachFailed'))
+          }
+        }
         navigate(createdId ? `/activities/${createdId}/edit` : '/activities', { replace: true })
         return
       }
@@ -1337,7 +1355,13 @@ export function ActivityFormPage() {
           <Card>
             <CardContent className="py-4">
               <p className="text-sm font-medium text-gray-700">{t('videos.title')}</p>
-              <p className="mt-1 text-sm text-gray-400">{t('videos.afterSave')}</p>
+              {pendingVideoLink ? (
+                <p className="mt-1 break-all text-sm text-gray-500">
+                  {t('activities.fromLink.videoPending', { url: pendingVideoLink.url })}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-gray-400">{t('videos.afterSave')}</p>
+              )}
             </CardContent>
           </Card>
         )}

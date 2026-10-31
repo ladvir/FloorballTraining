@@ -250,6 +250,23 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient();
         services.AddScoped<IICalImportService, ICalImportService>();
 
+        // Instagram/Facebook post metadata for the PWA share target. Redirects are followed
+        // manually by LinkPreviewService so each hop is re-checked against the host allow-list.
+        services.AddHttpClient(LinkPreviewService.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(8);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; FloTrLinkPreview/1.0)");
+                client.DefaultRequestHeaders.Accept.ParseAdd("text/html");
+                // English keeps Instagram's `... on <date>: "caption"` wrapper predictable.
+                client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AllowAutoRedirect = false,
+                AutomaticDecompression = System.Net.DecompressionMethods.All,
+            });
+        services.AddScoped<ILinkPreviewService, LinkPreviewService>();
+
         return services;
     }
 

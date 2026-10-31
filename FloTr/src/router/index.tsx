@@ -210,6 +210,14 @@ const AiActivityImportPage = lazy(() =>
     default: m.AiActivityImportPage,
   }))
 )
+const ActivityFromLinkPage = lazy(() =>
+  import('../features/activities/ActivityFromLinkPage').then((m) => ({
+    default: m.ActivityFromLinkPage,
+  }))
+)
+const ShareTargetPage = lazy(() =>
+  import('../features/activities/ShareTargetPage').then((m) => ({ default: m.ShareTargetPage }))
+)
 const VideoEditorPage = lazy(() =>
   import('../features/videoEditor/VideoEditorPage').then((m) => ({ default: m.VideoEditorPage }))
 )
@@ -339,6 +347,16 @@ export const router = createBrowserRouter(
       ),
     },
     {
+      // PWA share target (manifest `share_target`) — public so a share made while signed
+      // out survives the login redirect; it only stashes the link and forwards.
+      path: '/share-target',
+      element: (
+        <LazyPage>
+          <ShareTargetPage />
+        </LazyPage>
+      ),
+    },
+    {
       element: <ProtectedRoute />,
       children: [
         {
@@ -367,6 +385,7 @@ export const router = createBrowserRouter(
                 { path: '/activities', element: <ActivitiesPage /> },
                 { path: '/activities/new', element: <ActivityFormPage /> },
                 { path: '/activities/ai-import', element: <AiActivityImportPage /> },
+                { path: '/activities/from-link', element: <ActivityFromLinkPage /> },
                 { path: '/activities/:id/edit', element: <ActivityFormPage /> },
                 { path: '/appointments', element: <AppointmentsPage /> },
                 // Season plan: any authenticated user may view; page gates writes to coaches
