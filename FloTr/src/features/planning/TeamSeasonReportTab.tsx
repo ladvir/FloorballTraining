@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import type { Locale } from 'date-fns/locale'
@@ -31,12 +31,14 @@ interface Props {
 export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) {
   const { t } = useTranslation()
   const [selectedLabel, setSelectedLabel] = useState<string>(initialLabel)
+  const [showAll, setShowAll] = useState(false)
   const [exporting, setExporting] = useState(false)
   const captureRef = useRef<HTMLDivElement>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['seasonReport', teamId],
-    queryFn: () => seasonGoalsApi.getTeamReport(teamId),
+    queryKey: ['seasonReport', teamId, showAll],
+    queryFn: () => seasonGoalsApi.getTeamReport(teamId, showAll),
+    placeholderData: keepPreviousData,
     enabled: teamId > 0,
   })
 
@@ -92,6 +94,14 @@ export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) 
             {t('seasonReport.bestPlayers')}
           </h3>
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                checked={showAll}
+                onChange={(e) => setShowAll(e.target.checked)}
+              />
+              {t('seasonReport.showAll')}
+            </label>
             <select
               value={selectedLabel}
               onChange={(e) => setSelectedLabel(e.target.value)}

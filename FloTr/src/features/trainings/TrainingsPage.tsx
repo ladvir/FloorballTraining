@@ -21,6 +21,7 @@ import {
   Trash2,
   UserCheck,
   Sparkles,
+  LayoutTemplate,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -36,6 +37,7 @@ import { SkillCategoryCheckboxList } from '../../components/shared/SkillCategory
 import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
 import { AuthorChip, CardIconButton } from '../../components/shared/CardParts'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
+import { TemplatePickerModal } from './TemplatePickerModal'
 import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
 import { trainingsApi } from '../../api/trainings.api'
@@ -75,6 +77,7 @@ export function TrainingsPage() {
   })
 
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
   const [pdfTarget, setPdfTarget] = useState<TrainingDto | null>(null)
   const [validateAllResult, setValidateAllResult] = useState<{
@@ -636,6 +639,12 @@ export function TrainingsPage() {
               </Button>
             )}
             {isCoach && (
+              <Button size="sm" variant="outline" onClick={() => setTemplatePickerOpen(true)}>
+                <LayoutTemplate className="h-4 w-4" />
+                {t('trainingTemplates.newFromTemplate')}
+              </Button>
+            )}
+            {isCoach && (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
                 {t('trainings.newTraining')}
@@ -1045,6 +1054,16 @@ export function TrainingsPage() {
           </div>
         </Modal>
       )}
+
+      <TemplatePickerModal
+        isOpen={templatePickerOpen}
+        onClose={() => setTemplatePickerOpen(false)}
+        title={t('trainingTemplates.newFromTemplate')}
+        onPick={(tpl) => {
+          setTemplatePickerOpen(false)
+          navigate('/trainings/new', { state: { templateId: tpl.id } })
+        }}
+      />
 
       {scheduleTarget && (
         <ScheduleTrainingModal

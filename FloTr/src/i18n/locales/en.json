@@ -44,7 +44,8 @@
     "howToEarnXp": "How to earn XP",
     "announcer": "Announcer",
     "myCard": "My card",
-    "teamChallenges": "Team challenges"
+    "teamChallenges": "Team challenges",
+    "trainingTemplates": "Training templates"
   },
   "auth": {
     "email": "Email",
@@ -2614,6 +2615,10 @@
     "nameRequired2": "Name is required."
   },
   "attendance": {
+    "allMonths": "All months",
+    "allTypes": "All types",
+    "filterMonth": "Month filter",
+    "filterType": "Event type filter",
     "title": "Attendance",
     "record": "Record Attendance",
     "recordFor": "Attendance for: {{name}}",
@@ -3338,6 +3343,8 @@
     "breakdown": "Where your XP came from",
     "history": {
       "title": "XP history by month",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all",
       "month": "Month",
       "empty": "No XP this month"
     },
@@ -3719,6 +3726,7 @@
     "clubEmptyHint": "Pick a season the club teams play in."
   },
   "seasonReport": {
+    "showAll": "Show all",
     "team": "Team",
     "asCoach": "As coach",
     "asPlayer": "As player",
@@ -3883,5 +3891,39 @@
     "timelineBody": "Deletion through the app or web is immediate. Requests sent by email are typically processed within 30 days.",
     "moreInfoTitle": "6. More information",
     "moreInfoBody": "For a detailed description of what data we process about you and why, see:"
+  },
+  "trainingTemplates": {
+    "title": "Training templates",
+    "new": "New template",
+    "edit": "Edit template",
+    "name": "Name",
+    "description": "Description",
+    "partName": "Part name",
+    "partDuration": "Duration (min)",
+    "addPart": "Add part",
+    "removePart": "Remove part",
+    "addActivity": "+ activity",
+    "removeActivity": "Remove activity",
+    "emptyTitle": "No templates yet",
+    "emptyDesc": "Create a template or save an existing training as a template.",
+    "summary": "{{parts}} parts · {{minutes}} min",
+    "saveFailed": "Could not save the template.",
+    "deleteFailed": "Could not delete the template.",
+    "deleteTitle": "Delete template",
+    "deleteConfirm": "Really delete the template \"{{name}}\"? Trainings already created stay unchanged.",
+    "saveAs": "Save as template",
+    "saveAsShort": "As template",
+    "saved": "Template saved.",
+    "partsToInclude": "Parts in the template",
+    "selectAll": "All",
+    "selectFirstLast": "First and last only",
+    "includeActivities": "Keep activities too (otherwise only names and durations)",
+    "newFromTemplate": "New from template",
+    "insertFromTemplate": "Insert from template",
+    "pickerEmpty": "There are no templates yet.",
+    "position": "Insert:",
+    "atStart": "at the start",
+    "atEnd": "at the end",
+    "use": "Use"
   }
 }

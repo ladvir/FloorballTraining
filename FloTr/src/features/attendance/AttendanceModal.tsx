@@ -57,7 +57,7 @@ type Overrides = Record<number, { status: AttendanceStatus; note: string }>
 
 function buildBaseRows(
   records: AppointmentAttendanceDto[],
-  teamMemberIds: { memberId: number; firstName: string; lastName: string }[]
+  teamMemberIds: { memberId: number; firstName: string; lastName: string; isCoachOnly: boolean }[]
 ): MemberRow[] {
   const fromRecords: MemberRow[] = records.map((r) => ({
     memberId: r.memberId,
@@ -79,8 +79,13 @@ function buildBaseRows(
       note: '',
     }))
 
-  return [...fromRecords, ...fromTeam].sort((a, b) =>
-    a.memberLastName.localeCompare(b.memberLastName, 'cs')
+  // Players first, coaches last; each group by last name, then first name.
+  const coachIds = new Set(teamMemberIds.filter((m) => m.isCoachOnly).map((m) => m.memberId))
+  return [...fromRecords, ...fromTeam].sort(
+    (a, b) =>
+      Number(coachIds.has(a.memberId)) - Number(coachIds.has(b.memberId)) ||
+      a.memberLastName.localeCompare(b.memberLastName, 'cs') ||
+      a.memberFirstName.localeCompare(b.memberFirstName, 'cs')
   )
 }
 
@@ -197,6 +202,7 @@ export function AttendanceModal({
           memberId: tm.memberId,
           firstName: tm.member!.firstName ?? '',
           lastName: tm.member!.lastName ?? '',
+          isCoachOnly: tm.isCoach && !tm.isPlayer,
         })) ?? [],
     [team]
   )

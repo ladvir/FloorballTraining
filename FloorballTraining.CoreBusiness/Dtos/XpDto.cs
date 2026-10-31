@@ -33,6 +33,9 @@ public class XpEventDto
     public string Type { get; set; } = "";
     public int Points { get; set; }
     public DateTime OccurredAt { get; set; }
+    /// <summary>ChallengeReward → challenge catalog code (client i18n: challenge.{code}.title);
+    /// TeamChallengeReward → team challenge name. Null otherwise.</summary>
+    public string? Detail { get; set; }
 }
 
 /// <summary>A coach 1-click bonus (layer B, #100). <see cref="Type"/> is the <see cref="Enums.AwardType"/> name.</summary>

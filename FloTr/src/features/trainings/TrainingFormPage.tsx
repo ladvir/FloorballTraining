@@ -1,13 +1,17 @@
 import { Fragment, useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from '../../utils/toast'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ValidationResultModal } from './ValidationResultModal'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
+import { SaveAsTemplateModal } from './SaveAsTemplateModal'
+import { TemplatePickerModal } from './TemplatePickerModal'
+import { trainingTemplatesApi } from '../../api/trainingTemplates.api'
+import { insertTemplateParts, templateToFormParts } from './trainingTemplateUtils'
 import {
   DndContext,
   closestCenter,
@@ -45,6 +49,7 @@ import {
   HelpCircle,
   Sparkles,
   PlayCircle,
+  LayoutTemplate,
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
@@ -880,6 +885,12 @@ export function TrainingFormPage() {
   const [suggestedGoalIds, setSuggestedGoalIds] = useState<number[]>([])
 
   const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
+  const [insertTemplateOpen, setInsertTemplateOpen] = useState(false)
+  const location = useLocation()
+  const prefillTemplateId = !id
+    ? ((location.state as { templateId?: number } | null)?.templateId ?? null)
+    : null
   const [validationResult, setValidationResult] = useState<{
     isDraft: boolean
     errors: string[]
@@ -1012,7 +1023,23 @@ export function TrainingFormPage() {
 
   const unsavedGuard = useUnsavedChangesGuard()
 
-  const { fields, append, insert, remove, move } = useFieldArray({ control, name: 'trainingParts' })
+  const { fields, append, insert, remove, move, replace } = useFieldArray({
+    control,
+    name: 'trainingParts',
+  })
+
+  // "Nový ze šablony": prefill the parts of a new training once the template arrives.
+  const { data: prefillTemplate } = useQuery({
+    queryKey: ['training-template', prefillTemplateId],
+    queryFn: () => trainingTemplatesApi.getById(prefillTemplateId!),
+    enabled: prefillTemplateId != null,
+  })
+  const prefilledRef = useRef(false)
+  useEffect(() => {
+    if (!prefillTemplate || prefilledRef.current) return
+    prefilledRef.current = true
+    replace(templateToFormParts(prefillTemplate))
+  }, [prefillTemplate, replace])
   const newPart = (order: number) => ({
     id: -Date.now(),
     name: '',
@@ -1876,6 +1903,31 @@ export function TrainingFormPage() {
 
         {/* Actions row — wraps within page width */}
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {isCoach && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setInsertTemplateOpen(true)}
+                className="whitespace-nowrap"
+              >
+                <LayoutTemplate className="h-3.5 w-3.5" />
+                {t('trainingTemplates.insertFromTemplate')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSaveTemplateOpen(true)}
+                disabled={fields.length === 0}
+                className="whitespace-nowrap"
+              >
+                <LayoutTemplate className="h-3.5 w-3.5" />
+                {t('trainingTemplates.saveAsShort')}
+              </Button>
+            </>
+          )}
           {isEdit && (
             <>
               <Button
@@ -2501,6 +2553,31 @@ export function TrainingFormPage() {
           onClose={() => setScheduleOpen(false)}
         />
       )}
+
+      <SaveAsTemplateModal
+        isOpen={saveTemplateOpen}
+        onClose={() => setSaveTemplateOpen(false)}
+        defaultName={getValues('name')}
+        parts={getValues('trainingParts').map((p) => ({
+          name: p.name,
+          description: p.description,
+          duration: Number(p.duration) || 0,
+          activityIds: (p.trainingGroups ?? [])
+            .map((g) => g.activityId)
+            .filter((a): a is number => a != null),
+        }))}
+      />
+
+      <TemplatePickerModal
+        isOpen={insertTemplateOpen}
+        onClose={() => setInsertTemplateOpen(false)}
+        title={t('trainingTemplates.insertFromTemplate')}
+        withPosition
+        onPick={(tpl, position) => {
+          setInsertTemplateOpen(false)
+          replace(insertTemplateParts(getValues('trainingParts'), tpl, position))
+        }}
+      />
 
       {isEdit && previewOpen && (
         <TrainingDetailModal trainingId={Number(id)} onClose={() => setPreviewOpen(false)} />

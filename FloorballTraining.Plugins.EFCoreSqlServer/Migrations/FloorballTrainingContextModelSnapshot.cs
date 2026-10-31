@@ -5230,6 +5230,103 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("TrainingTag");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TrainingTemplates");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplatePart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TrainingTemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingTemplateId");
+
+                    b.ToTable("TrainingTemplateParts");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplatePartActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TrainingTemplatePartId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("TrainingTemplatePartId");
+
+                    b.ToTable("TrainingTemplatePartActivities");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.UserAiCredential", b =>
                 {
                     b.Property<int>("Id")
@@ -7125,6 +7222,36 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Training");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplatePart", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.TrainingTemplate", "TrainingTemplate")
+                        .WithMany("Parts")
+                        .HasForeignKey("TrainingTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingTemplate");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplatePartActivity", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TrainingTemplatePart", "TrainingTemplatePart")
+                        .WithMany("Activities")
+                        .HasForeignKey("TrainingTemplatePartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("TrainingTemplatePart");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Video", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
@@ -7472,6 +7599,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>
                 {
                     b.Navigation("TrainingGroups");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplate", b =>
+                {
+                    b.Navigation("Parts");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingTemplatePart", b =>
+                {
+                    b.Navigation("Activities");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.UserAiCredential", b =>

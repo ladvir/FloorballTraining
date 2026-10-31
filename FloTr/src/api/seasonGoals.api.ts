@@ -18,8 +18,10 @@ export const seasonGoalsApi = {
     apiClient.get<MyReportTeamDto[]>('/seasongoals/my-teams').then((r) => r.data),
 
   // Month-by-month + season-total best players & goal progress
-  getTeamReport: (teamId: number) =>
-    apiClient.get<TeamSeasonReportDto>(`/seasongoals/team/${teamId}/report`).then((r) => r.data),
+  getTeamReport: (teamId: number, all = false) =>
+    apiClient
+      .get<TeamSeasonReportDto>(`/seasongoals/team/${teamId}/report`, { params: { all } })
+      .then((r) => r.data),
 
   // One row per team of the season — club-manager rollup
   getClubRollup: (clubId: number, seasonId: number) =>

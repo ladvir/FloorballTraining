@@ -16,6 +16,11 @@ import { PublicCalendarPage } from '../features/teams/PublicCalendarPage'
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage }))
 )
+const TrainingTemplatesPage = lazy(() =>
+  import('../features/trainings/TrainingTemplatesPage').then((m) => ({
+    default: m.TrainingTemplatesPage,
+  }))
+)
 const TrainingsPage = lazy(() =>
   import('../features/trainings/TrainingsPage').then((m) => ({ default: m.TrainingsPage }))
 )
@@ -347,6 +352,7 @@ export const router = createBrowserRouter(
                 {
                   element: <CoachRoute />,
                   children: [
+                    { path: '/training-templates', element: <TrainingTemplatesPage /> },
                     { path: '/trainings/new', element: <TrainingFormPage /> },
                     { path: '/trainings/generate', element: <AiTrainingGeneratorPage /> },
                     { path: '/trainings/:id/edit', element: <TrainingFormPage /> },

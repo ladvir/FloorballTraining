@@ -44,7 +44,8 @@
     "howToEarnXp": "Jak zdobyć XP",
     "announcer": "Spiker",
     "myCard": "Moja karta",
-    "teamChallenges": "Wyzwania zespołowe"
+    "teamChallenges": "Wyzwania zespołowe",
+    "trainingTemplates": "Szablony treningów"
   },
   "auth": {
     "email": "E-mail",
@@ -2618,6 +2619,10 @@
     "nameRequired2": "Nazwa jest wymagana."
   },
   "attendance": {
+    "allMonths": "Wszystkie miesiące",
+    "allTypes": "Wszystkie typy",
+    "filterMonth": "Filtr miesiąca",
+    "filterType": "Filtr typu wydarzenia",
     "title": "Obecność",
     "record": "Zapisz obecność",
     "recordFor": "Obecność dla: {{name}}",
@@ -3346,6 +3351,8 @@
     "breakdown": "Skąd pochodzi Twoje XP",
     "history": {
       "title": "Historia XP według miesiąca",
+      "expandAll": "Rozwiń wszystko",
+      "collapseAll": "Zwiń wszystko",
       "month": "Miesiąc",
       "empty": "W tym miesiącu brak XP"
     },
@@ -3727,6 +3734,7 @@
     "clubEmptyHint": "Wybierz sezon, w którym grają drużyny klubu."
   },
   "seasonReport": {
+    "showAll": "Pokaż wszystkich",
     "team": "Drużyna",
     "asCoach": "Jako trener",
     "asPlayer": "Jako zawodnik",
@@ -3891,5 +3899,39 @@
     "timelineBody": "Usunięcie przez aplikację lub stronę internetową następuje natychmiast. Zgłoszenia przesłane e-mailem rozpatrujemy zwykle w ciągu 30 dni.",
     "moreInfoTitle": "6. Więcej informacji",
     "moreInfoBody": "Szczegółowy opis tego, jakie dane o Tobie przetwarzamy i dlaczego, znajdziesz tutaj:"
+  },
+  "trainingTemplates": {
+    "title": "Szablony treningów",
+    "new": "Nowy szablon",
+    "edit": "Edytuj szablon",
+    "name": "Nazwa",
+    "description": "Opis",
+    "partName": "Nazwa części",
+    "partDuration": "Czas (min)",
+    "addPart": "Dodaj część",
+    "removePart": "Usuń część",
+    "addActivity": "+ ćwiczenie",
+    "removeActivity": "Usuń ćwiczenie",
+    "emptyTitle": "Brak szablonów",
+    "emptyDesc": "Utwórz szablon lub zapisz istniejący trening jako szablon.",
+    "summary": "{{parts}} części · {{minutes}} min",
+    "saveFailed": "Nie udało się zapisać szablonu.",
+    "deleteFailed": "Nie udało się usunąć szablonu.",
+    "deleteTitle": "Usuń szablon",
+    "deleteConfirm": "Na pewno usunąć szablon „{{name}}”? Utworzone już treningi pozostaną bez zmian.",
+    "saveAs": "Zapisz jako szablon",
+    "saveAsShort": "Jako szablon",
+    "saved": "Szablon zapisany.",
+    "partsToInclude": "Części w szablonie",
+    "selectAll": "Wszystkie",
+    "selectFirstLast": "Tylko pierwsza i ostatnia",
+    "includeActivities": "Zachowaj także ćwiczenia (inaczej tylko nazwy i czas)",
+    "newFromTemplate": "Nowy z szablonu",
+    "insertFromTemplate": "Wstaw z szablonu",
+    "pickerEmpty": "Nie ma jeszcze szablonów.",
+    "position": "Wstaw:",
+    "atStart": "na początku",
+    "atEnd": "na końcu",
+    "use": "Użyj"
   }
 }

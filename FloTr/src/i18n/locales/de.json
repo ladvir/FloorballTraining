@@ -44,7 +44,8 @@
     "howToEarnXp": "Wie man XP verdient",
     "announcer": "Stadionsprecher",
     "myCard": "Meine Karte",
-    "teamChallenges": "Team-Challenges"
+    "teamChallenges": "Team-Challenges",
+    "trainingTemplates": "Trainingsvorlagen"
   },
   "auth": {
     "email": "E-Mail",
@@ -2614,6 +2615,10 @@
     "nameRequired2": "Name ist erforderlich."
   },
   "attendance": {
+    "allMonths": "Alle Monate",
+    "allTypes": "Alle Typen",
+    "filterMonth": "Monatsfilter",
+    "filterType": "Veranstaltungstyp-Filter",
     "title": "Anwesenheit",
     "record": "Anwesenheit erfassen",
     "recordFor": "Anwesenheit für: {{name}}",
@@ -3338,6 +3343,8 @@
     "breakdown": "Woher deine XP kommen",
     "history": {
       "title": "XP-Verlauf nach Monat",
+      "expandAll": "Alle ausklappen",
+      "collapseAll": "Alle einklappen",
       "month": "Monat",
       "empty": "Diesen Monat keine XP"
     },
@@ -3728,6 +3735,7 @@
     "clubEmptyHint": "Wähle eine Saison, in der die Vereinsteams spielen."
   },
   "seasonReport": {
+    "showAll": "Alle anzeigen",
     "team": "Team",
     "asCoach": "Als Trainer",
     "asPlayer": "Als Spieler",
@@ -3892,5 +3900,39 @@
     "timelineBody": "Die Löschung über die App oder das Web erfolgt sofort. Per E-Mail gesendete Anfragen bearbeiten wir in der Regel innerhalb von 30 Tagen.",
     "moreInfoTitle": "6. Weitere Informationen",
     "moreInfoBody": "Eine detaillierte Beschreibung, welche Daten wir über Sie verarbeiten und warum, finden Sie hier:"
+  },
+  "trainingTemplates": {
+    "title": "Trainingsvorlagen",
+    "new": "Neue Vorlage",
+    "edit": "Vorlage bearbeiten",
+    "name": "Name",
+    "description": "Beschreibung",
+    "partName": "Name des Teils",
+    "partDuration": "Dauer (Min.)",
+    "addPart": "Teil hinzufügen",
+    "removePart": "Teil entfernen",
+    "addActivity": "+ Aktivität",
+    "removeActivity": "Aktivität entfernen",
+    "emptyTitle": "Noch keine Vorlagen",
+    "emptyDesc": "Erstelle eine Vorlage oder speichere ein bestehendes Training als Vorlage.",
+    "summary": "{{parts}} Teile · {{minutes}} Min.",
+    "saveFailed": "Die Vorlage konnte nicht gespeichert werden.",
+    "deleteFailed": "Die Vorlage konnte nicht gelöscht werden.",
+    "deleteTitle": "Vorlage löschen",
+    "deleteConfirm": "Vorlage „{{name}}“ wirklich löschen? Bereits erstellte Trainings bleiben unverändert.",
+    "saveAs": "Als Vorlage speichern",
+    "saveAsShort": "Als Vorlage",
+    "saved": "Vorlage gespeichert.",
+    "partsToInclude": "Teile in der Vorlage",
+    "selectAll": "Alle",
+    "selectFirstLast": "Nur erster und letzter",
+    "includeActivities": "Aktivitäten behalten (sonst nur Namen und Dauer)",
+    "newFromTemplate": "Neu aus Vorlage",
+    "insertFromTemplate": "Aus Vorlage einfügen",
+    "pickerEmpty": "Es gibt noch keine Vorlagen.",
+    "position": "Einfügen:",
+    "atStart": "am Anfang",
+    "atEnd": "am Ende",
+    "use": "Verwenden"
   }
 }

@@ -11,7 +11,7 @@ import { dfLocale } from '../../utils/dateLocale'
 export function XpHistory({ memberId }: { memberId: number }) {
   const { t } = useTranslation()
   const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
-  const [expandedType, setExpandedType] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const { data } = useQuery({
     queryKey: ['xp-history', memberId],
     queryFn: () => xpApi.getHistory(memberId),
@@ -31,19 +31,30 @@ export function XpHistory({ memberId }: { memberId: number }) {
 
   const total = rows.reduce((sum, r) => sum + r.xp, 0)
 
-  const detailItems = useMemo(
-    () =>
-      monthEvents
-        .filter((e) => e.type === expandedType)
-        .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
-    [monthEvents, expandedType]
+  const sortedEvents = useMemo(
+    () => [...monthEvents].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
+    [monthEvents]
   )
+  const allOpen = rows.length > 0 && rows.every((r) => expanded.has(r.type))
+  const toggle = (type: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(type)) next.add(type)
+      return next
+    })
 
   return (
     <Card>
       <CardContent className="py-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-gray-700">{t('xp.history.title')}</p>
+          <button
+            type="button"
+            onClick={() => setExpanded(allOpen ? new Set() : new Set(rows.map((r) => r.type)))}
+            className="ml-auto text-xs text-sky-600 hover:underline"
+          >
+            {allOpen ? t('xp.history.collapseAll') : t('xp.history.expandAll')}
+          </button>
           <input
             type="month"
             value={month}
@@ -58,12 +69,12 @@ export function XpHistory({ memberId }: { memberId: number }) {
         ) : (
           <ul className="space-y-1">
             {rows.map((r) => {
-              const isOpen = expandedType === r.type
+              const isOpen = expanded.has(r.type)
               return (
                 <li key={r.type}>
                   <button
                     type="button"
-                    onClick={() => setExpandedType(isOpen ? null : r.type)}
+                    onClick={() => toggle(r.type)}
                     className="flex w-full items-center justify-between rounded-md py-1 text-sm hover:bg-gray-50"
                   >
                     <span className="flex items-center gap-1 text-gray-600">
@@ -81,20 +92,26 @@ export function XpHistory({ memberId }: { memberId: number }) {
 
                   {isOpen && (
                     <ul className="ml-5 space-y-1 border-l border-gray-100 pl-3">
-                      {detailItems.map((e, i) => (
-                        <li
-                          key={i}
-                          className="flex items-center justify-between py-0.5 text-xs text-gray-500"
-                        >
-                          <span>{t(`xp.type.${e.type}`, { defaultValue: e.type })}</span>
-                          <span>
-                            {format(parseISO(e.occurredAt), 'd. M. yyyy', { locale: dfLocale() })}
-                          </span>
-                          <span className="font-medium text-gray-700">
-                            {t('xp.xpTotal', { xp: e.points })}
-                          </span>
-                        </li>
-                      ))}
+                      {sortedEvents
+                        .filter((e) => e.type === r.type)
+                        .map((e, i) => (
+                          <li
+                            key={i}
+                            className="flex items-center justify-between py-0.5 text-xs text-gray-500"
+                          >
+                            <span>
+                              {e.type === 'ChallengeReward' && e.detail
+                                ? t(`challenge.${e.detail}.title`, { defaultValue: e.detail })
+                                : (e.detail ?? t(`xp.type.${e.type}`, { defaultValue: e.type }))}
+                            </span>
+                            <span>
+                              {format(parseISO(e.occurredAt), 'd. M. yyyy', { locale: dfLocale() })}
+                            </span>
+                            <span className="font-medium text-gray-700">
+                              {t('xp.xpTotal', { xp: e.points })}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   )}
                 </li>

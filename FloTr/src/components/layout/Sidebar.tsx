@@ -31,6 +31,7 @@ import {
   Megaphone,
   Users,
   Video,
+  LayoutTemplate,
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -94,6 +95,13 @@ export function Sidebar({ onClose }: SidebarProps) {
           to: '/activities',
           icon: ActivityIcon,
           label: t('nav.activities'),
+          hideForGuardian: true,
+        },
+        {
+          to: '/training-templates',
+          icon: LayoutTemplate,
+          label: t('nav.trainingTemplates'),
+          minRole: 'Coach',
           hideForGuardian: true,
         },
         { to: '/drawing', icon: Pencil, label: t('nav.drawing'), hideForGuardian: true },

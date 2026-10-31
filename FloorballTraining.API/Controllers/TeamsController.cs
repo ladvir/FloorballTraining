@@ -418,11 +418,11 @@ public class TeamsController(
         if (team == null) return NotFound();
         if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
 
-        // Get appointments for this team that have attendance records (last 20 events).
-        // Attendance stats count trainings only — matches track participation via the
-        // lineup/nomination, not attendance.
+        // All appointments of this team with attendance records, any type. The client filters by month /
+        // type (default: trainings only — attendance stats count trainings; matches track participation
+        // via the lineup/nomination, not attendance).
         var appointmentIds = await context.AppointmentAttendances
-            .Where(a => a.Appointment!.TeamId == id && a.Appointment.AppointmentType == AppointmentType.Training)
+            .Where(a => a.Appointment!.TeamId == id)
             .Select(a => a.AppointmentId)
             .Distinct()
             .ToListAsync();
@@ -430,8 +430,7 @@ public class TeamsController(
         var appointments = await context.Appointments
             .Where(a => a.TeamId == id && appointmentIds.Contains(a.Id))
             .OrderByDescending(a => a.Start)
-            .Take(20)
-            .Select(a => new { a.Id, a.Name, a.Start })
+            .Select(a => new { a.Id, a.Name, a.Start, a.AppointmentType })
             .ToListAsync();
 
         // Only count members who are currently on this team's roster and active — a former or
@@ -467,6 +466,7 @@ public class TeamsController(
                 AppointmentId = apt.Id,
                 AppointmentName = apt.Name,
                 AppointmentStart = apt.Start,
+                AppointmentType = (int)apt.AppointmentType,
                 Present = memberAttendances.Count(a => a.Status == 1),
                 Absent = memberAttendances.Count(a => a.Status == 2),
                 Excused = memberAttendances.Count(a => a.Status == 3),

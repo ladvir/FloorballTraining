@@ -44,7 +44,8 @@
     "howToEarnXp": "Jak získat XP",
     "announcer": "Hlasatel",
     "myCard": "Moje karta",
-    "teamChallenges": "Týmové výzvy"
+    "teamChallenges": "Týmové výzvy",
+    "trainingTemplates": "Šablony tréninků"
   },
   "auth": {
     "email": "Email",
@@ -2617,6 +2618,10 @@
     "nameRequired2": "Název je povinný."
   },
   "attendance": {
+    "allMonths": "Všechny měsíce",
+    "allTypes": "Všechny typy",
+    "filterMonth": "Filtr měsíce",
+    "filterType": "Filtr typu události",
     "title": "Docházka",
     "record": "Zaznamenat docházku",
     "recordFor": "Docházka pro: {{name}}",
@@ -3344,6 +3349,8 @@
     "breakdown": "Odkud XP přišlo",
     "history": {
       "title": "Historie XP podle měsíce",
+      "expandAll": "Rozbalit vše",
+      "collapseAll": "Sbalit vše",
       "month": "Měsíc",
       "empty": "V tomto měsíci žádné XP"
     },
@@ -3725,6 +3732,7 @@
     "clubEmptyHint": "Vyberte sezónu, ve které týmy klubu hrají."
   },
   "seasonReport": {
+    "showAll": "Zobrazit všechny",
     "team": "Tým",
     "asCoach": "Jako trenér",
     "asPlayer": "Jako hráč",
@@ -3889,5 +3897,39 @@
     "timelineBody": "Smazání přes aplikaci nebo web proběhne okamžitě. Žádosti zaslané e-mailem vyřizujeme obvykle do 30 dnů.",
     "moreInfoTitle": "6. Více informací",
     "moreInfoBody": "Podrobný popis toho, jaké údaje o vás zpracováváme a proč, najdete zde:"
+  },
+  "trainingTemplates": {
+    "title": "Šablony tréninků",
+    "new": "Nová šablona",
+    "edit": "Upravit šablonu",
+    "name": "Název",
+    "description": "Popis",
+    "partName": "Název části",
+    "partDuration": "Délka (min)",
+    "addPart": "Přidat část",
+    "removePart": "Odebrat část",
+    "addActivity": "+ aktivita",
+    "removeActivity": "Odebrat aktivitu",
+    "emptyTitle": "Zatím žádné šablony",
+    "emptyDesc": "Vytvořte šablonu nebo uložte existující trénink jako šablonu.",
+    "summary": "{{parts}} částí · {{minutes}} min",
+    "saveFailed": "Šablonu se nepodařilo uložit.",
+    "deleteFailed": "Šablonu se nepodařilo smazat.",
+    "deleteTitle": "Smazat šablonu",
+    "deleteConfirm": "Opravdu smazat šablonu „{{name}}“? Již vytvořené tréninky zůstanou beze změny.",
+    "saveAs": "Uložit jako šablonu",
+    "saveAsShort": "Jako šablonu",
+    "saved": "Šablona uložena.",
+    "partsToInclude": "Části v šabloně",
+    "selectAll": "Všechny",
+    "selectFirstLast": "Jen první a poslední",
+    "includeActivities": "Zachovat i aktivity (jinak jen názvy a délky)",
+    "newFromTemplate": "Nový ze šablony",
+    "insertFromTemplate": "Vložit ze šablony",
+    "pickerEmpty": "Zatím nejsou žádné šablony.",
+    "position": "Vložit:",
+    "atStart": "na začátek",
+    "atEnd": "na konec",
+    "use": "Použít"
   }
 }

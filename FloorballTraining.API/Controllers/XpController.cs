@@ -42,9 +42,32 @@ public class XpController(
         var events = await context.XpEvents.AsNoTracking()
             .Where(e => e.MemberId == memberId)
             .OrderByDescending(e => e.OccurredAt)
-            .Select(e => new XpEventDto { Type = e.Type.ToString(), Points = e.Points, OccurredAt = e.OccurredAt })
+            .Select(e => new { e.Type, e.Points, e.OccurredAt, e.SourceId })
             .ToListAsync(ct);
-        return Ok(events);
+
+        // Challenge rewards: say which challenge it was (catalog code → i18n'd on the client; team
+        // challenge → its own name).
+        var challengeIds = events.Where(e => e.Type == XpEventType.ChallengeReward && e.SourceId != null)
+            .Select(e => e.SourceId!.Value).Distinct().ToList();
+        var teamChallengeIds = events.Where(e => e.Type == XpEventType.TeamChallengeReward && e.SourceId != null)
+            .Select(e => e.SourceId!.Value).Distinct().ToList();
+        var codes = await context.ChallengeCompletions.AsNoTracking()
+            .Where(c => challengeIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Code, ct);
+        var teamNames = await context.TeamChallengeCompletions.AsNoTracking()
+            .Where(c => teamChallengeIds.Contains(c.Id))
+            .Select(c => new { c.Id, c.TeamChallenge!.Name })
+            .ToDictionaryAsync(c => c.Id, c => c.Name, ct);
+
+        return Ok(events.Select(e => new XpEventDto
+        {
+            Type = e.Type.ToString(),
+            Points = e.Points,
+            OccurredAt = e.OccurredAt,
+            Detail = e.SourceId is not { } sid ? null
+                : e.Type == XpEventType.ChallengeReward ? codes.GetValueOrDefault(sid)
+                : e.Type == XpEventType.TeamChallengeReward ? teamNames.GetValueOrDefault(sid)
+                : null,
+        }));
     }
 
     /// <summary>

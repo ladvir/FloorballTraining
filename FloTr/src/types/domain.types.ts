@@ -1281,6 +1281,7 @@ export interface TeamAttendanceEventDto {
   appointmentId: number
   appointmentName?: string
   appointmentStart: string
+  appointmentType: number
   present: number
   absent: number
   excused: number
@@ -1837,6 +1838,8 @@ export interface XpEventDto {
   type: string
   points: number
   occurredAt: string
+  /** ChallengeReward → challenge code; TeamChallengeReward → team challenge name. */
+  detail?: string | null
 }
 
 /** Coach 1-click bonus (layer B, #100/#101). Label lives under i18n `xp.type.<type>`. */
@@ -2202,4 +2205,26 @@ export interface MemberRewardClaimDto {
   fulfilledByName?: string | null
   fulfilledAt?: string | null
   canFulfill: boolean
+}
+
+// Training templates (systémové šablony tréninků)
+export interface TrainingTemplatePartDto {
+  name?: string
+  description?: string
+  duration: number
+  order: number
+  /** Prázdné = jen kostra bez aktivit. */
+  activityIds: number[]
+}
+
+export interface TrainingTemplateDto {
+  id: number
+  name: string
+  description?: string
+  createdByUserId?: string
+  createdByUserName?: string
+  createdAt?: string
+  totalDuration: number
+  canEdit: boolean
+  parts: TrainingTemplatePartDto[]
 }

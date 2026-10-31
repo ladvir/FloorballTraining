@@ -46,6 +46,7 @@ public class TeamAttendanceEventDto
     public int AppointmentId { get; set; }
     public string? AppointmentName { get; set; }
     public DateTime AppointmentStart { get; set; }
+    public int AppointmentType { get; set; }
     public int Present { get; set; }
     public int Absent { get; set; }
     public int Excused { get; set; }

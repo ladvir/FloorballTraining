@@ -99,6 +99,9 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<MemberSkillFocus> MemberSkillFocuses { get; set; } = null!;
 
         public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
+        public DbSet<TrainingTemplate> TrainingTemplates { get; set; } = null!;
+        public DbSet<TrainingTemplatePart> TrainingTemplateParts { get; set; } = null!;
+        public DbSet<TrainingTemplatePartActivity> TrainingTemplatePartActivities { get; set; } = null!;
         public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;
         public DbSet<MatchLineup> MatchLineups { get; set; } = null!;
         public DbSet<LineupRoster> LineupRosters { get; set; } = null!;
