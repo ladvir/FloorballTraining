@@ -121,14 +121,13 @@ public class TeamChallengeDerivationTests(CustomWebApplicationFactory factory) :
         completions.Should().HaveCount(2); // one per rostered player
         completions.Select(c => c.MemberId).Should().BeEquivalentTo(new[] { _memberA, _memberB });
         completions.Should().OnlyContain(c => c.PeriodKey == Week(_now) && c.CompletedByUserId == null);
-        bonus.Should().HaveCount(2);
-        bonus.Should().OnlyContain(e => e.Points == 50); // priced units(=RewardXp) × 1
+        bonus.Should().BeEmpty(); // derived team challenges are trophy-only (base events already paid)
 
         // Idempotent: a second pass over the same records changes nothing.
         await RecomputeAsync();
         var (again, againBonus) = await StateAsync();
         again.Should().HaveCount(2);
-        againBonus.Should().HaveCount(2);
+        againBonus.Should().BeEmpty();
     }
 
     [Fact]

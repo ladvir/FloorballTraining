@@ -45,7 +45,8 @@
     "announcer": "Announcer",
     "myCard": "My card",
     "teamChallenges": "Team challenges",
-    "trainingTemplates": "Training templates"
+    "trainingTemplates": "Training templates",
+    "badgeDefinitions": "Badge management"
   },
   "auth": {
     "email": "Email",
@@ -1178,7 +1179,6 @@
     "gridView": "Cards",
     "listView": "List",
     "groupByTags": "Group by tags",
-    "clearSelection": "Clear selection",
     "validateAllTitle": "Validation result for all activities",
     "validateTotal": "Total activities:",
     "validateComplete": "Complete:",
@@ -3434,53 +3434,194 @@
       "name": "Loyalty",
       "desc": "3 seasons played"
     },
-    "Attendance150": { "name": "Attendance 150", "desc": "150 trainings" },
-    "Attendance250": { "name": "Attendance 250", "desc": "250 trainings" },
-    "Attendance400": { "name": "Attendance 400", "desc": "400 trainings" },
-    "Matches25": { "name": "Warrior 25", "desc": "25 matches played" },
-    "Matches100": { "name": "Warrior 100", "desc": "100 matches played" },
-    "Matches250": { "name": "Warrior 250", "desc": "250 matches played" },
-    "Goals100": { "name": "Sniper II", "desc": "100 goals" },
-    "Goals250": { "name": "Sniper III", "desc": "250 goals" },
-    "Goals500": { "name": "Sniper IV", "desc": "500 goals" },
-    "FourGoalsInMatch": { "name": "Poker", "desc": "4 goals in one match" },
-    "FiveGoalsInMatch": { "name": "Unstoppable", "desc": "5+ goals in one match" },
-    "Assists50": { "name": "Playmaker III", "desc": "50 assists" },
-    "Assists100": { "name": "Playmaker IV", "desc": "100 assists" },
-    "Points50": { "name": "Complete Player I", "desc": "50 points (goals + assists)" },
-    "Points150": { "name": "Complete Player II", "desc": "150 points (goals + assists)" },
-    "Points300": { "name": "Complete Player III", "desc": "300 points (goals + assists)" },
-    "Points600": { "name": "Complete Player IV", "desc": "600 points (goals + assists)" },
-    "PlusMinus20": { "name": "Steady", "desc": "career +20 net rating" },
-    "PlusMinus50": { "name": "Defensive Wall", "desc": "career +50 net rating" },
-    "PlusMinus100": { "name": "The Wall", "desc": "career +100 net rating" },
-    "SeasonAttendance90": { "name": "Iron Man II", "desc": "90% season attendance" },
-    "SeasonAttendance100": { "name": "Iron Man III", "desc": "100% season attendance" },
-    "Loyalty5": { "name": "Loyalty II", "desc": "5 seasons played" },
-    "Loyalty8": { "name": "Loyalty III", "desc": "8 seasons played" },
-    "Loyalty10": { "name": "Loyalty IV", "desc": "10 seasons played" },
-    "HomeTraining10": { "name": "Home Warrior I", "desc": "10 home trainings" },
-    "HomeTraining50": { "name": "Home Warrior II", "desc": "50 home trainings" },
-    "HomeTraining150": { "name": "Home Warrior III", "desc": "150 home trainings" },
-    "SkillImprovement1": { "name": "On the Rise I", "desc": "first skill-grade improvement" },
-    "SkillImprovement10": { "name": "On the Rise II", "desc": "10 skill-grade improvements" },
-    "SkillImprovement25": { "name": "On the Rise III", "desc": "25 skill-grade improvements" },
-    "SkillTarget5": { "name": "Target Reached I", "desc": "5 target grades reached" },
-    "SkillTarget15": { "name": "Target Reached II", "desc": "15 target grades reached" },
-    "TestRecord1": { "name": "Personal Best I", "desc": "first personal record in a test" },
-    "TestRecord10": { "name": "Personal Best II", "desc": "10 personal records" },
-    "PlayerOfTraining5": { "name": "Player of Training I", "desc": "5× player of training" },
-    "PlayerOfTraining20": { "name": "Player of Training II", "desc": "20× player of training" },
-    "PlayerOfMatch3": { "name": "Player of the Match", "desc": "3× player of the match" },
-    "FairPlay5": { "name": "Fair Play I", "desc": "5× fair play award" },
-    "FairPlay20": { "name": "Fair Play II", "desc": "20× fair play award" },
-    "FamilyCheered10": { "name": "Family Support I", "desc": "10× family came to cheer" },
-    "FamilyCheered50": { "name": "Family Support II", "desc": "50× family came to cheer" },
-    "Challenges10": { "name": "Challenge Warrior I", "desc": "10 challenges completed" },
-    "Challenges50": { "name": "Challenge Warrior II", "desc": "50 challenges completed" },
-    "CareerXp5000": { "name": "5,000 XP", "desc": "5,000 career XP" },
-    "CareerXp15000": { "name": "15,000 XP", "desc": "15,000 career XP" },
-    "CareerXp30000": { "name": "30,000 XP", "desc": "30,000 career XP" }
+    "Attendance150": {
+      "name": "Attendance 150",
+      "desc": "150 trainings"
+    },
+    "Attendance250": {
+      "name": "Attendance 250",
+      "desc": "250 trainings"
+    },
+    "Attendance400": {
+      "name": "Attendance 400",
+      "desc": "400 trainings"
+    },
+    "Matches25": {
+      "name": "Warrior 25",
+      "desc": "25 matches played"
+    },
+    "Matches100": {
+      "name": "Warrior 100",
+      "desc": "100 matches played"
+    },
+    "Matches250": {
+      "name": "Warrior 250",
+      "desc": "250 matches played"
+    },
+    "Goals100": {
+      "name": "Sniper II",
+      "desc": "100 goals"
+    },
+    "Goals250": {
+      "name": "Sniper III",
+      "desc": "250 goals"
+    },
+    "Goals500": {
+      "name": "Sniper IV",
+      "desc": "500 goals"
+    },
+    "FourGoalsInMatch": {
+      "name": "Poker",
+      "desc": "4 goals in one match"
+    },
+    "FiveGoalsInMatch": {
+      "name": "Unstoppable",
+      "desc": "5+ goals in one match"
+    },
+    "Assists50": {
+      "name": "Playmaker III",
+      "desc": "50 assists"
+    },
+    "Assists100": {
+      "name": "Playmaker IV",
+      "desc": "100 assists"
+    },
+    "Points50": {
+      "name": "Complete Player I",
+      "desc": "50 points (goals + assists)"
+    },
+    "Points150": {
+      "name": "Complete Player II",
+      "desc": "150 points (goals + assists)"
+    },
+    "Points300": {
+      "name": "Complete Player III",
+      "desc": "300 points (goals + assists)"
+    },
+    "Points600": {
+      "name": "Complete Player IV",
+      "desc": "600 points (goals + assists)"
+    },
+    "PlusMinus20": {
+      "name": "Steady",
+      "desc": "career +20 net rating"
+    },
+    "PlusMinus50": {
+      "name": "Defensive Wall",
+      "desc": "career +50 net rating"
+    },
+    "PlusMinus100": {
+      "name": "The Wall",
+      "desc": "career +100 net rating"
+    },
+    "SeasonAttendance90": {
+      "name": "Iron Man II",
+      "desc": "90% season attendance"
+    },
+    "SeasonAttendance100": {
+      "name": "Iron Man III",
+      "desc": "100% season attendance"
+    },
+    "Loyalty5": {
+      "name": "Loyalty II",
+      "desc": "5 seasons played"
+    },
+    "Loyalty8": {
+      "name": "Loyalty III",
+      "desc": "8 seasons played"
+    },
+    "Loyalty10": {
+      "name": "Loyalty IV",
+      "desc": "10 seasons played"
+    },
+    "HomeTraining10": {
+      "name": "Home Warrior I",
+      "desc": "10 home trainings"
+    },
+    "HomeTraining50": {
+      "name": "Home Warrior II",
+      "desc": "50 home trainings"
+    },
+    "HomeTraining150": {
+      "name": "Home Warrior III",
+      "desc": "150 home trainings"
+    },
+    "SkillImprovement1": {
+      "name": "On the Rise I",
+      "desc": "first skill-grade improvement"
+    },
+    "SkillImprovement10": {
+      "name": "On the Rise II",
+      "desc": "10 skill-grade improvements"
+    },
+    "SkillImprovement25": {
+      "name": "On the Rise III",
+      "desc": "25 skill-grade improvements"
+    },
+    "SkillTarget5": {
+      "name": "Target Reached I",
+      "desc": "5 target grades reached"
+    },
+    "SkillTarget15": {
+      "name": "Target Reached II",
+      "desc": "15 target grades reached"
+    },
+    "TestRecord1": {
+      "name": "Personal Best I",
+      "desc": "first personal record in a test"
+    },
+    "TestRecord10": {
+      "name": "Personal Best II",
+      "desc": "10 personal records"
+    },
+    "PlayerOfTraining5": {
+      "name": "Player of Training I",
+      "desc": "5× player of training"
+    },
+    "PlayerOfTraining20": {
+      "name": "Player of Training II",
+      "desc": "20× player of training"
+    },
+    "PlayerOfMatch3": {
+      "name": "Player of the Match",
+      "desc": "3× player of the match"
+    },
+    "FairPlay5": {
+      "name": "Fair Play I",
+      "desc": "5× fair play award"
+    },
+    "FairPlay20": {
+      "name": "Fair Play II",
+      "desc": "20× fair play award"
+    },
+    "FamilyCheered10": {
+      "name": "Family Support I",
+      "desc": "10× family came to cheer"
+    },
+    "FamilyCheered50": {
+      "name": "Family Support II",
+      "desc": "50× family came to cheer"
+    },
+    "Challenges10": {
+      "name": "Challenge Warrior I",
+      "desc": "10 challenges completed"
+    },
+    "Challenges50": {
+      "name": "Challenge Warrior II",
+      "desc": "50 challenges completed"
+    },
+    "CareerXp5000": {
+      "name": "5,000 XP",
+      "desc": "5,000 career XP"
+    },
+    "CareerXp15000": {
+      "name": "15,000 XP",
+      "desc": "15,000 career XP"
+    },
+    "CareerXp30000": {
+      "name": "30,000 XP",
+      "desc": "30,000 career XP"
+    }
   },
   "leaderboard": {
     "title": "Leaderboard",
@@ -3519,6 +3660,7 @@
     "section": "Your challenges",
     "rewardXp": "+{{xp}} XP",
     "done": "Done! +{{xp}} XP",
+    "doneNoXp": "Completed!",
     "progress": "{{current}}/{{target}}",
     "window": {
       "Week": "this week",
@@ -3925,5 +4067,66 @@
     "atStart": "at the start",
     "atEnd": "at the end",
     "use": "Use"
+  },
+  "badgeAdmin": {
+    "title": "Badge management",
+    "subtitle": "Add, edit and remove badges, set how often they can be earned and upload an icon.",
+    "add": "Add badge",
+    "edit": "Edit badge",
+    "code": "Code",
+    "codeHint": "Unique code (letters, digits, _). Cannot be changed later.",
+    "name": "Name",
+    "nameHint": "Empty = use the translated name of a built-in badge.",
+    "description": "Description",
+    "metricLabel": "What is counted",
+    "threshold": "Threshold (count)",
+    "periodLabel": "Validity",
+    "repeatable": "Repeatable (earned again for every further multiple)",
+    "repeatableShort": "repeatable",
+    "hintLifetime": "One-time: earned once. Repeatable: earned again at every further multiple of the threshold (10, 20, 30…).",
+    "hintPeriodic": "A monthly / seasonal badge is earned again in every new month / season.",
+    "icon": "Icon",
+    "chooseIcon": "Choose image (png, jpg, webp, svg up to 1 MB)",
+    "active": "Active",
+    "earnedBy": "earned {{count}}×",
+    "inactive": "inactive",
+    "confirmRemove": "Remove this badge? Badges players already earned stay, but it is no longer offered or awarded.",
+    "period": {
+      "Lifetime": "one-time",
+      "Month": "monthly",
+      "Season": "seasonal"
+    },
+    "metric": {
+      "TrainingCount": "Trainings attended",
+      "MatchCount": "Matches played",
+      "GoalCount": "Goals",
+      "AssistCount": "Assists",
+      "GoalsPlusAssists": "Points (goals + assists)",
+      "NetPlusMinus": "Plus/minus",
+      "MaxGoalsInMatch": "Goals in a single match",
+      "SeasonsPlayed": "Seasons played",
+      "SeasonAttendancePct": "Season attendance (%)",
+      "HomeTrainingCount": "Home trainings",
+      "SkillImprovementCount": "Skill improvements",
+      "SkillTargetCount": "Skill targets reached",
+      "TestRecordCount": "Test personal records",
+      "PlayerOfTrainingCount": "Player of the training",
+      "PlayerOfMatchCount": "Player of the match",
+      "FairPlayCount": "Fair play",
+      "FamilyCheeredCount": "Family cheered",
+      "ChallengeCount": "Challenges completed",
+      "CareerXp": "Total XP"
+    },
+    "filter": {
+      "search": "Search by name…",
+      "allPeriods": "All types",
+      "allMetrics": "All metrics",
+      "repeatableAll": "Repeatable: all",
+      "repeatableYes": "Repeatable only",
+      "repeatableNo": "Non-repeatable only",
+      "minThreshold": "Points from",
+      "maxThreshold": "Points to",
+      "noResults": "No badge matches the filter."
+    }
   }
 }

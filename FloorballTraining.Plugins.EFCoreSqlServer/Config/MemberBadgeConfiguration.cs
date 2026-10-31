@@ -10,7 +10,8 @@ public class MemberBadgeConfiguration : IEntityTypeConfiguration<MemberBadge>
     {
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.MemberId).IsRequired();
-        builder.Property(p => p.Code).IsRequired();
+        builder.Property(p => p.Code).IsRequired().HasMaxLength(64);
+        builder.Property(p => p.PeriodKey).HasMaxLength(16);
         builder.Property(p => p.EarnedAt).IsRequired();
 
         builder.HasOne(b => b.Member)
@@ -23,7 +24,7 @@ public class MemberBadgeConfiguration : IEntityTypeConfiguration<MemberBadge>
             .HasForeignKey(b => b.SeasonId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // Idempotence: a badge is earned once per (member, code, season).
-        builder.HasIndex(b => new { b.MemberId, b.Code, b.SeasonId }).IsUnique();
+        // Idempotence: a badge is earned once per (member, code, season, period).
+        builder.HasIndex(b => new { b.MemberId, b.Code, b.SeasonId, b.PeriodKey }).IsUnique();
     }
 }

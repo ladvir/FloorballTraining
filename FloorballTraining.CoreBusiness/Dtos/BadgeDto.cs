@@ -15,4 +15,12 @@ public class BadgeStatusDto
     /// <summary>How many players sharing a team with this member hold this badge (this member included).
     /// Powers the FlotrPlayer "X in your team have this" line on the login celebration.</summary>
     public int TeamHolders { get; set; }
+    /// <summary>Admin-entered name/description of a custom badge; null for built-ins (client uses badge.{code}.name / .desc i18n).</summary>
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    /// <summary>Lifetime / Month / Season.</summary>
+    public string Period { get; set; } = "Lifetime";
+    public bool Repeatable { get; set; }
+    /// <summary>How many times this member has earned it (months / seasons / multiples).</summary>
+    public int Count { get; set; }
 }

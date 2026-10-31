@@ -330,6 +330,7 @@ public class XpService(FloorballTrainingContext context)
         foreach (var c in completions)
         {
             if (!ChallengeCatalog.ByCode.TryGetValue(c.Code, out var def)) continue; // retired code → XP pruned
+            if (def.RewardXp <= 0) continue; // trophy only — the base events already paid the activity
             add(c.MemberId, XpEventType.ChallengeReward, def.RewardXp, null, XpSourceKind.Challenge, c.Id, c.CompletedAt);
         }
     }
@@ -347,6 +348,9 @@ public class XpService(FloorballTrainingContext context)
         foreach (var c in completions)
         {
             if (c.TeamChallenge == null) continue; // challenge deleted → completion cascades away, XP pruned
+            // Derived challenges re-measure activity the base events already pay → trophy only. A manual
+            // goal ("win the tournament") has no base event, so the coach's reward still applies.
+            if (!c.TeamChallenge.IsManual || c.TeamChallenge.RewardXp <= 0) continue;
             add(c.MemberId, XpEventType.TeamChallengeReward, c.TeamChallenge.RewardXp, c.TeamChallenge.TeamId,
                 XpSourceKind.TeamChallenge, c.Id, c.CompletedAt);
         }

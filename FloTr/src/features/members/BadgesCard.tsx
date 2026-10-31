@@ -63,16 +63,25 @@ function BadgeTile({ badge }: { badge: BadgeStatusDto }) {
         className={cn('h-14 w-14 object-contain', !badge.earned && 'opacity-40 grayscale')}
       />
       <p className="mt-1.5 text-xs font-medium text-gray-800">
-        {t(`badge.${badge.code}.name`, { defaultValue: badge.code })}
+        {badge.name || t(`badge.${badge.code}.name`, { defaultValue: badge.code })}
       </p>
       <p className="mt-0.5 text-[11px] text-gray-400">
-        {t(`badge.${badge.code}.desc`, { defaultValue: '' })}
+        {badge.description || t(`badge.${badge.code}.desc`, { defaultValue: '' })}
       </p>
-      {badge.earned ? (
+      {badge.period && badge.period !== 'Lifetime' && (
+        <p className="mt-0.5 text-[10px] uppercase tracking-wide text-gray-400">
+          {t(`badgeAdmin.period.${badge.period}`)}
+        </p>
+      )}
+      {badge.earned && (
         <span className="mt-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
           {t('badge.earned')}
+          {(badge.count ?? 1) > 1 && ` ×${badge.count}`}
         </span>
-      ) : (
+      )}
+      {/* Progress bar: not yet earned, or repeatable/periodic (progress toward the next one). */}
+      {!badge.earned ||
+      ((badge.repeatable || badge.period !== 'Lifetime') && badge.progress < 1) ? (
         <div className="mt-2 w-full">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
             <div className="h-full rounded-full bg-sky-400" style={{ width: `${pct}%` }} />
@@ -81,7 +90,7 @@ function BadgeTile({ badge }: { badge: BadgeStatusDto }) {
             {badge.current} / {badge.threshold}
           </p>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

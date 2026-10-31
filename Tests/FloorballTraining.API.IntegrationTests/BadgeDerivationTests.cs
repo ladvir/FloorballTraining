@@ -124,6 +124,37 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
     }
 
     [Fact]
+    public async Task CustomDefinitions_MonthlyAndRepeatable_AreEarnedPerPeriodAndPerMultiple_Idempotently()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var monthly = $"Monthly4_{suffix}";
+        var repeat = $"Repeat3_{suffix}";
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        await BadgeService.EnsureSeededAsync(db);
+        db.BadgeDefinitions.AddRange(
+            new BadgeDefinition { Code = monthly, Metric = BadgeMetric.TrainingCount, Threshold = 4, Period = BadgePeriod.Month, IconPath = "badges/custom.png" },
+            new BadgeDefinition { Code = repeat, Metric = BadgeMetric.TrainingCount, Threshold = 3, Repeatable = true, IconPath = "badges/custom.png" });
+        await db.SaveChangesAsync();
+
+        var svc = scope.ServiceProvider.GetRequiredService<BadgeService>();
+        await svc.RecomputeAllAsync();
+        (await svc.RecomputeAllAsync()).Should().Be(0); // idempotent
+
+        var rows = (await BadgesOf(_achieverId)).Where(b => b.Code == monthly || b.Code == repeat).ToList();
+        // 10 trainings all in March 2026 → one monthly badge; floor(10/3) = 3 multiples of the repeatable one.
+        rows.Where(b => b.Code == monthly).Should().ContainSingle().Which.PeriodKey.Should().Be("2026-03");
+        rows.Where(b => b.Code == repeat).Select(b => b.PeriodKey).Should().BeEquivalentTo(new string?[] { null, "x2", "x3" });
+        // Crossed on the 3rd / 6th / 9th present training (days 2, 5, 8).
+        rows.Single(b => b.Code == repeat && b.PeriodKey == "x2").EarnedAt.Should().Be(_now.AddDays(5));
+
+        // Deactivated definitions stop being offered.
+        db.BadgeDefinitions.Single(d => d.Code == repeat).IsActive = false;
+        await db.SaveChangesAsync();
+        (await svc.GetBadgesAsync(_achieverId)).Should().NotContain(b => b.Code == repeat);
+    }
+
+    [Fact]
     public async Task Recompute_AwardsThresholdsHattrickIronMan_AndIsIdempotent()
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -132,14 +163,14 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
         await svc.RecomputeAllAsync();
 
         var achieverCodes = (await BadgesOf(_achieverId)).Select(b => b.Code).ToList();
-        achieverCodes.Should().Contain(BadgeCode.Attendance10);   // 10 present trainings
-        achieverCodes.Should().NotContain(BadgeCode.Attendance25);
-        achieverCodes.Should().Contain(BadgeCode.FirstGoal);
-        achieverCodes.Should().Contain(BadgeCode.Hattrick);        // 3 goals in one match
-        achieverCodes.Should().NotContain(BadgeCode.Goals10);
+        achieverCodes.Should().Contain(nameof(BadgeCode.Attendance10));   // 10 present trainings
+        achieverCodes.Should().NotContain(nameof(BadgeCode.Attendance25));
+        achieverCodes.Should().Contain(nameof(BadgeCode.FirstGoal));
+        achieverCodes.Should().Contain(nameof(BadgeCode.Hattrick));        // 3 goals in one match
+        achieverCodes.Should().NotContain(nameof(BadgeCode.Goals10));
 
         // Iron Man is season-scoped: exactly one row, tagged with the season (100% attendance).
-        var ironMan = (await BadgesOf(_achieverId)).Where(b => b.Code == BadgeCode.IronMan).ToList();
+        var ironMan = (await BadgesOf(_achieverId)).Where(b => b.Code == nameof(BadgeCode.IronMan)).ToList();
         ironMan.Should().ContainSingle().Which.SeasonId.Should().Be(_seasonId);
 
         // Control earns nothing (2 trainings, 40% attendance).
@@ -159,18 +190,18 @@ public class BadgeDerivationTests(CustomWebApplicationFactory factory) : IAsyncL
         await svc.RecomputeAllAsync();
 
         // Attendance10 crossed at the 10th present training (day 9), not at derivation time.
-        (await BadgesOf(_achieverId)).Single(b => b.Code == BadgeCode.Attendance10)
+        (await BadgesOf(_achieverId)).Single(b => b.Code == nameof(BadgeCode.Attendance10))
             .EarnedAt.Should().Be(_now.AddDays(9));
 
         // A badge stamped with the run time earlier is corrected on the next recompute.
         await using (var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>().CreateDbContext())
         {
-            await db.MemberBadges.Where(b => b.MemberId == _achieverId && b.Code == BadgeCode.Attendance10)
+            await db.MemberBadges.Where(b => b.MemberId == _achieverId && b.Code == nameof(BadgeCode.Attendance10))
                 .ExecuteUpdateAsync(u => u.SetProperty(b => b.EarnedAt, DateTime.UtcNow.AddYears(1)));
         }
         await using var scope2 = factory.Services.CreateAsyncScope(); // fresh context, like the job
         await scope2.ServiceProvider.GetRequiredService<BadgeService>().RecomputeAllAsync();
-        (await BadgesOf(_achieverId)).Single(b => b.Code == BadgeCode.Attendance10)
+        (await BadgesOf(_achieverId)).Single(b => b.Code == nameof(BadgeCode.Attendance10))
             .EarnedAt.Should().Be(_now.AddDays(9));
     }
 

@@ -114,7 +114,7 @@ function CelebrationCard({
         : 'celebration.levelTitle',
   )
   const name = isBadge
-    ? t(`badge.${item.badge.code}.name` as StringKey)
+    ? item.badge.name || t(`badge.${item.badge.code}.name` as StringKey)
     : item.kind === 'rank'
       ? t(`xp.rank${item.rankIndex}` as StringKey)
       : t('xp.level', { level: String(item.level) })
@@ -146,7 +146,7 @@ function CelebrationCard({
           {isBadge ? (
             <Text style={styles.criteria}>
               {t('celebration.badgeCriteria', {
-                criteria: t(`badge.${item.badge.code}.desc` as StringKey),
+                criteria: item.badge.description || t(`badge.${item.badge.code}.desc` as StringKey),
               })}
             </Text>
           ) : null}

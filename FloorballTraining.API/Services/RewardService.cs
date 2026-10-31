@@ -43,7 +43,7 @@ public class RewardService(FloorballTrainingContext context, XpService xp)
                 .Select(b => new { b.MemberId, b.Code })
                 .ToListAsync(ct))
             .GroupBy(b => b.MemberId)
-            .ToDictionary(g => g.Key, g => g.Select(x => x.Code.ToString()).ToHashSet());
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Code).ToHashSet());
 
         var existing = (await context.MemberRewardClaims.AsNoTracking()
                 .Select(c => new { c.MemberId, c.ClubRewardId })

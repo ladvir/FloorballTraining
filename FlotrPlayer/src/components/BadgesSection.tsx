@@ -33,10 +33,10 @@ function BadgeTile({ badge }: { badge: BadgeStatusDto }) {
     <View style={styles.tile}>
       <Image source={{ uri: `${API_BASE_URL}/${badge.icon}` }} style={styles.icon} />
       <Text style={styles.name} numberOfLines={3}>
-        {t(`badge.${badge.code}.name` as StringKey)}
+        {badge.name || t(`badge.${badge.code}.name` as StringKey)}
       </Text>
       <Text style={styles.desc} numberOfLines={3}>
-        {t(`badge.${badge.code}.desc` as StringKey)}
+        {badge.description || t(`badge.${badge.code}.desc` as StringKey)}
       </Text>
     </View>
   )

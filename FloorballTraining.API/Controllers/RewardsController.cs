@@ -293,7 +293,7 @@ public class RewardsController(
                     return new BadRequestObjectResult("Trigger value must be a positive XP threshold.");
                 break;
             case RewardTriggerType.BadgeEarned:
-                if (!Enum.TryParse<BadgeCode>(dto.TriggerValue, ignoreCase: true, out _))
+                if (string.IsNullOrWhiteSpace(dto.TriggerValue) || dto.TriggerValue.Length > 64)
                     return new BadRequestObjectResult("Trigger value must be a valid badge code.");
                 break;
         }

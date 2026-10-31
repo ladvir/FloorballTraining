@@ -12,7 +12,11 @@ public class MemberBadge : BaseEntity
     public int MemberId { get; set; }
     public Member? Member { get; set; }
 
-    public BadgeCode Code { get; set; }
+    /// <summary>Matches <see cref="BadgeDefinition.Code"/>.</summary>
+    public string Code { get; set; } = "";
+
+    /// <summary>Month ("2026-10") for monthly badges, "x2"/"x3"… for further multiples of a repeatable lifetime badge; null otherwise.</summary>
+    public string? PeriodKey { get; set; }
 
     /// <summary>Set for season-scoped badges (Iron Man); null for lifetime badges.</summary>
     public int? SeasonId { get; set; }

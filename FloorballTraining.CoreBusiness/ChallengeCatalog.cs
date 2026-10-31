@@ -35,6 +35,9 @@ public enum ChallengeCode
 /// Static challenge definitions (#108), kept in code like <see cref="BadgeCatalog"/> / <see cref="XpRules"/>
 /// rather than a DB table: targets/rewards are fixed placeholders and titles/descriptions are i18n keys on
 /// the client, so nothing about a definition needs to live in SQL.
+/// RewardXp is 0 on purpose: every metric here is already paid by its base XP event (attendance, goal,
+/// skill, test, home training), so a challenge is a trophy, not a second payout. A non-zero value still
+/// pays (XpService.DeriveChallenges) for a future challenge measuring something not paid elsewhere.
 /// ponytail: flat const catalog; HeadCoach-configurable challenges are a later extension (like #106 for values).
 /// </summary>
 public static class ChallengeCatalog
@@ -51,11 +54,11 @@ public static class ChallengeCatalog
 
     public static readonly IReadOnlyList<Def> All =
     [
-        new(ChallengeCode.Train3PerWeek,    ChallengeMetric.TrainingAttendance, 3, ChallengeWindow.Week,   30),
-        new(ChallengeCode.ScoreInMatch,     ChallengeMetric.MatchGoal,          1, ChallengeWindow.Week,   20),
-        new(ChallengeCode.TwoHomeTrainings, ChallengeMetric.HomeTraining,       2, ChallengeWindow.Week,   15),
-        new(ChallengeCode.ImproveSkill,     ChallengeMetric.SkillImprovement,   1, ChallengeWindow.Month,  25),
-        new(ChallengeCode.TestRecord,       ChallengeMetric.TestPersonalRecord, 1, ChallengeWindow.Season, 20),
+        new(ChallengeCode.Train3PerWeek,    ChallengeMetric.TrainingAttendance, 3, ChallengeWindow.Week,   0),
+        new(ChallengeCode.ScoreInMatch,     ChallengeMetric.MatchGoal,          1, ChallengeWindow.Week,   0),
+        new(ChallengeCode.TwoHomeTrainings, ChallengeMetric.HomeTraining,       2, ChallengeWindow.Week,   0),
+        new(ChallengeCode.ImproveSkill,     ChallengeMetric.SkillImprovement,   1, ChallengeWindow.Month,  0),
+        new(ChallengeCode.TestRecord,       ChallengeMetric.TestPersonalRecord, 1, ChallengeWindow.Season, 0),
     ];
 
     public static readonly IReadOnlyDictionary<string, Def> ByCode =

@@ -160,6 +160,12 @@ export function Sidebar({ onClose }: SidebarProps) {
           minRole: 'Admin',
         },
         {
+          to: '/admin/badges',
+          icon: Medal,
+          label: t('nav.badgeDefinitions'),
+          minRole: 'Admin',
+        },
+        {
           href: `${import.meta.env.VITE_API_URL ?? ''}/hangfire`,
           icon: Gauge,
           label: t('nav.backgroundJobs'),

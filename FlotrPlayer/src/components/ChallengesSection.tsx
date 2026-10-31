@@ -66,10 +66,14 @@ function ChallengeRow({ c, onStart }: { c: ChallengeDto; onStart: () => void }) 
         {c.completed ? (
           <View style={styles.doneChip}>
             <Icon name="checkmark-circle" size={14} color={DONE_COLOR} />
-            <Text style={styles.doneText}>{t('challenge.done', { xp: String(c.rewardXp) })}</Text>
+            <Text style={styles.doneText}>
+              {c.rewardXp > 0 ? t('challenge.done', { xp: String(c.rewardXp) }) : t('challenge.doneNoXp')}
+            </Text>
           </View>
         ) : (
-          <Text style={styles.reward}>{t('challenge.rewardXp', { xp: String(c.rewardXp) })}</Text>
+          c.rewardXp > 0 && (
+            <Text style={styles.reward}>{t('challenge.rewardXp', { xp: String(c.rewardXp) })}</Text>
+          )
         )}
       </View>
       <Text style={styles.rowDesc}>{t(descKey)}</Text>

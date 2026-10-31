@@ -49,7 +49,7 @@ const emptyDraft = (): Draft => ({
   window: 'Month',
   startsOn: '',
   endsOn: '',
-  rewardXp: '30',
+  rewardXp: '0',
   isActive: true,
 })
 
@@ -224,8 +224,7 @@ function ChallengeRow({
           : t(`challenge.metric.${c.metric}` as StringKey)) +
           ' · ' +
           t(`teamChallenge.window.${c.window}` as StringKey) +
-          ' · ' +
-          t('challenge.rewardXp', { xp: String(c.rewardXp) }) +
+          (c.rewardXp > 0 ? ' · ' + t('challenge.rewardXp', { xp: String(c.rewardXp) }) : '') +
           (c.isActive ? '' : ' · ✕')}
       </Text>
 
@@ -357,14 +356,16 @@ function DraftForm({
         </>
       )}
 
-      <Field label={t('teamChallenge.rewardXp')}>
-        <TextInput
-          style={styles.input}
-          value={draft.rewardXp}
-          onChangeText={(rewardXp) => set({ rewardXp })}
-          keyboardType="number-pad"
-        />
-      </Field>
+      {draft.isManual && (
+        <Field label={t('teamChallenge.rewardXp')}>
+          <TextInput
+            style={styles.input}
+            value={draft.rewardXp}
+            onChangeText={(rewardXp) => set({ rewardXp })}
+            keyboardType="number-pad"
+          />
+        </Field>
+      )}
 
       <Chips
         options={[

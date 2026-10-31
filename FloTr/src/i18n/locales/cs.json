@@ -45,7 +45,8 @@
     "announcer": "Hlasatel",
     "myCard": "Moje karta",
     "teamChallenges": "Týmové výzvy",
-    "trainingTemplates": "Šablony tréninků"
+    "trainingTemplates": "Šablony tréninků",
+    "badgeDefinitions": "Správa odznaků"
   },
   "auth": {
     "email": "Email",
@@ -1181,7 +1182,6 @@
     "gridView": "Karty",
     "listView": "Seznam",
     "groupByTags": "Seskupit podle tagů",
-    "clearSelection": "Zrušit výběr",
     "validateAllTitle": "Výsledek kontroly všech aktivit",
     "validateTotal": "Celkem aktivit:",
     "validateComplete": "Kompletní:",
@@ -3440,53 +3440,194 @@
       "name": "Věrnost",
       "desc": "3 odehrané sezóny"
     },
-    "Attendance150": { "name": "Docházka 150", "desc": "150 tréninků" },
-    "Attendance250": { "name": "Docházka 250", "desc": "250 tréninků" },
-    "Attendance400": { "name": "Docházka 400", "desc": "400 tréninků" },
-    "Matches25": { "name": "Bojovník 25", "desc": "25 odehraných zápasů" },
-    "Matches100": { "name": "Bojovník 100", "desc": "100 odehraných zápasů" },
-    "Matches250": { "name": "Bojovník 250", "desc": "250 odehraných zápasů" },
-    "Goals100": { "name": "Kanonýr II", "desc": "100 gólů" },
-    "Goals250": { "name": "Kanonýr III", "desc": "250 gólů" },
-    "Goals500": { "name": "Kanonýr IV", "desc": "500 gólů" },
-    "FourGoalsInMatch": { "name": "Poker", "desc": "4 góly v jednom zápase" },
-    "FiveGoalsInMatch": { "name": "Nezastavitelný", "desc": "5 a více gólů v jednom zápase" },
-    "Assists50": { "name": "Nahrávač III", "desc": "50 asistencí" },
-    "Assists100": { "name": "Nahrávač IV", "desc": "100 asistencí" },
-    "Points50": { "name": "Kompletní hráč I", "desc": "50 bodů (góly + asistence)" },
-    "Points150": { "name": "Kompletní hráč II", "desc": "150 bodů (góly + asistence)" },
-    "Points300": { "name": "Kompletní hráč III", "desc": "300 bodů (góly + asistence)" },
-    "Points600": { "name": "Kompletní hráč IV", "desc": "600 bodů (góly + asistence)" },
-    "PlusMinus20": { "name": "Jistota", "desc": "kariérní bilance +20" },
-    "PlusMinus50": { "name": "Opora obrany", "desc": "kariérní bilance +50" },
-    "PlusMinus100": { "name": "Zeď", "desc": "kariérní bilance +100" },
-    "SeasonAttendance90": { "name": "Železný muž II", "desc": "90% docházka v sezóně" },
-    "SeasonAttendance100": { "name": "Železný muž III", "desc": "100% docházka v sezóně" },
-    "Loyalty5": { "name": "Věrnost II", "desc": "5 odehraných sezón" },
-    "Loyalty8": { "name": "Věrnost III", "desc": "8 odehraných sezón" },
-    "Loyalty10": { "name": "Věrnost IV", "desc": "10 odehraných sezón" },
-    "HomeTraining10": { "name": "Domácí bojovník I", "desc": "10 domácích tréninků" },
-    "HomeTraining50": { "name": "Domácí bojovník II", "desc": "50 domácích tréninků" },
-    "HomeTraining150": { "name": "Domácí bojovník III", "desc": "150 domácích tréninků" },
-    "SkillImprovement1": { "name": "Na vzestupu I", "desc": "první zlepšená známka" },
-    "SkillImprovement10": { "name": "Na vzestupu II", "desc": "10× zlepšená známka" },
-    "SkillImprovement25": { "name": "Na vzestupu III", "desc": "25× zlepšená známka" },
-    "SkillTarget5": { "name": "Cíl splněn I", "desc": "5× dosažená cílová známka" },
-    "SkillTarget15": { "name": "Cíl splněn II", "desc": "15× dosažená cílová známka" },
-    "TestRecord1": { "name": "Osobák I", "desc": "první osobní rekord v testu" },
-    "TestRecord10": { "name": "Osobák II", "desc": "10 osobních rekordů v testech" },
-    "PlayerOfTraining5": { "name": "Hráč tréninku I", "desc": "5× hráč tréninku" },
-    "PlayerOfTraining20": { "name": "Hráč tréninku II", "desc": "20× hráč tréninku" },
-    "PlayerOfMatch3": { "name": "Hráč zápasu", "desc": "3× hráč zápasu" },
-    "FairPlay5": { "name": "Fair play I", "desc": "5× ocenění za fair play" },
-    "FairPlay20": { "name": "Fair play II", "desc": "20× ocenění za fair play" },
-    "FamilyCheered10": { "name": "Rodinná podpora I", "desc": "10× přišla povzbudit rodina" },
-    "FamilyCheered50": { "name": "Rodinná podpora II", "desc": "50× přišla povzbudit rodina" },
-    "Challenges10": { "name": "Bojovník výzev I", "desc": "10 splněných výzev" },
-    "Challenges50": { "name": "Bojovník výzev II", "desc": "50 splněných výzev" },
-    "CareerXp5000": { "name": "5 000 XP", "desc": "5 000 XP za kariéru" },
-    "CareerXp15000": { "name": "15 000 XP", "desc": "15 000 XP za kariéru" },
-    "CareerXp30000": { "name": "30 000 XP", "desc": "30 000 XP za kariéru" }
+    "Attendance150": {
+      "name": "Docházka 150",
+      "desc": "150 tréninků"
+    },
+    "Attendance250": {
+      "name": "Docházka 250",
+      "desc": "250 tréninků"
+    },
+    "Attendance400": {
+      "name": "Docházka 400",
+      "desc": "400 tréninků"
+    },
+    "Matches25": {
+      "name": "Bojovník 25",
+      "desc": "25 odehraných zápasů"
+    },
+    "Matches100": {
+      "name": "Bojovník 100",
+      "desc": "100 odehraných zápasů"
+    },
+    "Matches250": {
+      "name": "Bojovník 250",
+      "desc": "250 odehraných zápasů"
+    },
+    "Goals100": {
+      "name": "Kanonýr II",
+      "desc": "100 gólů"
+    },
+    "Goals250": {
+      "name": "Kanonýr III",
+      "desc": "250 gólů"
+    },
+    "Goals500": {
+      "name": "Kanonýr IV",
+      "desc": "500 gólů"
+    },
+    "FourGoalsInMatch": {
+      "name": "Poker",
+      "desc": "4 góly v jednom zápase"
+    },
+    "FiveGoalsInMatch": {
+      "name": "Nezastavitelný",
+      "desc": "5 a více gólů v jednom zápase"
+    },
+    "Assists50": {
+      "name": "Nahrávač III",
+      "desc": "50 asistencí"
+    },
+    "Assists100": {
+      "name": "Nahrávač IV",
+      "desc": "100 asistencí"
+    },
+    "Points50": {
+      "name": "Kompletní hráč I",
+      "desc": "50 bodů (góly + asistence)"
+    },
+    "Points150": {
+      "name": "Kompletní hráč II",
+      "desc": "150 bodů (góly + asistence)"
+    },
+    "Points300": {
+      "name": "Kompletní hráč III",
+      "desc": "300 bodů (góly + asistence)"
+    },
+    "Points600": {
+      "name": "Kompletní hráč IV",
+      "desc": "600 bodů (góly + asistence)"
+    },
+    "PlusMinus20": {
+      "name": "Jistota",
+      "desc": "kariérní bilance +20"
+    },
+    "PlusMinus50": {
+      "name": "Opora obrany",
+      "desc": "kariérní bilance +50"
+    },
+    "PlusMinus100": {
+      "name": "Zeď",
+      "desc": "kariérní bilance +100"
+    },
+    "SeasonAttendance90": {
+      "name": "Železný muž II",
+      "desc": "90% docházka v sezóně"
+    },
+    "SeasonAttendance100": {
+      "name": "Železný muž III",
+      "desc": "100% docházka v sezóně"
+    },
+    "Loyalty5": {
+      "name": "Věrnost II",
+      "desc": "5 odehraných sezón"
+    },
+    "Loyalty8": {
+      "name": "Věrnost III",
+      "desc": "8 odehraných sezón"
+    },
+    "Loyalty10": {
+      "name": "Věrnost IV",
+      "desc": "10 odehraných sezón"
+    },
+    "HomeTraining10": {
+      "name": "Domácí bojovník I",
+      "desc": "10 domácích tréninků"
+    },
+    "HomeTraining50": {
+      "name": "Domácí bojovník II",
+      "desc": "50 domácích tréninků"
+    },
+    "HomeTraining150": {
+      "name": "Domácí bojovník III",
+      "desc": "150 domácích tréninků"
+    },
+    "SkillImprovement1": {
+      "name": "Na vzestupu I",
+      "desc": "první zlepšená známka"
+    },
+    "SkillImprovement10": {
+      "name": "Na vzestupu II",
+      "desc": "10× zlepšená známka"
+    },
+    "SkillImprovement25": {
+      "name": "Na vzestupu III",
+      "desc": "25× zlepšená známka"
+    },
+    "SkillTarget5": {
+      "name": "Cíl splněn I",
+      "desc": "5× dosažená cílová známka"
+    },
+    "SkillTarget15": {
+      "name": "Cíl splněn II",
+      "desc": "15× dosažená cílová známka"
+    },
+    "TestRecord1": {
+      "name": "Osobák I",
+      "desc": "první osobní rekord v testu"
+    },
+    "TestRecord10": {
+      "name": "Osobák II",
+      "desc": "10 osobních rekordů v testech"
+    },
+    "PlayerOfTraining5": {
+      "name": "Hráč tréninku I",
+      "desc": "5× hráč tréninku"
+    },
+    "PlayerOfTraining20": {
+      "name": "Hráč tréninku II",
+      "desc": "20× hráč tréninku"
+    },
+    "PlayerOfMatch3": {
+      "name": "Hráč zápasu",
+      "desc": "3× hráč zápasu"
+    },
+    "FairPlay5": {
+      "name": "Fair play I",
+      "desc": "5× ocenění za fair play"
+    },
+    "FairPlay20": {
+      "name": "Fair play II",
+      "desc": "20× ocenění za fair play"
+    },
+    "FamilyCheered10": {
+      "name": "Rodinná podpora I",
+      "desc": "10× přišla povzbudit rodina"
+    },
+    "FamilyCheered50": {
+      "name": "Rodinná podpora II",
+      "desc": "50× přišla povzbudit rodina"
+    },
+    "Challenges10": {
+      "name": "Bojovník výzev I",
+      "desc": "10 splněných výzev"
+    },
+    "Challenges50": {
+      "name": "Bojovník výzev II",
+      "desc": "50 splněných výzev"
+    },
+    "CareerXp5000": {
+      "name": "5 000 XP",
+      "desc": "5 000 XP za kariéru"
+    },
+    "CareerXp15000": {
+      "name": "15 000 XP",
+      "desc": "15 000 XP za kariéru"
+    },
+    "CareerXp30000": {
+      "name": "30 000 XP",
+      "desc": "30 000 XP za kariéru"
+    }
   },
   "leaderboard": {
     "title": "Žebříček",
@@ -3525,6 +3666,7 @@
     "section": "Tvoje výzvy",
     "rewardXp": "+{{xp}} XP",
     "done": "Splněno! +{{xp}} XP",
+    "doneNoXp": "Splněno!",
     "progress": "{{current}}/{{target}}",
     "window": {
       "Week": "tento týden",
@@ -3931,5 +4073,66 @@
     "atStart": "na začátek",
     "atEnd": "na konec",
     "use": "Použít"
+  },
+  "badgeAdmin": {
+    "title": "Správa odznaků",
+    "subtitle": "Přidávejte, upravujte a odebírejte odznaky, nastavte jak často je lze získat a nahrajte ikonu.",
+    "add": "Přidat odznak",
+    "edit": "Upravit odznak",
+    "code": "Kód",
+    "codeHint": "Jednoznačný kód (písmena, číslice, _). Nelze později změnit.",
+    "name": "Název",
+    "nameHint": "Prázdné = použije se přeložený název vestavěného odznaku.",
+    "description": "Popis",
+    "metricLabel": "Co se počítá",
+    "threshold": "Hranice (počet)",
+    "periodLabel": "Platnost",
+    "repeatable": "Opakovatelný (znovu za každý další násobek)",
+    "repeatableShort": "opakovatelný",
+    "hintLifetime": "Jednorázový: získá se jednou. Opakovatelný: získá se znovu při každém dalším násobku hranice (10, 20, 30…).",
+    "hintPeriodic": "Měsíční / sezónní odznak se získá znovu v každém novém měsíci / sezóně.",
+    "icon": "Ikona",
+    "chooseIcon": "Vybrat obrázek (png, jpg, webp, svg do 1 MB)",
+    "active": "Aktivní",
+    "earnedBy": "získáno {{count}}×",
+    "inactive": "neaktivní",
+    "confirmRemove": "Odebrat odznak? Už získané odznaky hráčům zůstanou, ale odznak se přestane nabízet a udělovat.",
+    "period": {
+      "Lifetime": "jednorázový",
+      "Month": "měsíční",
+      "Season": "sezónní"
+    },
+    "metric": {
+      "TrainingCount": "Počet tréninků",
+      "MatchCount": "Počet zápasů",
+      "GoalCount": "Góly",
+      "AssistCount": "Asistence",
+      "GoalsPlusAssists": "Body (góly + asistence)",
+      "NetPlusMinus": "Plus/minus",
+      "MaxGoalsInMatch": "Gólů v jednom zápase",
+      "SeasonsPlayed": "Odehrané sezóny",
+      "SeasonAttendancePct": "Docházka za sezónu (%)",
+      "HomeTrainingCount": "Domácí tréninky",
+      "SkillImprovementCount": "Zlepšení dovedností",
+      "SkillTargetCount": "Splněné cíle dovedností",
+      "TestRecordCount": "Osobní rekordy v testech",
+      "PlayerOfTrainingCount": "Hráč tréninku",
+      "PlayerOfMatchCount": "Hráč zápasu",
+      "FairPlayCount": "Fair play",
+      "FamilyCheeredCount": "Rodina fandila",
+      "ChallengeCount": "Splněné výzvy",
+      "CareerXp": "Celkové XP"
+    },
+    "filter": {
+      "search": "Hledat podle názvu…",
+      "allPeriods": "Všechny typy",
+      "allMetrics": "Všechny metriky",
+      "repeatableAll": "Opakovatelnost: vše",
+      "repeatableYes": "Jen opakovatelné",
+      "repeatableNo": "Jen neopakovatelné",
+      "minThreshold": "Body od",
+      "maxThreshold": "Body do",
+      "noResults": "Žádný odznak neodpovídá filtru."
+    }
   }
 }

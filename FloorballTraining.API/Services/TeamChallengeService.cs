@@ -157,7 +157,7 @@ public class TeamChallengeService(FloorballTrainingContext context, ChallengeCon
         Window = c.Window.ToString(),
         StartsOn = c.StartsOn,
         EndsOn = c.EndsOn,
-        RewardXp = c.RewardXp,
+        RewardXp = c.IsManual ? c.RewardXp : 0, // derived challenges pay no XP (XpService.DeriveTeamChallenges)
         IsActive = c.IsActive,
     };
 

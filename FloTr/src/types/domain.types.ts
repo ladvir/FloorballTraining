@@ -1869,6 +1869,31 @@ export interface BadgeStatusDto {
   earned: boolean
   earnedAt?: string | null
   progress: number
+  teamHolders?: number
+  /** Custom-badge text; null for built-ins (use the badge.{code}.name / .desc i18n keys). */
+  name?: string | null
+  description?: string | null
+  period?: BadgePeriod
+  repeatable?: boolean
+  /** Times earned (months / seasons / multiples). */
+  count?: number
+}
+
+export type BadgePeriod = 'Lifetime' | 'Month' | 'Season'
+
+/** Admin-managed badge definition (GET/POST/PUT /badges/definitions). */
+export interface BadgeDefinitionDto {
+  id: number
+  code: string
+  metric: string
+  threshold: number
+  period: BadgePeriod
+  repeatable: boolean
+  iconPath: string
+  name?: string | null
+  description?: string | null
+  isActive: boolean
+  earnedCount: number
 }
 
 /** One recent gamification milestone for the coach+ dashboard feed: a badge earned, or a career

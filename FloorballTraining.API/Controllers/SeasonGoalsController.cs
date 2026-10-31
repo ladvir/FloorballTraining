@@ -187,10 +187,8 @@ public class SeasonGoalsController(
     private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When);
     private sealed record AttendanceRow(int MemberId, int Status, DateTime When);
     private sealed record EarnRow(int MemberId, DateTime When);
-    private sealed record BadgeEarnRow(int MemberId, BadgeCode Code, DateTime When);
+    private sealed record BadgeEarnRow(int MemberId, string Code, DateTime When);
 
-    private static readonly Dictionary<BadgeCode, string> BadgeIcons =
-        BadgeCatalog.All.ToDictionary(d => d.Code, d => d.Icon);
 
     /// <summary>
     /// GET /seasongoals/team/{teamId}/report — for each elapsed calendar month of the season, plus a
@@ -283,6 +281,9 @@ public class SeasonGoalsController(
             .Select(b => new BadgeEarnRow(b.MemberId, b.Code, b.EarnedAt))
             .ToListAsync();
 
+        await FloorballTraining.API.Services.BadgeService.EnsureSeededAsync(context);
+        var badgeIcons = await context.BadgeDefinitions.AsNoTracking().ToDictionaryAsync(d => d.Code, d => d.IconPath);
+
         var rewardRaw = await context.MemberRewardClaims.AsNoTracking()
             .Where(r => rosterMemberIds.Contains(r.MemberId) && r.EarnedAt >= seasonStart && r.EarnedAt < reportEndExcl)
             .Select(r => new EarnRow(r.MemberId, r.EarnedAt))
@@ -302,7 +303,7 @@ public class SeasonGoalsController(
                 TopXp = RankXp(xpRaw, monthStart, monthEndExcl, priorXpByMember, names, take),
                 TopScoring = RankScoring(scoringRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
                 TopAttendance = RankAttendance(attendanceRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
-                TopBadges = ListBadges(badgeRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
+                TopBadges = ListBadges(badgeRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take, badgeIcons),
                 TopRewards = RankCount(rewardRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
             });
         }
@@ -313,7 +314,7 @@ public class SeasonGoalsController(
             TopXp = RankXp(xpRaw, seasonStart, reportEndExcl, priorXpByMember, names, take),
             TopScoring = RankScoring(scoringRaw, names, take),
             TopAttendance = RankAttendance(attendanceRaw, names, take),
-            TopBadges = ListBadges(badgeRaw, names, take),
+            TopBadges = ListBadges(badgeRaw, names, take, badgeIcons),
             TopRewards = RankCount(rewardRaw, names, take),
         };
 
@@ -369,15 +370,15 @@ public class SeasonGoalsController(
     }
 
     /// <summary>Most recently earned badges first (a member earns each badge code at most once per season).</summary>
-    private static List<BadgeEarnRowDto> ListBadges(IEnumerable<BadgeEarnRow> rows, Dictionary<int, string> names, int take) =>
+    private static List<BadgeEarnRowDto> ListBadges(IEnumerable<BadgeEarnRow> rows, Dictionary<int, string> names, int take, Dictionary<string, string> icons) =>
         rows.OrderByDescending(r => r.When)
             .Take(take)
             .Select(r => new BadgeEarnRowDto
             {
                 MemberId = r.MemberId,
                 Name = names.GetValueOrDefault(r.MemberId, "?"),
-                Code = r.Code.ToString(),
-                Icon = BadgeIcons.GetValueOrDefault(r.Code, string.Empty),
+                Code = r.Code,
+                Icon = icons.GetValueOrDefault(r.Code, string.Empty),
             })
             .ToList();
 

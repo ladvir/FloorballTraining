@@ -49,8 +49,8 @@ public class RewardDerivationTests(CustomWebApplicationFactory factory) : IAsync
 
         // Both players earn the Attendance10 badge (the badge-trigger source of truth).
         db.MemberBadges.AddRange(
-            new MemberBadge { MemberId = playerA.Id, Code = BadgeCode.Attendance10, EarnedAt = _now },
-            new MemberBadge { MemberId = playerB.Id, Code = BadgeCode.Attendance10, EarnedAt = _now });
+            new MemberBadge { MemberId = playerA.Id, Code = nameof(BadgeCode.Attendance10), EarnedAt = _now },
+            new MemberBadge { MemberId = playerB.Id, Code = nameof(BadgeCode.Attendance10), EarnedAt = _now });
 
         // Player A also has 600 lifetime (non-home) XP; player B has none.
         for (var i = 0; i < 6; i++)

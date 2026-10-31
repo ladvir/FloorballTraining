@@ -127,7 +127,8 @@ public class XpController(
         var cutoff = DateTime.UtcNow.AddDays(-days);
         var feed = new List<RecentAchievementDto>();
 
-        var iconByCode = BadgeCatalog.All.ToDictionary(d => d.Code, d => d.Icon);
+        await FloorballTraining.API.Services.BadgeService.EnsureSeededAsync(context, ct);
+        var iconByCode = await context.BadgeDefinitions.AsNoTracking().ToDictionaryAsync(d => d.Code, d => d.IconPath, ct);
         var recentBadges = await context.MemberBadges.AsNoTracking()
             .Where(b => memberIds.Contains(b.MemberId) && b.EarnedAt >= cutoff)
             .Select(b => new { b.MemberId, b.Code, b.EarnedAt })
@@ -136,7 +137,7 @@ public class XpController(
             feed.Add(new RecentAchievementDto
             {
                 MemberId = b.MemberId, MemberName = members[b.MemberId], Kind = "badge", At = b.EarnedAt,
-                BadgeCode = b.Code.ToString(), BadgeIcon = iconByCode.GetValueOrDefault(b.Code),
+                BadgeCode = b.Code, BadgeIcon = iconByCode.GetValueOrDefault(b.Code),
             });
 
         var xpAgg = await context.XpEvents.AsNoTracking()

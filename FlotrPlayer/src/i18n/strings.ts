@@ -381,6 +381,7 @@ export type StringKey =
   | 'challenge.pageHint'
   | 'challenge.rewardXp'
   | 'challenge.done'
+  | 'challenge.doneNoXp'
   | 'challenge.progress'
   | 'challenge.window.Week'
   | 'challenge.window.Month'
@@ -831,6 +832,7 @@ const cs: Record<StringKey, string> = {
   'challenge.pageHint': 'Výzvy se plní samy z tréninků, docházky a zápasů. Sleduj svůj postup.',
   'challenge.rewardXp': '+{xp} XP',
   'challenge.done': 'Splněno! +{xp} XP',
+  'challenge.doneNoXp': 'Splněno!',
   'challenge.progress': '{current}/{target}',
   'challenge.window.Week': 'tento týden',
   'challenge.window.Month': 'tento měsíc',

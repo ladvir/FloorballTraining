@@ -100,6 +100,11 @@ const TrainingDuplicatesPage = lazy(() =>
 const AuditLogsPage = lazy(() =>
   import('../features/admin/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage }))
 )
+const BadgeDefinitionsPage = lazy(() =>
+  import('../features/admin/BadgeDefinitionsPage').then((m) => ({
+    default: m.BadgeDefinitionsPage,
+  }))
+)
 const TranslationsPage = lazy(() =>
   import('../features/admin/TranslationsPage').then((m) => ({ default: m.TranslationsPage }))
 )
@@ -454,6 +459,7 @@ export const router = createBrowserRouter(
                     { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
                     { path: '/admin/audit-logs', element: <AuditLogsPage /> },
                     { path: '/admin/translations', element: <TranslationsPage /> },
+                    { path: '/admin/badges', element: <BadgeDefinitionsPage /> },
                   ],
                 },
                 // Admin + ClubAdmin routes

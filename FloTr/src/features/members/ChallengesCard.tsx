@@ -73,12 +73,14 @@ function ChallengeRow({
         {c.completed ? (
           <span className="flex items-center gap-1 text-xs font-medium text-green-600">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            {t('challenge.done', { xp: c.rewardXp })}
+            {c.rewardXp > 0 ? t('challenge.done', { xp: c.rewardXp }) : t('challenge.doneNoXp')}
           </span>
         ) : (
-          <span className="text-xs font-semibold text-amber-600">
-            {t('challenge.rewardXp', { xp: c.rewardXp })}
-          </span>
+          c.rewardXp > 0 && (
+            <span className="text-xs font-semibold text-amber-600">
+              {t('challenge.rewardXp', { xp: c.rewardXp })}
+            </span>
+          )
         )}
       </div>
       <p className="text-xs text-gray-400">{t(`challenge.${c.code}.desc`)}</p>

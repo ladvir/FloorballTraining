@@ -45,7 +45,8 @@
     "announcer": "Stadionsprecher",
     "myCard": "Meine Karte",
     "teamChallenges": "Team-Challenges",
-    "trainingTemplates": "Trainingsvorlagen"
+    "trainingTemplates": "Trainingsvorlagen",
+    "badgeDefinitions": "Abzeichen verwalten"
   },
   "auth": {
     "email": "E-Mail",
@@ -1178,7 +1179,6 @@
     "gridView": "Karten",
     "listView": "Liste",
     "groupByTags": "Nach Tags gruppieren",
-    "clearSelection": "Auswahl aufheben",
     "validateAllTitle": "Validierungsergebnis für alle Aktivitäten",
     "validateTotal": "Aktivitäten gesamt:",
     "validateComplete": "Vollständig:",
@@ -3430,49 +3430,166 @@
       "name": "Eiserner Mann",
       "desc": "80% Saisonanwesenheit"
     },
-    "Attendance150": { "name": "Anwesenheit 150", "desc": "150 Trainings" },
-    "Attendance250": { "name": "Anwesenheit 250", "desc": "250 Trainings" },
-    "Attendance400": { "name": "Anwesenheit 400", "desc": "400 Trainings" },
-    "Matches25": { "name": "Kämpfer 25", "desc": "25 gespielte Spiele" },
-    "Matches100": { "name": "Kämpfer 100", "desc": "100 gespielte Spiele" },
-    "Matches250": { "name": "Kämpfer 250", "desc": "250 gespielte Spiele" },
-    "Goals100": { "name": "Torjäger II", "desc": "100 Tore" },
-    "Goals250": { "name": "Torjäger III", "desc": "250 Tore" },
-    "Goals500": { "name": "Torjäger IV", "desc": "500 Tore" },
-    "FourGoalsInMatch": { "name": "Poker", "desc": "4 Tore in einem Spiel" },
-    "FiveGoalsInMatch": { "name": "Unaufhaltsam", "desc": "5 oder mehr Tore in einem Spiel" },
-    "Assists50": { "name": "Vorlagengeber III", "desc": "50 Vorlagen" },
-    "Assists100": { "name": "Vorlagengeber IV", "desc": "100 Vorlagen" },
-    "Points50": { "name": "Kompletter Spieler I", "desc": "50 Punkte (Tore + Vorlagen)" },
-    "Points150": { "name": "Kompletter Spieler II", "desc": "150 Punkte (Tore + Vorlagen)" },
-    "Points300": { "name": "Kompletter Spieler III", "desc": "300 Punkte (Tore + Vorlagen)" },
-    "Points600": { "name": "Kompletter Spieler IV", "desc": "600 Punkte (Tore + Vorlagen)" },
-    "PlusMinus20": { "name": "Sicherheit", "desc": "Karriere-Plus/Minus-Bilanz +20" },
-    "PlusMinus50": { "name": "Abwehrstütze", "desc": "Karriere-Plus/Minus-Bilanz +50" },
-    "PlusMinus100": { "name": "Die Mauer", "desc": "Karriere-Plus/Minus-Bilanz +100" },
-    "SeasonAttendance90": { "name": "Eiserner Mann II", "desc": "90% Saisonanwesenheit" },
-    "SeasonAttendance100": { "name": "Eiserner Mann III", "desc": "100% Saisonanwesenheit" },
-    "Loyalty5": { "name": "Treue II", "desc": "5 gespielte Saisons" },
-    "Loyalty8": { "name": "Treue III", "desc": "8 gespielte Saisons" },
-    "Loyalty10": { "name": "Treue IV", "desc": "10 gespielte Saisons" },
-    "HomeTraining10": { "name": "Heimkrieger I", "desc": "10 Heimtrainings" },
-    "HomeTraining50": { "name": "Heimkrieger II", "desc": "50 Heimtrainings" },
-    "HomeTraining150": { "name": "Heimkrieger III", "desc": "150 Heimtrainings" },
-    "SkillImprovement1": { "name": "Im Aufwind I", "desc": "erste verbesserte Bewertung" },
-    "SkillImprovement10": { "name": "Im Aufwind II", "desc": "10× verbesserte Bewertung" },
-    "SkillImprovement25": { "name": "Im Aufwind III", "desc": "25× verbesserte Bewertung" },
-    "SkillTarget5": { "name": "Ziel erreicht I", "desc": "5× Zielbewertung erreicht" },
-    "SkillTarget15": { "name": "Ziel erreicht II", "desc": "15× Zielbewertung erreicht" },
-    "TestRecord1": { "name": "Bestleistung I", "desc": "erster persönlicher Rekord in einem Test" },
-    "TestRecord10": { "name": "Bestleistung II", "desc": "10 persönliche Rekorde" },
-    "PlayerOfTraining5": { "name": "Spieler des Trainings I", "desc": "5× Spieler des Trainings" },
+    "Attendance150": {
+      "name": "Anwesenheit 150",
+      "desc": "150 Trainings"
+    },
+    "Attendance250": {
+      "name": "Anwesenheit 250",
+      "desc": "250 Trainings"
+    },
+    "Attendance400": {
+      "name": "Anwesenheit 400",
+      "desc": "400 Trainings"
+    },
+    "Matches25": {
+      "name": "Kämpfer 25",
+      "desc": "25 gespielte Spiele"
+    },
+    "Matches100": {
+      "name": "Kämpfer 100",
+      "desc": "100 gespielte Spiele"
+    },
+    "Matches250": {
+      "name": "Kämpfer 250",
+      "desc": "250 gespielte Spiele"
+    },
+    "Goals100": {
+      "name": "Torjäger II",
+      "desc": "100 Tore"
+    },
+    "Goals250": {
+      "name": "Torjäger III",
+      "desc": "250 Tore"
+    },
+    "Goals500": {
+      "name": "Torjäger IV",
+      "desc": "500 Tore"
+    },
+    "FourGoalsInMatch": {
+      "name": "Poker",
+      "desc": "4 Tore in einem Spiel"
+    },
+    "FiveGoalsInMatch": {
+      "name": "Unaufhaltsam",
+      "desc": "5 oder mehr Tore in einem Spiel"
+    },
+    "Assists50": {
+      "name": "Vorlagengeber III",
+      "desc": "50 Vorlagen"
+    },
+    "Assists100": {
+      "name": "Vorlagengeber IV",
+      "desc": "100 Vorlagen"
+    },
+    "Points50": {
+      "name": "Kompletter Spieler I",
+      "desc": "50 Punkte (Tore + Vorlagen)"
+    },
+    "Points150": {
+      "name": "Kompletter Spieler II",
+      "desc": "150 Punkte (Tore + Vorlagen)"
+    },
+    "Points300": {
+      "name": "Kompletter Spieler III",
+      "desc": "300 Punkte (Tore + Vorlagen)"
+    },
+    "Points600": {
+      "name": "Kompletter Spieler IV",
+      "desc": "600 Punkte (Tore + Vorlagen)"
+    },
+    "PlusMinus20": {
+      "name": "Sicherheit",
+      "desc": "Karriere-Plus/Minus-Bilanz +20"
+    },
+    "PlusMinus50": {
+      "name": "Abwehrstütze",
+      "desc": "Karriere-Plus/Minus-Bilanz +50"
+    },
+    "PlusMinus100": {
+      "name": "Die Mauer",
+      "desc": "Karriere-Plus/Minus-Bilanz +100"
+    },
+    "SeasonAttendance90": {
+      "name": "Eiserner Mann II",
+      "desc": "90% Saisonanwesenheit"
+    },
+    "SeasonAttendance100": {
+      "name": "Eiserner Mann III",
+      "desc": "100% Saisonanwesenheit"
+    },
+    "Loyalty5": {
+      "name": "Treue II",
+      "desc": "5 gespielte Saisons"
+    },
+    "Loyalty8": {
+      "name": "Treue III",
+      "desc": "8 gespielte Saisons"
+    },
+    "Loyalty10": {
+      "name": "Treue IV",
+      "desc": "10 gespielte Saisons"
+    },
+    "HomeTraining10": {
+      "name": "Heimkrieger I",
+      "desc": "10 Heimtrainings"
+    },
+    "HomeTraining50": {
+      "name": "Heimkrieger II",
+      "desc": "50 Heimtrainings"
+    },
+    "HomeTraining150": {
+      "name": "Heimkrieger III",
+      "desc": "150 Heimtrainings"
+    },
+    "SkillImprovement1": {
+      "name": "Im Aufwind I",
+      "desc": "erste verbesserte Bewertung"
+    },
+    "SkillImprovement10": {
+      "name": "Im Aufwind II",
+      "desc": "10× verbesserte Bewertung"
+    },
+    "SkillImprovement25": {
+      "name": "Im Aufwind III",
+      "desc": "25× verbesserte Bewertung"
+    },
+    "SkillTarget5": {
+      "name": "Ziel erreicht I",
+      "desc": "5× Zielbewertung erreicht"
+    },
+    "SkillTarget15": {
+      "name": "Ziel erreicht II",
+      "desc": "15× Zielbewertung erreicht"
+    },
+    "TestRecord1": {
+      "name": "Bestleistung I",
+      "desc": "erster persönlicher Rekord in einem Test"
+    },
+    "TestRecord10": {
+      "name": "Bestleistung II",
+      "desc": "10 persönliche Rekorde"
+    },
+    "PlayerOfTraining5": {
+      "name": "Spieler des Trainings I",
+      "desc": "5× Spieler des Trainings"
+    },
     "PlayerOfTraining20": {
       "name": "Spieler des Trainings II",
       "desc": "20× Spieler des Trainings"
     },
-    "PlayerOfMatch3": { "name": "Spieler des Spiels", "desc": "3× Spieler des Spiels" },
-    "FairPlay5": { "name": "Fair Play I", "desc": "5× Fair-Play-Auszeichnung" },
-    "FairPlay20": { "name": "Fair Play II", "desc": "20× Fair-Play-Auszeichnung" },
+    "PlayerOfMatch3": {
+      "name": "Spieler des Spiels",
+      "desc": "3× Spieler des Spiels"
+    },
+    "FairPlay5": {
+      "name": "Fair Play I",
+      "desc": "5× Fair-Play-Auszeichnung"
+    },
+    "FairPlay20": {
+      "name": "Fair Play II",
+      "desc": "20× Fair-Play-Auszeichnung"
+    },
     "FamilyCheered10": {
       "name": "Familienunterstützung I",
       "desc": "10× Familie kam zum Anfeuern"
@@ -3481,11 +3598,26 @@
       "name": "Familienunterstützung II",
       "desc": "50× Familie kam zum Anfeuern"
     },
-    "Challenges10": { "name": "Herausforderer I", "desc": "10 Herausforderungen abgeschlossen" },
-    "Challenges50": { "name": "Herausforderer II", "desc": "50 Herausforderungen abgeschlossen" },
-    "CareerXp5000": { "name": "5.000 XP", "desc": "5.000 XP in der Karriere" },
-    "CareerXp15000": { "name": "15.000 XP", "desc": "15.000 XP in der Karriere" },
-    "CareerXp30000": { "name": "30.000 XP", "desc": "30.000 XP in der Karriere" },
+    "Challenges10": {
+      "name": "Herausforderer I",
+      "desc": "10 Herausforderungen abgeschlossen"
+    },
+    "Challenges50": {
+      "name": "Herausforderer II",
+      "desc": "50 Herausforderungen abgeschlossen"
+    },
+    "CareerXp5000": {
+      "name": "5.000 XP",
+      "desc": "5.000 XP in der Karriere"
+    },
+    "CareerXp15000": {
+      "name": "15.000 XP",
+      "desc": "15.000 XP in der Karriere"
+    },
+    "CareerXp30000": {
+      "name": "30.000 XP",
+      "desc": "30.000 XP in der Karriere"
+    },
     "Loyalty3": {
       "name": "Treue",
       "desc": "3 gespielte Saisons"
@@ -3528,6 +3660,7 @@
     "section": "Deine Herausforderungen",
     "rewardXp": "+{{xp}} XP",
     "done": "Geschafft! +{{xp}} XP",
+    "doneNoXp": "Geschafft!",
     "progress": "{{current}}/{{target}}",
     "window": {
       "Week": "diese Woche",
@@ -3934,5 +4067,66 @@
     "atStart": "am Anfang",
     "atEnd": "am Ende",
     "use": "Verwenden"
+  },
+  "badgeAdmin": {
+    "title": "Abzeichen verwalten",
+    "subtitle": "Abzeichen hinzufügen, bearbeiten und entfernen, festlegen wie oft sie erworben werden können und ein Symbol hochladen.",
+    "add": "Abzeichen hinzufügen",
+    "edit": "Abzeichen bearbeiten",
+    "code": "Code",
+    "codeHint": "Eindeutiger Code (Buchstaben, Ziffern, _). Später nicht änderbar.",
+    "name": "Name",
+    "nameHint": "Leer = übersetzter Name des integrierten Abzeichens.",
+    "description": "Beschreibung",
+    "metricLabel": "Was gezählt wird",
+    "threshold": "Schwelle (Anzahl)",
+    "periodLabel": "Gültigkeit",
+    "repeatable": "Wiederholbar (erneut bei jedem weiteren Vielfachen)",
+    "repeatableShort": "wiederholbar",
+    "hintLifetime": "Einmalig: wird einmal erworben. Wiederholbar: wird bei jedem weiteren Vielfachen der Schwelle erneut erworben (10, 20, 30…).",
+    "hintPeriodic": "Ein monatliches / saisonales Abzeichen wird in jedem neuen Monat / jeder neuen Saison erneut erworben.",
+    "icon": "Symbol",
+    "chooseIcon": "Bild wählen (png, jpg, webp, svg bis 1 MB)",
+    "active": "Aktiv",
+    "earnedBy": "{{count}}× erworben",
+    "inactive": "inaktiv",
+    "confirmRemove": "Abzeichen entfernen? Bereits erworbene Abzeichen bleiben erhalten, es wird aber nicht mehr angeboten oder vergeben.",
+    "period": {
+      "Lifetime": "einmalig",
+      "Month": "monatlich",
+      "Season": "saisonal"
+    },
+    "metric": {
+      "TrainingCount": "Besuchte Trainings",
+      "MatchCount": "Gespielte Spiele",
+      "GoalCount": "Tore",
+      "AssistCount": "Assists",
+      "GoalsPlusAssists": "Punkte (Tore + Assists)",
+      "NetPlusMinus": "Plus/Minus",
+      "MaxGoalsInMatch": "Tore in einem Spiel",
+      "SeasonsPlayed": "Gespielte Saisons",
+      "SeasonAttendancePct": "Saisonanwesenheit (%)",
+      "HomeTrainingCount": "Heimtrainings",
+      "SkillImprovementCount": "Fähigkeitsverbesserungen",
+      "SkillTargetCount": "Erreichte Fähigkeitsziele",
+      "TestRecordCount": "Persönliche Testrekorde",
+      "PlayerOfTrainingCount": "Spieler des Trainings",
+      "PlayerOfMatchCount": "Spieler des Spiels",
+      "FairPlayCount": "Fair Play",
+      "FamilyCheeredCount": "Familie hat angefeuert",
+      "ChallengeCount": "Abgeschlossene Herausforderungen",
+      "CareerXp": "Gesamt-XP"
+    },
+    "filter": {
+      "search": "Nach Namen suchen…",
+      "allPeriods": "Alle Typen",
+      "allMetrics": "Alle Metriken",
+      "repeatableAll": "Wiederholbar: alle",
+      "repeatableYes": "Nur wiederholbare",
+      "repeatableNo": "Nur nicht wiederholbare",
+      "minThreshold": "Punkte ab",
+      "maxThreshold": "Punkte bis",
+      "noResults": "Kein Abzeichen entspricht dem Filter."
+    }
   }
 }

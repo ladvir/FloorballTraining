@@ -414,7 +414,7 @@ public class SeasonGoalTests : IAsyncLifetime
             });
             db.MemberBadges.Add(new MemberBadge
             {
-                MemberId = _memberId2, Code = BadgeCode.Attendance10, SeasonId = _seasonId, EarnedAt = matchDate,
+                MemberId = _memberId2, Code = nameof(BadgeCode.Attendance10), SeasonId = _seasonId, EarnedAt = matchDate,
             });
             var reward = new ClubReward
             {

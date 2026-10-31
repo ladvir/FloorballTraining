@@ -91,7 +91,7 @@ public class ChallengeDerivationTests(CustomWebApplicationFactory factory) : IAs
         var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
         var bonus = await db.XpEvents.AsNoTracking()
             .Where(e => e.MemberId == _memberId && e.Type == XpEventType.ChallengeReward).ToListAsync();
-        bonus.Should().ContainSingle().Which.Points.Should().Be(Train3.RewardXp); // 30, priced via units × 1
+        bonus.Should().BeEmpty(); // trophy only: the base attendance events already paid the activity
 
         // Idempotent: a second run over the same records completes/awards nothing new.
         (await challenges.RecomputeAllAsync()).Should().Be(0);
@@ -118,7 +118,7 @@ public class ChallengeDerivationTests(CustomWebApplicationFactory factory) : IAs
 
         var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
         (await db.XpEvents.CountAsync(e => e.MemberId == _memberId && e.Type == XpEventType.ChallengeReward))
-            .Should().Be(2); // one bonus per completed window
+            .Should().Be(0); // challenges pay no XP
     }
 
     [Fact]

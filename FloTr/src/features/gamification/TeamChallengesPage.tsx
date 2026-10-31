@@ -230,9 +230,11 @@ function ChallengeCard({
               : t(`challenge.metric.${c.metric}`, { defaultValue: c.metric ?? '' })}
           </span>
           <span>{t(`teamChallenge.window.${c.window}`, { defaultValue: c.window })}</span>
-          <span className="font-semibold text-amber-600">
-            {t('challenge.rewardXp', { xp: c.rewardXp })}
-          </span>
+          {c.rewardXp > 0 && (
+            <span className="font-semibold text-amber-600">
+              {t('challenge.rewardXp', { xp: c.rewardXp })}
+            </span>
+          )}
         </div>
 
         {!c.isManual && (
@@ -306,7 +308,7 @@ function ChallengeFormModal({
   const [window, setWindow] = useState(editing?.window ?? 'Month')
   const [startsOn, setStartsOn] = useState(editing?.startsOn?.slice(0, 10) ?? '')
   const [endsOn, setEndsOn] = useState(editing?.endsOn?.slice(0, 10) ?? '')
-  const [rewardXp, setRewardXp] = useState(String(editing?.rewardXp ?? 30))
+  const [rewardXp, setRewardXp] = useState(String(editing?.rewardXp ?? 0))
   const [isActive, setIsActive] = useState(editing?.isActive ?? true)
 
   const needsRange = window === 'Custom'
@@ -405,17 +407,20 @@ function ChallengeFormModal({
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-gray-700">
-              {t('challenge.rewardXp', { xp: '' }).trim() || 'XP'}
-            </span>
-            <Input
-              type="number"
-              min={0}
-              value={rewardXp}
-              onChange={(e) => setRewardXp(e.target.value)}
-            />
-          </label>
+          {/* Only a manual goal pays XP; derived ones re-measure activity the base events already pay. */}
+          {isManual && (
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-gray-700">
+                {t('challenge.rewardXp', { xp: '' }).trim() || 'XP'}
+              </span>
+              <Input
+                type="number"
+                min={0}
+                value={rewardXp}
+                onChange={(e) => setRewardXp(e.target.value)}
+              />
+            </label>
+          )}
         </div>
 
         {needsRange && (

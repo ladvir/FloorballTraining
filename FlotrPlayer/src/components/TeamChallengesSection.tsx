@@ -50,10 +50,14 @@ function ChallengeRow({ c }: { c: TeamChallengeDto }) {
         {c.completed ? (
           <View style={styles.doneChip}>
             <Icon name="checkmark-circle" size={14} color={DONE_COLOR} />
-            <Text style={styles.doneText}>{t('challenge.done', { xp: String(c.rewardXp) })}</Text>
+            <Text style={styles.doneText}>
+              {c.rewardXp > 0 ? t('challenge.done', { xp: String(c.rewardXp) }) : t('challenge.doneNoXp')}
+            </Text>
           </View>
         ) : (
-          <Text style={styles.reward}>{t('challenge.rewardXp', { xp: String(c.rewardXp) })}</Text>
+          c.rewardXp > 0 && (
+            <Text style={styles.reward}>{t('challenge.rewardXp', { xp: String(c.rewardXp) })}</Text>
+          )
         )}
       </View>
       {!!c.description && <Text style={styles.rowDesc}>{c.description}</Text>}
@@ -81,7 +85,9 @@ function ChallengeRow({ c }: { c: TeamChallengeDto }) {
       {c.isManual && (
         <Text style={styles.window}>
           {c.completed
-            ? t('challenge.done', { xp: String(c.rewardXp) })
+            ? c.rewardXp > 0
+              ? t('challenge.done', { xp: String(c.rewardXp) })
+              : t('challenge.doneNoXp')
             : t('teamChallenge.inProgress')}
         </Text>
       )}

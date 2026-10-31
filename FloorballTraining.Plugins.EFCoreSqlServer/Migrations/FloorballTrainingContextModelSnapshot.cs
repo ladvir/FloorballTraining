@@ -1060,6 +1060,60 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("AppointmentTestDefinitions");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.BadgeDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IconPath")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Metric")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Repeatable")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Threshold")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("BadgeDefinitions");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ChallengeCompletion", b =>
                 {
                     b.Property<int>("Id")
@@ -2243,14 +2297,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Code")
-                        .HasColumnType("int");
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime>("EarnedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("MemberId")
                         .HasColumnType("int");
+
+                    b.Property<string>("PeriodKey")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -2267,9 +2327,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("SeasonId");
 
-                    b.HasIndex("MemberId", "Code", "SeasonId")
+                    b.HasIndex("MemberId", "Code", "SeasonId", "PeriodKey")
                         .IsUnique()
-                        .HasFilter("[SeasonId] IS NOT NULL");
+                        .HasFilter("[SeasonId] IS NOT NULL AND [PeriodKey] IS NOT NULL");
 
                     b.ToTable("MemberBadges");
                 });

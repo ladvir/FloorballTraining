@@ -289,6 +289,9 @@ export interface BadgeStatusDto {
   progress: number
   /** Players sharing a team with this member who hold this badge (member included). */
   teamHolders: number
+  /** Custom-badge text from the admin; null/absent for built-ins (use the i18n keys). */
+  name?: string | null
+  description?: string | null
 }
 
 /** One self-completable challenge's live progress for a member (#108/#109). Title/desc come from

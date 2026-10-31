@@ -45,7 +45,8 @@
     "announcer": "Spiker",
     "myCard": "Moja karta",
     "teamChallenges": "Wyzwania zespołowe",
-    "trainingTemplates": "Szablony treningów"
+    "trainingTemplates": "Szablony treningów",
+    "badgeDefinitions": "Zarządzanie odznakami"
   },
   "auth": {
     "email": "E-mail",
@@ -1166,7 +1167,7 @@
     "ageGroupCount": "Kat. wiek. ({{count}})",
     "skillFilter": "Umiejętności",
     "skillCount": "Umiejętności ({{count}})",
-    "clearSelection": "Wyczyść wybór",
+    "clearSelection": "Wyczyść zaznaczenie",
     "allAuthors": "Wszyscy autorzy",
     "allStatuses": "Wszystkie statusy",
     "statusDraftPlural": "W trakcie",
@@ -1182,7 +1183,6 @@
     "gridView": "Karty",
     "listView": "Lista",
     "groupByTags": "Grupuj według tagów",
-    "clearSelection": "Wyczyść zaznaczenie",
     "validateAllTitle": "Wynik walidacji wszystkich aktywności",
     "validateTotal": "Aktywności łącznie:",
     "validateComplete": "Kompletne:",
@@ -3438,53 +3438,194 @@
       "name": "Żelazny człowiek",
       "desc": "80% frekwencji w sezonie"
     },
-    "Attendance150": { "name": "Frekwencja 150", "desc": "150 treningów" },
-    "Attendance250": { "name": "Frekwencja 250", "desc": "250 treningów" },
-    "Attendance400": { "name": "Frekwencja 400", "desc": "400 treningów" },
-    "Matches25": { "name": "Wojownik 25", "desc": "25 rozegranych meczów" },
-    "Matches100": { "name": "Wojownik 100", "desc": "100 rozegranych meczów" },
-    "Matches250": { "name": "Wojownik 250", "desc": "250 rozegranych meczów" },
-    "Goals100": { "name": "Snajper II", "desc": "100 goli" },
-    "Goals250": { "name": "Snajper III", "desc": "250 goli" },
-    "Goals500": { "name": "Snajper IV", "desc": "500 goli" },
-    "FourGoalsInMatch": { "name": "Poker", "desc": "4 gole w jednym meczu" },
-    "FiveGoalsInMatch": { "name": "Niepowstrzymany", "desc": "5 lub więcej goli w jednym meczu" },
-    "Assists50": { "name": "Rozgrywający III", "desc": "50 asyst" },
-    "Assists100": { "name": "Rozgrywający IV", "desc": "100 asyst" },
-    "Points50": { "name": "Kompletny zawodnik I", "desc": "50 punktów (gole + asysty)" },
-    "Points150": { "name": "Kompletny zawodnik II", "desc": "150 punktów (gole + asysty)" },
-    "Points300": { "name": "Kompletny zawodnik III", "desc": "300 punktów (gole + asysty)" },
-    "Points600": { "name": "Kompletny zawodnik IV", "desc": "600 punktów (gole + asysty)" },
-    "PlusMinus20": { "name": "Pewniak", "desc": "bilans kariery +20" },
-    "PlusMinus50": { "name": "Filar obrony", "desc": "bilans kariery +50" },
-    "PlusMinus100": { "name": "Mur", "desc": "bilans kariery +100" },
-    "SeasonAttendance90": { "name": "Żelazny człowiek II", "desc": "90% frekwencji w sezonie" },
-    "SeasonAttendance100": { "name": "Żelazny człowiek III", "desc": "100% frekwencji w sezonie" },
-    "Loyalty5": { "name": "Lojalność II", "desc": "5 rozegranych sezonów" },
-    "Loyalty8": { "name": "Lojalność III", "desc": "8 rozegranych sezonów" },
-    "Loyalty10": { "name": "Lojalność IV", "desc": "10 rozegranych sezonów" },
-    "HomeTraining10": { "name": "Domowy wojownik I", "desc": "10 treningów w domu" },
-    "HomeTraining50": { "name": "Domowy wojownik II", "desc": "50 treningów w domu" },
-    "HomeTraining150": { "name": "Domowy wojownik III", "desc": "150 treningów w domu" },
-    "SkillImprovement1": { "name": "Progresja I", "desc": "pierwsza poprawiona ocena" },
-    "SkillImprovement10": { "name": "Progresja II", "desc": "10× poprawiona ocena" },
-    "SkillImprovement25": { "name": "Progresja III", "desc": "25× poprawiona ocena" },
-    "SkillTarget5": { "name": "Cel osiągnięty I", "desc": "5× osiągnięta ocena docelowa" },
-    "SkillTarget15": { "name": "Cel osiągnięty II", "desc": "15× osiągnięta ocena docelowa" },
-    "TestRecord1": { "name": "Rekord życiowy I", "desc": "pierwszy rekord życiowy w teście" },
-    "TestRecord10": { "name": "Rekord życiowy II", "desc": "10 rekordów życiowych" },
-    "PlayerOfTraining5": { "name": "Zawodnik treningu I", "desc": "5× zawodnik treningu" },
-    "PlayerOfTraining20": { "name": "Zawodnik treningu II", "desc": "20× zawodnik treningu" },
-    "PlayerOfMatch3": { "name": "Zawodnik meczu", "desc": "3× zawodnik meczu" },
-    "FairPlay5": { "name": "Fair Play I", "desc": "5× nagroda fair play" },
-    "FairPlay20": { "name": "Fair Play II", "desc": "20× nagroda fair play" },
-    "FamilyCheered10": { "name": "Wsparcie rodziny I", "desc": "10× rodzina przyszła dopingować" },
-    "FamilyCheered50": { "name": "Wsparcie rodziny II", "desc": "50× rodzina przyszła dopingować" },
-    "Challenges10": { "name": "Zdobywca wyzwań I", "desc": "10 ukończonych wyzwań" },
-    "Challenges50": { "name": "Zdobywca wyzwań II", "desc": "50 ukończonych wyzwań" },
-    "CareerXp5000": { "name": "5000 XP", "desc": "5000 XP w karierze" },
-    "CareerXp15000": { "name": "15000 XP", "desc": "15000 XP w karierze" },
-    "CareerXp30000": { "name": "30000 XP", "desc": "30000 XP w karierze" },
+    "Attendance150": {
+      "name": "Frekwencja 150",
+      "desc": "150 treningów"
+    },
+    "Attendance250": {
+      "name": "Frekwencja 250",
+      "desc": "250 treningów"
+    },
+    "Attendance400": {
+      "name": "Frekwencja 400",
+      "desc": "400 treningów"
+    },
+    "Matches25": {
+      "name": "Wojownik 25",
+      "desc": "25 rozegranych meczów"
+    },
+    "Matches100": {
+      "name": "Wojownik 100",
+      "desc": "100 rozegranych meczów"
+    },
+    "Matches250": {
+      "name": "Wojownik 250",
+      "desc": "250 rozegranych meczów"
+    },
+    "Goals100": {
+      "name": "Snajper II",
+      "desc": "100 goli"
+    },
+    "Goals250": {
+      "name": "Snajper III",
+      "desc": "250 goli"
+    },
+    "Goals500": {
+      "name": "Snajper IV",
+      "desc": "500 goli"
+    },
+    "FourGoalsInMatch": {
+      "name": "Poker",
+      "desc": "4 gole w jednym meczu"
+    },
+    "FiveGoalsInMatch": {
+      "name": "Niepowstrzymany",
+      "desc": "5 lub więcej goli w jednym meczu"
+    },
+    "Assists50": {
+      "name": "Rozgrywający III",
+      "desc": "50 asyst"
+    },
+    "Assists100": {
+      "name": "Rozgrywający IV",
+      "desc": "100 asyst"
+    },
+    "Points50": {
+      "name": "Kompletny zawodnik I",
+      "desc": "50 punktów (gole + asysty)"
+    },
+    "Points150": {
+      "name": "Kompletny zawodnik II",
+      "desc": "150 punktów (gole + asysty)"
+    },
+    "Points300": {
+      "name": "Kompletny zawodnik III",
+      "desc": "300 punktów (gole + asysty)"
+    },
+    "Points600": {
+      "name": "Kompletny zawodnik IV",
+      "desc": "600 punktów (gole + asysty)"
+    },
+    "PlusMinus20": {
+      "name": "Pewniak",
+      "desc": "bilans kariery +20"
+    },
+    "PlusMinus50": {
+      "name": "Filar obrony",
+      "desc": "bilans kariery +50"
+    },
+    "PlusMinus100": {
+      "name": "Mur",
+      "desc": "bilans kariery +100"
+    },
+    "SeasonAttendance90": {
+      "name": "Żelazny człowiek II",
+      "desc": "90% frekwencji w sezonie"
+    },
+    "SeasonAttendance100": {
+      "name": "Żelazny człowiek III",
+      "desc": "100% frekwencji w sezonie"
+    },
+    "Loyalty5": {
+      "name": "Lojalność II",
+      "desc": "5 rozegranych sezonów"
+    },
+    "Loyalty8": {
+      "name": "Lojalność III",
+      "desc": "8 rozegranych sezonów"
+    },
+    "Loyalty10": {
+      "name": "Lojalność IV",
+      "desc": "10 rozegranych sezonów"
+    },
+    "HomeTraining10": {
+      "name": "Domowy wojownik I",
+      "desc": "10 treningów w domu"
+    },
+    "HomeTraining50": {
+      "name": "Domowy wojownik II",
+      "desc": "50 treningów w domu"
+    },
+    "HomeTraining150": {
+      "name": "Domowy wojownik III",
+      "desc": "150 treningów w domu"
+    },
+    "SkillImprovement1": {
+      "name": "Progresja I",
+      "desc": "pierwsza poprawiona ocena"
+    },
+    "SkillImprovement10": {
+      "name": "Progresja II",
+      "desc": "10× poprawiona ocena"
+    },
+    "SkillImprovement25": {
+      "name": "Progresja III",
+      "desc": "25× poprawiona ocena"
+    },
+    "SkillTarget5": {
+      "name": "Cel osiągnięty I",
+      "desc": "5× osiągnięta ocena docelowa"
+    },
+    "SkillTarget15": {
+      "name": "Cel osiągnięty II",
+      "desc": "15× osiągnięta ocena docelowa"
+    },
+    "TestRecord1": {
+      "name": "Rekord życiowy I",
+      "desc": "pierwszy rekord życiowy w teście"
+    },
+    "TestRecord10": {
+      "name": "Rekord życiowy II",
+      "desc": "10 rekordów życiowych"
+    },
+    "PlayerOfTraining5": {
+      "name": "Zawodnik treningu I",
+      "desc": "5× zawodnik treningu"
+    },
+    "PlayerOfTraining20": {
+      "name": "Zawodnik treningu II",
+      "desc": "20× zawodnik treningu"
+    },
+    "PlayerOfMatch3": {
+      "name": "Zawodnik meczu",
+      "desc": "3× zawodnik meczu"
+    },
+    "FairPlay5": {
+      "name": "Fair Play I",
+      "desc": "5× nagroda fair play"
+    },
+    "FairPlay20": {
+      "name": "Fair Play II",
+      "desc": "20× nagroda fair play"
+    },
+    "FamilyCheered10": {
+      "name": "Wsparcie rodziny I",
+      "desc": "10× rodzina przyszła dopingować"
+    },
+    "FamilyCheered50": {
+      "name": "Wsparcie rodziny II",
+      "desc": "50× rodzina przyszła dopingować"
+    },
+    "Challenges10": {
+      "name": "Zdobywca wyzwań I",
+      "desc": "10 ukończonych wyzwań"
+    },
+    "Challenges50": {
+      "name": "Zdobywca wyzwań II",
+      "desc": "50 ukończonych wyzwań"
+    },
+    "CareerXp5000": {
+      "name": "5000 XP",
+      "desc": "5000 XP w karierze"
+    },
+    "CareerXp15000": {
+      "name": "15000 XP",
+      "desc": "15000 XP w karierze"
+    },
+    "CareerXp30000": {
+      "name": "30000 XP",
+      "desc": "30000 XP w karierze"
+    },
     "Loyalty3": {
       "name": "Lojalność",
       "desc": "3 rozegrane sezony"
@@ -3527,6 +3668,7 @@
     "section": "Twoje wyzwania",
     "rewardXp": "+{{xp}} XP",
     "done": "Zaliczone! +{{xp}} XP",
+    "doneNoXp": "Ukończono!",
     "progress": "{{current}}/{{target}}",
     "window": {
       "Week": "w tym tygodniu",
@@ -3933,5 +4075,66 @@
     "atStart": "na początku",
     "atEnd": "na końcu",
     "use": "Użyj"
+  },
+  "badgeAdmin": {
+    "title": "Zarządzanie odznakami",
+    "subtitle": "Dodawaj, edytuj i usuwaj odznaki, ustaw jak często można je zdobyć i wgraj ikonę.",
+    "add": "Dodaj odznakę",
+    "edit": "Edytuj odznakę",
+    "code": "Kod",
+    "codeHint": "Unikalny kod (litery, cyfry, _). Nie można później zmienić.",
+    "name": "Nazwa",
+    "nameHint": "Puste = przetłumaczona nazwa wbudowanej odznaki.",
+    "description": "Opis",
+    "metricLabel": "Co jest liczone",
+    "threshold": "Próg (liczba)",
+    "periodLabel": "Ważność",
+    "repeatable": "Powtarzalna (ponownie za każdą kolejną wielokrotność)",
+    "repeatableShort": "powtarzalna",
+    "hintLifetime": "Jednorazowa: zdobywana raz. Powtarzalna: zdobywana ponownie przy każdej kolejnej wielokrotności progu (10, 20, 30…).",
+    "hintPeriodic": "Odznaka miesięczna / sezonowa jest zdobywana ponownie w każdym nowym miesiącu / sezonie.",
+    "icon": "Ikona",
+    "chooseIcon": "Wybierz obraz (png, jpg, webp, svg do 1 MB)",
+    "active": "Aktywna",
+    "earnedBy": "zdobyta {{count}}×",
+    "inactive": "nieaktywna",
+    "confirmRemove": "Usunąć odznakę? Zdobyte już odznaki zostają, ale nie będzie już oferowana ani przyznawana.",
+    "period": {
+      "Lifetime": "jednorazowa",
+      "Month": "miesięczna",
+      "Season": "sezonowa"
+    },
+    "metric": {
+      "TrainingCount": "Liczba treningów",
+      "MatchCount": "Liczba meczów",
+      "GoalCount": "Gole",
+      "AssistCount": "Asysty",
+      "GoalsPlusAssists": "Punkty (gole + asysty)",
+      "NetPlusMinus": "Plus/minus",
+      "MaxGoalsInMatch": "Goli w jednym meczu",
+      "SeasonsPlayed": "Rozegrane sezony",
+      "SeasonAttendancePct": "Frekwencja w sezonie (%)",
+      "HomeTrainingCount": "Treningi domowe",
+      "SkillImprovementCount": "Poprawa umiejętności",
+      "SkillTargetCount": "Osiągnięte cele umiejętności",
+      "TestRecordCount": "Rekordy osobiste w testach",
+      "PlayerOfTrainingCount": "Zawodnik treningu",
+      "PlayerOfMatchCount": "Zawodnik meczu",
+      "FairPlayCount": "Fair play",
+      "FamilyCheeredCount": "Rodzina dopingowała",
+      "ChallengeCount": "Ukończone wyzwania",
+      "CareerXp": "Łączne XP"
+    },
+    "filter": {
+      "search": "Szukaj po nazwie…",
+      "allPeriods": "Wszystkie typy",
+      "allMetrics": "Wszystkie metryki",
+      "repeatableAll": "Powtarzalność: wszystkie",
+      "repeatableYes": "Tylko powtarzalne",
+      "repeatableNo": "Tylko niepowtarzalne",
+      "minThreshold": "Punkty od",
+      "maxThreshold": "Punkty do",
+      "noResults": "Żadna odznaka nie pasuje do filtra."
+    }
   }
 }
