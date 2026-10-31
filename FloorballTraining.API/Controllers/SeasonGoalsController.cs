@@ -31,8 +31,11 @@ public class SeasonGoalsController(
         var userId = GetCurrentUserId()!;
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
 
+        // Admin sees every club, but the report honours the selected (active) club.
         if (roleInfo.EffectiveRole == "Admin")
-            return await context.Teams.Select(t => t.Id).ToListAsync();
+            return await context.Teams
+                .Where(t => roleInfo.ClubId == null || t.ClubId == roleInfo.ClubId)
+                .Select(t => t.Id).ToListAsync();
 
         if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
             return await context.Teams
@@ -185,7 +188,7 @@ public class SeasonGoalsController(
     private sealed record XpRow(int MemberId, int Points, DateTime When, XpEventType Type);
     /// <summary>When = the match's date (appointment start), not when the tracker was created — trackers are often entered days later.</summary>
     private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When, int TrackerId, string? Label);
-    private sealed record AttendanceRow(int MemberId, int Status, DateTime When);
+    private sealed record AttendanceRow(int MemberId, int AppointmentId, int Status, DateTime When);
     private sealed record EarnRow(int MemberId, DateTime When);
     private sealed record BadgeEarnRow(int MemberId, string Code, DateTime When);
 
@@ -286,8 +289,13 @@ public class SeasonGoalsController(
                         && a.Appointment.AppointmentType == AppointmentType.Training
                         && rosterMemberIds.Contains(a.MemberId)
                         && a.Appointment.Start >= seasonStart && a.Appointment.Start < reportEndExcl)
-            .Select(a => new AttendanceRow(a.MemberId, a.Status, a.Appointment!.Start))
+            .Select(a => new AttendanceRow(a.MemberId, a.AppointmentId, a.Status, a.Appointment!.Start))
             .ToListAsync();
+
+        // Players who also train with another team: an absence here is not counted when they were
+        // present at the other team's training the same day (see AttendanceForgiveness).
+        var forgiven = await AttendanceForgiveness.LoadForgivenAsync(context, rosterMemberIds, seasonStart, reportEndExcl);
+        attendanceRaw = attendanceRaw.Where(x => !forgiven.Contains((x.MemberId, x.AppointmentId))).ToList();
 
         var badgeRaw = await context.MemberBadges.AsNoTracking()
             .Where(b => rosterMemberIds.Contains(b.MemberId) && b.EarnedAt >= seasonStart && b.EarnedAt < reportEndExcl)
@@ -298,7 +306,8 @@ public class SeasonGoalsController(
         var badgeIcons = await context.BadgeDefinitions.AsNoTracking().ToDictionaryAsync(d => d.Code, d => d.IconPath);
 
         var rewardRaw = await context.MemberRewardClaims.AsNoTracking()
-            .Where(r => rosterMemberIds.Contains(r.MemberId) && r.EarnedAt >= seasonStart && r.EarnedAt < reportEndExcl)
+            .Where(r => rosterMemberIds.Contains(r.MemberId) && r.EarnedAt >= seasonStart && r.EarnedAt < reportEndExcl
+                        && r.ClubReward!.ClubId == team.ClubId)
             .Select(r => new EarnRow(r.MemberId, r.EarnedAt))
             .ToListAsync();
 
@@ -866,10 +875,13 @@ public class SeasonGoalsController(
             .ToList();
         if (apptIds.Count > 0)
         {
-            var statuses = await context.AppointmentAttendances
+            var rows = await context.AppointmentAttendances
                 .Where(x => apptIds.Contains(x.AppointmentId))
-                .Select(x => x.Status)
+                .Select(x => new { x.MemberId, x.AppointmentId, x.Status })
                 .ToListAsync();
+            var forgiven = await AttendanceForgiveness.LoadForgivenAsync(
+                context, rows.Select(r => r.MemberId).Distinct().ToList(), from, toExcl);
+            var statuses = rows.Where(r => !forgiven.Contains((r.MemberId, r.AppointmentId))).Select(r => r.Status).ToList();
             var present = statuses.Count(s => s == 1);
             var denom = present + statuses.Count(s => s == 2) + statuses.Count(s => s == 3);
             bundle.AttendanceRatePercent = denom > 0 ? 100.0 * present / denom : null;

@@ -491,11 +491,14 @@ public class MemberReportController(
     {
         // Attendance stats count trainings only — matches track participation via the lineup/
         // nomination, not attendance.
-        var statuses = await context.AppointmentAttendances
+        var rows = await context.AppointmentAttendances
             .Where(a => a.MemberId == memberId && a.RecordedAt >= windowStart && a.Status != 0
                         && a.Appointment!.AppointmentType == AppointmentType.Training)
-            .Select(a => a.Status)
+            .Select(a => new { a.AppointmentId, a.Status })
             .ToListAsync();
+        // Absence covered by presence at another team's training the same day doesn't count.
+        var forgiven = await FloorballTraining.API.Services.AttendanceForgiveness.LoadForgivenAsync(context, [memberId], DateTime.MinValue, DateTime.MaxValue);
+        var statuses = rows.Where(r => !forgiven.Contains((memberId, r.AppointmentId))).Select(r => r.Status).ToList();
 
         var present = statuses.Count(s => s == 1);
         return new PlayerReportAttendanceDto

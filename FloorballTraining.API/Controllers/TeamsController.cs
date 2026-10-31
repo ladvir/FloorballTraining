@@ -477,7 +477,12 @@ public class TeamsController(
         }).ToList();
 
         // Aggregate per-member stats
+        // Absences covered by presence at another team's training the same day don't count against the member.
+        var forgiven = appointments.Count == 0 ? new HashSet<(int MemberId, int AppointmentId)>()
+            : await FloorballTraining.API.Services.AttendanceForgiveness.LoadForgivenAsync(
+                context, activeTeamMemberIds, appointments.Min(x => x.Start), DateTime.MaxValue);
         var memberGroups = allAttendances
+            .Where(a => !forgiven.Contains((a.MemberId, a.AppointmentId)))
             .GroupBy(a => new { a.MemberId, a.MemberFirstName, a.MemberLastName })
             .Select(g =>
             {

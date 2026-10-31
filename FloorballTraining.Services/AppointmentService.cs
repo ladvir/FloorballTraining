@@ -75,9 +75,14 @@ namespace FloorballTraining.Services
         {
             if (repeatingPattern.RepeatingFrequency == RepeatingFrequency.Once) return;
 
+            // A pattern without an end date would loop until DateTime overflows — cap it at one year.
+            // A non-positive interval would never advance.
+            if (repeatingPattern.Interval < 1) repeatingPattern.Interval = 1;
+            var lastAllowed = (repeatingPattern.EndDate ?? template.Start.AddYears(1)).AddSeconds(-1);
+
             var currentDate = GetNextDate(repeatingPattern, template.Start);
 
-            while (repeatingPattern.EndDate == null || currentDate <= repeatingPattern.EndDate.Value.AddSeconds(-1))
+            while (currentDate <= lastAllowed)
             {
                 var newAppointment = new AppointmentDto
                 {

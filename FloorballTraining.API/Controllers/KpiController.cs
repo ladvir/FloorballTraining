@@ -175,7 +175,12 @@ public class KpiController(
             .ToList();
 
         // Top attendees (all past events in window, min 3)
+        var forgiven = attendance.Count == 0
+            ? new HashSet<(int MemberId, int AppointmentId)>()
+            : await FloorballTraining.API.Services.AttendanceForgiveness.LoadForgivenAsync(
+                context, attendance.Select(a => a.MemberId).Distinct().ToList(), DateTime.MinValue, DateTime.MaxValue);
         var memberAttendance = attendance
+            .Where(a => !forgiven.Contains((a.MemberId, a.AppointmentId)))
             .GroupBy(a => a.MemberId)
             .Where(g => g.Count() >= 3)
             .Select(g => new

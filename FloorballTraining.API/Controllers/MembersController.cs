@@ -130,11 +130,14 @@ public class MembersController(
             .Take(50)
             .ToListAsync();
 
-        var present = records.Count(r => r.Status == 1);
-        var absent = records.Count(r => r.Status == 2);
-        var excused = records.Count(r => r.Status == 3);
-        var unknown = records.Count(r => r.Status == 0);
-        var total = records.Count;
+        // Absence covered by presence at another team's training the same day doesn't count.
+        var forgiven = await FloorballTraining.API.Services.AttendanceForgiveness.LoadForgivenAsync(db, [id], DateTime.MinValue, DateTime.MaxValue);
+        var counted = records.Where(r => !forgiven.Contains((id, r.AppointmentId))).ToList();
+        var present = counted.Count(r => r.Status == 1);
+        var absent = counted.Count(r => r.Status == 2);
+        var excused = counted.Count(r => r.Status == 3);
+        var unknown = counted.Count(r => r.Status == 0);
+        var total = counted.Count;
         var rate = total > 0 ? (int)Math.Round((double)present / total * 100) : 0;
 
         return Ok(new MemberAttendanceSummaryDto

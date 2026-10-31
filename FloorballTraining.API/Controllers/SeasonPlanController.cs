@@ -636,13 +636,18 @@ public class SeasonPlanController(
                         && a.Start >= rangeFrom && a.Start < rangeToExclusive)
             .ToListAsync();
 
+        // Absences covered by presence at another team's training the same day don't count.
+        var forgiven = await FloorballTraining.API.Services.AttendanceForgiveness.LoadForgivenAsync(
+            context, appointments.SelectMany(a => a.Attendances).Select(x => x.MemberId).Distinct().ToList(),
+            rangeFrom, rangeToExclusive);
+
         var mesoGoalSkills = GoalSkillList(mesocycle.GoalSkill1, mesocycle.GoalSkill2, mesocycle.GoalSkill3);
 
         var result = new MesocycleEvaluationDto
         {
             Total = BuildEvaluationBlock(
                 mesocycle.Id, mesocycle.Name, mesocycle.StartDate, mesocycle.EndDate,
-                mesoGoalSkills, appointments),
+                mesoGoalSkills, appointments, forgiven),
             Microcycles = mesocycle.Microcycles
                 .OrderBy(mc => mc.StartDate)
                 .Select(mc =>
@@ -650,7 +655,7 @@ public class SeasonPlanController(
                     // Effective goals: the microcycle's own skills, falling back to the mesocycle's
                     var skills = GoalSkillList(mc.GoalSkill1, mc.GoalSkill2, mc.GoalSkill3);
                     if (skills.Count == 0) skills = mesoGoalSkills;
-                    return BuildEvaluationBlock(mc.Id, mc.Name, mc.StartDate, mc.EndDate, skills, appointments);
+                    return BuildEvaluationBlock(mc.Id, mc.Name, mc.StartDate, mc.EndDate, skills, appointments, forgiven);
                 })
                 .ToList()
         };
@@ -665,7 +670,8 @@ public class SeasonPlanController(
 
     private static CycleEvaluationBlockDto BuildEvaluationBlock(
         int cycleId, string name, DateTime start, DateTime endInclusive,
-        List<Skill> goalSkills, List<Appointment> teamAppointments)
+        List<Skill> goalSkills, List<Appointment> teamAppointments,
+        HashSet<(int MemberId, int AppointmentId)> forgiven)
     {
         var endExclusive = endInclusive.AddDays(1);
         var inRange = teamAppointments
@@ -682,7 +688,8 @@ public class SeasonPlanController(
         var totalMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDuration());
         var matchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForSkills(skillIds));
 
-        var attendances = inRange.SelectMany(a => a.Attendances).ToList();
+        var attendances = inRange.SelectMany(a => a.Attendances)
+            .Where(at => !forgiven.Contains((at.MemberId, at.AppointmentId))).ToList();
         var present = attendances.Count(at => at.Status == 1);
         var absent = attendances.Count(at => at.Status == 2);
         var excused = attendances.Count(at => at.Status == 3);

@@ -64,7 +64,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             {
                 db.Clubs.Remove(existingClub);
 
-                await db.SaveChangesAsync();
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    // Still referenced elsewhere (seasons, opponents, tournaments, rewards, ...) —
+                    // same as having teams/members: the club is kept.
+                }
             }
         }
 

@@ -293,6 +293,10 @@ public class BadgeService(FloorballTrainingContext context)
 
         // SeasonAttendancePct (Iron Man badge) counts trainings only — matches track participation
         // via the lineup/nomination, not attendance. SeasonsPlayed stays based on any presence.
+        var forgiven = AttendanceForgiveness.Forgiven(attendances
+            .Where(a => a.Appointment?.TeamId != null && a.Appointment.AppointmentType == AppointmentType.Training)
+            .Select(a => new AttendanceForgiveness.Rec(a.MemberId, a.AppointmentId, a.Appointment!.TeamId!.Value,
+                a.Appointment.Start, a.Appointment.End, a.Status)));
         var seasonTotals = new Dictionary<(int mid, int sid), (int total, int present)>();
         var seasonsPlayed = new Dictionary<int, HashSet<int>>();
         foreach (var a in attendances)
@@ -314,7 +318,7 @@ public class BadgeService(FloorballTrainingContext context)
                 if (present)
                     (seasonsPlayed.TryGetValue(a.MemberId, out var set) ? set : seasonsPlayed[a.MemberId] = new()).Add(sid.Value);
 
-                if (isTraining)
+                if (isTraining && !forgiven.Contains((a.MemberId, a.AppointmentId)))
                 {
                     var key = (a.MemberId, sid.Value);
                     var cur = seasonTotals.GetValueOrDefault(key);
