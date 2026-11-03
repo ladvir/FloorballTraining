@@ -84,7 +84,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
         ...(isPlayer ? [{ to: '/me', icon: UserCircle, label: t('nav.myCard') }] : []),
         { to: '/xp/how-to-earn', icon: Medal, label: t('nav.howToEarnXp') },
-        { to: '/announcer', icon: Megaphone, label: t('nav.announcer') },
+        { to: '/announcer', icon: Megaphone, label: t('nav.announcer'), minRole: 'Coach' },
       ],
     },
     {
@@ -120,10 +120,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/teams', icon: Users, label: t('nav.teams'), minRole: 'Coach' },
         { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },
         { to: '/tournaments', icon: Trophy, label: t('nav.tournaments'), minRole: 'Coach' },
-        { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan'), hideForGuardian: true },
+        { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan'), minRole: 'Coach' },
         { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
         { to: '/kpi', icon: BarChart2, label: t('nav.kpi'), minRole: 'Coach' },
-        { to: '/ratings', icon: Star, label: t('nav.ratings'), hideForGuardian: true },
+        { to: '/ratings', icon: Star, label: t('nav.ratings'), minRole: 'Coach' },
       ],
     },
     {
@@ -245,23 +245,25 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Settings */}
-      <div className="border-t border-gray-100 px-3 py-3">
-        <NavLink
-          to="/profile"
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isActive
-                ? 'bg-sky-50 text-sky-600'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            )
-          }
-        >
-          <Settings className="h-4 w-4" />
-          {t('nav.profileSettings')}
-        </NavLink>
-      </div>
+      {/* Settings — a read-only guest can change nothing, not even the profile */}
+      {user?.accountType !== 'Guest' && (
+        <div className="border-t border-gray-100 px-3 py-3">
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-sky-50 text-sky-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              )
+            }
+          >
+            <Settings className="h-4 w-4" />
+            {t('nav.profileSettings')}
+          </NavLink>
+        </div>
+      )}
     </aside>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { User, Dumbbell, Copy, FileDown, PlayCircle, Target, LayoutTemplate } from 'lucide-react'
@@ -316,22 +317,24 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
               {t('liveTraining.start')}
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            loading={downloadingPdf}
-            onClick={async () => {
-              setDownloadingPdf(true)
-              try {
-                await trainingsApi.downloadPdf(training.id, training.name, { compact: true })
-              } finally {
-                setDownloadingPdf(false)
-              }
-            }}
-          >
-            <FileDown className="h-3.5 w-3.5" />
-            PDF
-          </Button>
+          <HideForGuest>
+            <Button
+              size="sm"
+              variant="outline"
+              loading={downloadingPdf}
+              onClick={async () => {
+                setDownloadingPdf(true)
+                try {
+                  await trainingsApi.downloadPdf(training.id, training.name, { compact: true })
+                } finally {
+                  setDownloadingPdf(false)
+                }
+              }}
+            >
+              <FileDown className="h-3.5 w-3.5" />
+              PDF
+            </Button>
+          </HideForGuest>
           {onCopy && (
             <Button
               size="sm"

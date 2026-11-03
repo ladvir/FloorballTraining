@@ -99,6 +99,7 @@ public class XpService(FloorballTrainingContext context)
 
         DeriveAttendance(await LoadAttendanceAsync(ct), Add);
         DeriveStats(await LoadStatEntriesAsync(ct), Add);
+        DeriveGoalkeeper(await GoalkeeperMatches.LoadAsync(context, null, ct), Add);
         DeriveSkillProgress(await LoadRatingsAsync(ct), Add);
         DeriveTestRecords(await LoadTestResultsAsync(ct), Add);
         var coachAwards = await LoadCoachAwardsAsync(ct);
@@ -115,7 +116,7 @@ public class XpService(FloorballTrainingContext context)
         {
             XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
             XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward, XpSourceKind.FanCheckIn,
-            XpSourceKind.HomeTraining, XpSourceKind.Challenge, XpSourceKind.TeamChallenge
+            XpSourceKind.HomeTraining, XpSourceKind.Challenge, XpSourceKind.TeamChallenge, XpSourceKind.StatTrackerParticipant
         };
         var orphanIds = existingEvents
             .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
@@ -204,6 +205,19 @@ public class XpService(FloorballTrainingContext context)
 
             add(memberId.Value, mapped.Value.type, mapped.Value.units, e.StatTracker?.TeamId, XpSourceKind.StatTrackerEntry, e.Id,
                 e.StatTracker?.Appointment?.Start ?? e.CreatedAt); // match date, not when it was logged
+        }
+    }
+
+    // --- Goalkeeper: clean sheet and ≥85 % save rate per tracked match (see GoalkeeperMatches). One event per
+    //     (goalkeeper, match): SourceId = the StatTrackerParticipant.
+    private static void DeriveGoalkeeper(List<GoalkeeperMatch> matches, AddXp add)
+    {
+        foreach (var m in matches)
+        {
+            if (m.CleanSheet)
+                add(m.MemberId, XpEventType.GoalkeeperCleanSheet, 1, m.TeamId, XpSourceKind.StatTrackerParticipant, m.ParticipantId, m.When);
+            if (m.SavePctHit)
+                add(m.MemberId, XpEventType.GoalkeeperSavePct, 1, m.TeamId, XpSourceKind.StatTrackerParticipant, m.ParticipantId, m.When);
         }
     }
 

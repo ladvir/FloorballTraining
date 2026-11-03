@@ -27,6 +27,8 @@ namespace FloorballTraining.API.Dtos.Users
         public List<UserClubMembershipInfo> ClubMemberships { get; set; } = [];
         public DateTime? LastLoginAt { get; set; }
         public string? PreferredLanguage { get; set; }
+        /// <summary>Read-only team guest: no member card, never a player.</summary>
+        public bool IsGuest { get; set; }
     }
 
     public class SetPasswordRequest

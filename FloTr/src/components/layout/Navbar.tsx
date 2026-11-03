@@ -13,7 +13,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
-  const { user, logout, isAuthenticated, effectiveRole } = useAuthStore()
+  const { user, logout, isAuthenticated, effectiveRole, isGuest } = useAuthStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const { t } = useTranslation()
@@ -84,15 +84,15 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <div className="hidden sm:block text-left">
               <span className="block max-w-32 truncate leading-tight">{displayName}</span>
               <span className="block text-[10px] font-normal text-gray-400 leading-tight">
-                {
-                  {
-                    Admin: 'Admin',
-                    ClubAdmin: t('auth.roleClubAdmin'),
-                    HeadCoach: t('auth.roleHeadCoach'),
-                    Coach: t('auth.roleCoach'),
-                    User: t('auth.roleUser'),
-                  }[effectiveRole]
-                }
+                {isGuest
+                  ? t('auth.roleGuest')
+                  : {
+                      Admin: 'Admin',
+                      ClubAdmin: t('auth.roleClubAdmin'),
+                      HeadCoach: t('auth.roleHeadCoach'),
+                      Coach: t('auth.roleCoach'),
+                      User: t('auth.roleUser'),
+                    }[effectiveRole]}
               </span>
             </div>
             <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -104,16 +104,18 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <p className="text-xs text-gray-500">{t('nav.loggedInAs')}</p>
                 <p className="truncate text-sm font-medium text-gray-900">{user?.email}</p>
               </div>
-              <button
-                onClick={() => {
-                  setMenuOpen(false)
-                  navigate('/profile')
-                }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Settings className="h-4 w-4" />
-                {t('nav.profileSettings')}
-              </button>
+              {user?.accountType !== 'Guest' && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false)
+                    navigate('/profile')
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t('nav.profileSettings')}
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"

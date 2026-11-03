@@ -42,6 +42,7 @@ import { AddTeamMemberModal } from './AddTeamMemberModal'
 import { TeamSettingsModal } from './TeamSettingsModal'
 import { TeamTestingTab } from './TeamTestingTab'
 import { useAuthStore } from '../../store/authStore'
+import { TeamGuestsCard } from './TeamGuestsCard'
 import { formatFullName } from '../../utils/name'
 import type { MemberDto, TeamMemberDto, AppointmentDto } from '../../types/domain.types'
 
@@ -316,6 +317,8 @@ export function TeamDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {canManage && <TeamGuestsCard teamId={team.id} />}
 
           {/* Players */}
           <Card>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -220,9 +221,15 @@ function DraggableActivityCard({
                 <Copy className="h-3.5 w-3.5" />
               </CardIconButton>
             )}
-            <CardIconButton title="PDF" disabled={downloadingPdfId === activity.id} onClick={onPdf}>
-              <FileDown className="h-3.5 w-3.5" />
-            </CardIconButton>
+            <HideForGuest>
+              <CardIconButton
+                title="PDF"
+                disabled={downloadingPdfId === activity.id}
+                onClick={onPdf}
+              >
+                <FileDown className="h-3.5 w-3.5" />
+              </CardIconButton>
+            </HideForGuest>
             {canDelete && onDelete && (
               <CardIconButton tone="danger" title={t('common.delete')} onClick={onDelete}>
                 <Trash2 className="h-3.5 w-3.5" />
@@ -348,16 +355,18 @@ function DraggableActivityRow({
               <Copy className="h-3.5 w-3.5" />
             </button>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onPdf()
-            }}
-            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-            title="PDF"
-          >
-            <FileDown className="h-3.5 w-3.5" />
-          </button>
+          <HideForGuest>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onPdf()
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title="PDF"
+            >
+              <FileDown className="h-3.5 w-3.5" />
+            </button>
+          </HideForGuest>
           {canDelete && onDelete && (
             <button
               onClick={(e) => {
@@ -424,10 +433,12 @@ function SelectedActivitiesPanel() {
           >
             Odebrat vše
           </button>
-          <Button size="sm" onClick={() => navigate('/trainings/new')}>
-            <ArrowRight className="h-3.5 w-3.5" />
-            Použít v tréninku
-          </Button>
+          <HideForGuest>
+            <Button size="sm" onClick={() => navigate('/trainings/new')}>
+              <ArrowRight className="h-3.5 w-3.5" />
+              Použít v tréninku
+            </Button>
+          </HideForGuest>
         </div>
       </div>
 
@@ -504,7 +515,7 @@ export function ActivitiesPage() {
     { value: 'duration-asc', label: t('activities.sortByDurationAsc') },
     { value: 'duration-desc', label: t('activities.sortByDurationDesc') },
   ]
-  const { isAdmin, user, activeClubId } = useAuthStore()
+  const { isAdmin, user, activeClubId, isGuest } = useAuthStore()
 
   // AI import entry is shown only when AI is enabled and a credential resolves.
   const { data: aiStatus } = useQuery({
@@ -793,20 +804,24 @@ export function ActivitiesPage() {
                   {t('activities.checkAll')}
                 </Button>
               )}
-              {aiStatus?.enabled && aiStatus.hasCredential && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate('/activities/ai-import')}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {t('ai.activityImport.button')}
+              <HideForGuest>
+                {aiStatus?.enabled && aiStatus.hasCredential && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate('/activities/ai-import')}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {t('ai.activityImport.button')}
+                  </Button>
+                )}
+              </HideForGuest>
+              <HideForGuest>
+                <Button size="sm" onClick={() => navigate('/activities/new')}>
+                  <Plus className="h-4 w-4" />
+                  {t('activities.newActivityBtn')}
                 </Button>
-              )}
-              <Button size="sm" onClick={() => navigate('/activities/new')}>
-                <Plus className="h-4 w-4" />
-                {t('activities.newActivityBtn')}
-              </Button>
+              </HideForGuest>
             </div>
           }
         />
@@ -1119,10 +1134,12 @@ export function ActivitiesPage() {
                     Zrušit filtry
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={() => navigate('/activities/new')}>
-                    <Plus className="h-4 w-4" />
-                    Vytvořit první aktivitu
-                  </Button>
+                  <HideForGuest>
+                    <Button size="sm" onClick={() => navigate('/activities/new')}>
+                      <Plus className="h-4 w-4" />
+                      Vytvořit první aktivitu
+                    </Button>
+                  </HideForGuest>
                 )
               }
             />
@@ -1162,7 +1179,7 @@ export function ActivitiesPage() {
                             onDetail={() => setDetailActivityId(activity.id)}
                             onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                             onPdf={() => setPdfTarget(activity)}
-                            onCopy={() => copyMutation.mutate(activity.id)}
+                            onCopy={isGuest ? undefined : () => copyMutation.mutate(activity.id)}
                             onDelete={() => {
                               setDeleteError(null)
                               setDeleteTarget(activity)
@@ -1208,7 +1225,9 @@ export function ActivitiesPage() {
                                 onDetail={() => setDetailActivityId(activity.id)}
                                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                                 onPdf={() => setPdfTarget(activity)}
-                                onCopy={() => copyMutation.mutate(activity.id)}
+                                onCopy={
+                                  isGuest ? undefined : () => copyMutation.mutate(activity.id)
+                                }
                                 onDelete={() => {
                                   setDeleteError(null)
                                   setDeleteTarget(activity)
@@ -1240,10 +1259,12 @@ export function ActivitiesPage() {
                   Zrušit filtry
                 </Button>
               ) : (
-                <Button size="sm" onClick={() => navigate('/activities/new')}>
-                  <Plus className="h-4 w-4" />
-                  Vytvořit první aktivitu
-                </Button>
+                <HideForGuest>
+                  <Button size="sm" onClick={() => navigate('/activities/new')}>
+                    <Plus className="h-4 w-4" />
+                    Vytvořit první aktivitu
+                  </Button>
+                </HideForGuest>
               )
             }
           />
@@ -1258,7 +1279,7 @@ export function ActivitiesPage() {
                 onDetail={() => setDetailActivityId(activity.id)}
                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                 onPdf={() => setPdfTarget(activity)}
-                onCopy={() => copyMutation.mutate(activity.id)}
+                onCopy={isGuest ? undefined : () => copyMutation.mutate(activity.id)}
                 onDelete={() => {
                   setDeleteError(null)
                   setDeleteTarget(activity)
@@ -1302,7 +1323,7 @@ export function ActivitiesPage() {
                     onDetail={() => setDetailActivityId(activity.id)}
                     onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                     onPdf={() => setPdfTarget(activity)}
-                    onCopy={() => copyMutation.mutate(activity.id)}
+                    onCopy={isGuest ? undefined : () => copyMutation.mutate(activity.id)}
                     onDelete={() => {
                       setDeleteError(null)
                       setDeleteTarget(activity)

@@ -99,7 +99,8 @@
     "roleUser": "User",
     "languageSk": "Slovak",
     "languagePl": "Polish",
-    "languageDe": "German"
+    "languageDe": "German",
+    "roleGuest": "Guest"
   },
   "common": {
     "save": "Save",
@@ -1372,7 +1373,13 @@
     "roleHeadCoachShort": "Head coach",
     "roleCoachShort": "Coach",
     "roleUserShort": "User",
-    "memberData": "Member data"
+    "memberData": "Member data",
+    "roleGuest": "Guest (read-only)",
+    "roleGuestDesc": "Sees what a player of the chosen teams sees. Cannot change anything, has no profile and no player status.",
+    "guestTeams": "Guest teams",
+    "guestPickClub": "Select a club first.",
+    "guestNoTeams": "The club has no teams.",
+    "roleGuestShort": "Guest"
   },
   "profile": {
     "title": "Profile & Settings",
@@ -1859,7 +1866,28 @@
     "ageGroupRequired": "Please select an age group",
     "copyPlan": "Copy season plan",
     "copyPlanHint": "Mesocycles and microcycles shift by the difference of season starts.",
-    "colXp": "XP / level"
+    "colXp": "XP / level",
+    "guests": {
+      "title": "Guests (read-only)",
+      "hint": "A guest sees what a player sees, but cannot change anything, not even their password.",
+      "invite": "Invite guest",
+      "emailPlaceholder": "Guest e-mail",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "sendCredentials": "E-mail the credentials",
+      "added": "Guest added.",
+      "addedWithPassword": "Guest added. Temporary password: {{password}}",
+      "addFailed": "Could not add the guest.",
+      "remove": "Remove guest",
+      "removePrompt": "Remove the guest from this team?",
+      "removed": "Guest removed.",
+      "removeFailed": "Could not remove the guest.",
+      "resend": "E-mail a new password",
+      "resent": "New password sent by e-mail.",
+      "resentWithPassword": "E-mail failed. New password: {{password}}",
+      "resendFailed": "Could not reset the password.",
+      "passwordPlaceholder": "Password (empty = generate)"
+    }
   },
   "ratings": {
     "title": "Ratings",
@@ -3361,7 +3389,9 @@
       "PlayerOfMatch": "Player of the match",
       "FairPlay": "Fair play",
       "FamilyCheered": "Family cheered",
-      "HomeTraining": "Home training"
+      "HomeTraining": "Home training",
+      "GoalkeeperCleanSheet": "Clean sheet",
+      "GoalkeeperSavePct": "Save percentage"
     },
     "howto": {
       "desc": {
@@ -3377,7 +3407,9 @@
         "SkillGradeImprovement": "Improve a skill grade over your last rating.",
         "SkillTargetReached": "Reach the target grade for a skill.",
         "TestPersonalRecord": "Beat your own best result in a fitness test.",
-        "HomeTraining": "Log a confirmed home training session (capped)."
+        "HomeTraining": "Log a confirmed home training session (capped).",
+        "GoalkeeperCleanSheet": "Finish a match without conceding a goal.",
+        "GoalkeeperSavePct": "Save at least 85% of shots in a match (min. 10 shots)."
       }
     }
   },
@@ -3621,6 +3653,14 @@
     "CareerXp30000": {
       "name": "30,000 XP",
       "desc": "30,000 career XP"
+    },
+    "GoalkeeperCleanSheets5": {
+      "name": "The Wall",
+      "desc": "5 clean sheets"
+    },
+    "GoalkeeperCleanSheetStreak3": {
+      "name": "Iron Goal",
+      "desc": "3 clean sheets in a row"
     }
   },
   "leaderboard": {
@@ -3893,7 +3933,8 @@
     "colAssists": "Assists",
     "colReason": "Reason",
     "colXp": "XP",
-    "total": "Total"
+    "total": "Total",
+    "showDetails": "Show details"
   },
   "teamChallenge": {
     "title": "Team challenges",
@@ -4123,7 +4164,9 @@
       "FairPlayCount": "Fair play",
       "FamilyCheeredCount": "Family cheered",
       "ChallengeCount": "Challenges completed",
-      "CareerXp": "Total XP"
+      "CareerXp": "Total XP",
+      "CleanSheetCount": "Clean sheets",
+      "CleanSheetStreak": "Clean sheets in a row"
     },
     "filter": {
       "search": "Search by name…",

@@ -28,6 +28,9 @@ namespace FloorballTraining.API.Dtos.Users
         /// </summary>
         public bool SendCredentialsEmail { get; set; }
 
+        /// <summary>Role "Guest" only: teams the read-only guest gets access to (all in the target club).</summary>
+        public List<int>? TeamIds { get; set; }
+
         // Member-specific data written to the auto-created Member row.
         public int BirthYear { get; set; }
         public int? Gender { get; set; }

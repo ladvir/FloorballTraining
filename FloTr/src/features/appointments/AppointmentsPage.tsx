@@ -180,7 +180,7 @@ export function AppointmentsPage() {
       return true
     }
   })
-  const { user, isAdmin, isHeadCoach, isCoach, isGuardian, activeClubId } = useAuthStore()
+  const { user, isAdmin, isHeadCoach, isCoach, isGuardian, isGuest, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   const typeLabels: Record<number, string> = {
@@ -505,7 +505,7 @@ export function AppointmentsPage() {
                 {t('appointments.exportWorkTime')}
               </Button>
             )}
-            {!isGuardian && (
+            {!isGuardian && !isGuest && (
               <Button size="sm" onClick={() => openCreate()}>
                 <Plus className="h-4 w-4" />
                 {t('appointments.newEvent')}
@@ -557,7 +557,8 @@ export function AppointmentsPage() {
             <option value={0}>{t('appointments.allTeams')}</option>
             {(selectedSeason ? teams?.filter((t) => t.seasonId === selectedSeason.id) : teams)
               ?.filter(
-                (t) => isHeadCoach || isGuardian || (user?.coachTeamIds ?? []).includes(t.id)
+                (t) =>
+                  isHeadCoach || isGuardian || isGuest || (user?.coachTeamIds ?? []).includes(t.id)
               )
               .map((t) => (
                 <option key={t.id} value={t.id}>
@@ -675,7 +676,7 @@ export function AppointmentsPage() {
           onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
           onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
           onToday={() => setCurrentMonth(new Date())}
-          onDayClick={(date) => openCreate(date)}
+          onDayClick={isGuest ? undefined : (date) => openCreate(date)}
           onAppointmentClick={handleAppointmentClick}
           onCopyAppointment={(apt, targetDate) => copyMutation.mutate({ apt, targetDate })}
           ratingAverages={ratingAverages}
@@ -1118,7 +1119,7 @@ function CalendarView({
   onPrevMonth: () => void
   onNextMonth: () => void
   onToday: () => void
-  onDayClick: (date: Date) => void
+  onDayClick?: (date: Date) => void
   onAppointmentClick: (apt: AppointmentDto) => void
   onCopyAppointment?: (apt: AppointmentDto, targetDate: Date) => void
   ratingAverages?: Record<number, number>
@@ -1224,7 +1225,7 @@ function CalendarView({
                       }`
                     : undefined
                 }
-                onClick={() => onDayClick(day)}
+                onClick={() => onDayClick?.(day)}
                 onDragOver={(e) => {
                   if (draggedAptRef.current && e.ctrlKey) {
                     e.preventDefault()

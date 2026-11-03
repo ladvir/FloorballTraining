@@ -12,6 +12,8 @@ export interface CreateUserData {
   birthYear?: number
   gender?: number | null
   preferredLanguage?: string
+  /** Role "Guest" only: teams the read-only guest may view. */
+  teamIds?: number[]
 }
 
 export interface UpdateUserProfileData {

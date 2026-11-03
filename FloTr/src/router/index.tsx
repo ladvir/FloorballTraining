@@ -266,6 +266,11 @@ function ProtectedRoute() {
   return <Outlet />
 }
 
+function NotGuestRoute() {
+  const { user } = useAuthStore()
+  return user?.accountType === 'Guest' ? <Navigate to="/" replace /> : <Outlet />
+}
+
 function AdminRoute() {
   const { isAdmin } = useAuthStore()
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />
@@ -434,9 +439,15 @@ export const router = createBrowserRouter(
                 // Self-view of the member record — same MemberDetailPage a coach uses, scoped to
                 // the caller's own memberId (unlike /members/:id, not behind CoachRoute).
                 { path: '/me', element: <MemberDetailPage selfView /> },
-                { path: '/profile', element: <ProfilePage /> },
-                { path: '/settings', element: <ProfilePage /> },
-                { path: '/settings/ai', element: <AiSettingsPage /> },
+                // A read-only guest has no profile/settings access at all.
+                {
+                  element: <NotGuestRoute />,
+                  children: [
+                    { path: '/profile', element: <ProfilePage /> },
+                    { path: '/settings', element: <ProfilePage /> },
+                    { path: '/settings/ai', element: <AiSettingsPage /> },
+                  ],
+                },
                 // HeadCoach+ routes
                 {
                   element: <HeadCoachRoute />,

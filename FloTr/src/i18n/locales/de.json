@@ -99,7 +99,8 @@
     "roleUser": "Benutzer",
     "languageSk": "Slowakisch",
     "languagePl": "Polnisch",
-    "languageDe": "Deutsch"
+    "languageDe": "Deutsch",
+    "roleGuest": "Gast"
   },
   "common": {
     "save": "Speichern",
@@ -1372,7 +1373,13 @@
     "roleHeadCoachShort": "Cheftrainer",
     "roleCoachShort": "Trainer",
     "roleUserShort": "Benutzer",
-    "memberData": "Mitgliedsdaten"
+    "memberData": "Mitgliedsdaten",
+    "roleGuest": "Gast (nur Lesezugriff)",
+    "roleGuestDesc": "Sieht, was ein Spieler der gewählten Teams sieht. Kann nichts ändern, hat kein Profil und keinen Spielerstatus.",
+    "guestTeams": "Teams des Gastes",
+    "guestPickClub": "Zuerst einen Verein wählen.",
+    "guestNoTeams": "Der Verein hat keine Teams.",
+    "roleGuestShort": "Gast"
   },
   "profile": {
     "title": "Profil & Einstellungen",
@@ -1859,7 +1866,28 @@
     "ageGroupRequired": "Bitte wählen Sie eine Altersgruppe aus",
     "copyPlan": "Saisonplan kopieren",
     "copyPlanHint": "Meso- und Mikrozyklen verschieben sich um die Differenz der Saisonstarts.",
-    "colXp": "XP / Level"
+    "colXp": "XP / Level",
+    "guests": {
+      "title": "Gäste (nur Lesezugriff)",
+      "hint": "Ein Gast sieht, was ein Spieler sieht, kann aber nichts ändern, auch nicht sein Passwort.",
+      "invite": "Gast einladen",
+      "emailPlaceholder": "E-Mail des Gastes",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "sendCredentials": "Zugangsdaten per E-Mail senden",
+      "added": "Gast hinzugefügt.",
+      "addedWithPassword": "Gast hinzugefügt. Temporäres Passwort: {{password}}",
+      "addFailed": "Gast konnte nicht hinzugefügt werden.",
+      "remove": "Gast entfernen",
+      "removePrompt": "Gast aus dem Team entfernen?",
+      "removed": "Gast entfernt.",
+      "removeFailed": "Gast konnte nicht entfernt werden.",
+      "resend": "Neues Passwort per E-Mail",
+      "resent": "Neues Passwort per E-Mail gesendet.",
+      "resentWithPassword": "E-Mail fehlgeschlagen. Neues Passwort: {{password}}",
+      "resendFailed": "Passwort konnte nicht zurückgesetzt werden.",
+      "passwordPlaceholder": "Passwort (leer = generieren)"
+    }
   },
   "ratings": {
     "title": "Bewertungen",
@@ -3361,7 +3389,9 @@
       "PlayerOfMatch": "Spieler des Spiels",
       "FairPlay": "Fair Play",
       "FamilyCheered": "Familie hat angefeuert",
-      "HomeTraining": "Heimtraining"
+      "HomeTraining": "Heimtraining",
+      "GoalkeeperCleanSheet": "Zu Null",
+      "GoalkeeperSavePct": "Fangquote"
     },
     "howto": {
       "desc": {
@@ -3377,7 +3407,9 @@
         "SkillGradeImprovement": "Verbessere eine Fähigkeitsnote gegenüber der letzten Bewertung.",
         "SkillTargetReached": "Erreiche die Zielnote einer Fähigkeit.",
         "TestPersonalRecord": "Übertriff dein bestes Ergebnis in einem Test.",
-        "HomeTraining": "Trage ein bestätigtes Heimtraining ein (begrenzt)."
+        "HomeTraining": "Trage ein bestätigtes Heimtraining ein (begrenzt).",
+        "GoalkeeperCleanSheet": "Beende ein Spiel ohne Gegentor.",
+        "GoalkeeperSavePct": "Halte mindestens 85 % der Schüsse in einem Spiel (min. 10 Schüsse)."
       }
     }
   },
@@ -3621,6 +3653,14 @@
     "Loyalty3": {
       "name": "Treue",
       "desc": "3 gespielte Saisons"
+    },
+    "GoalkeeperCleanSheets5": {
+      "name": "Die Mauer",
+      "desc": "5× zu Null"
+    },
+    "GoalkeeperCleanSheetStreak3": {
+      "name": "Eiserne Torwand",
+      "desc": "3× zu Null in Folge"
     }
   },
   "leaderboard": {
@@ -3893,7 +3933,8 @@
     "colAssists": "Assists",
     "colReason": "Wofür",
     "colXp": "XP",
-    "total": "Gesamt"
+    "total": "Gesamt",
+    "showDetails": "Details anzeigen"
   },
   "teamChallenge": {
     "title": "Team-Challenges",
@@ -4123,7 +4164,9 @@
       "FairPlayCount": "Fair Play",
       "FamilyCheeredCount": "Familie hat angefeuert",
       "ChallengeCount": "Abgeschlossene Herausforderungen",
-      "CareerXp": "Gesamt-XP"
+      "CareerXp": "Gesamt-XP",
+      "CleanSheetCount": "Spiele zu Null",
+      "CleanSheetStreak": "Zu Null in Folge"
     },
     "filter": {
       "search": "Nach Namen suchen…",

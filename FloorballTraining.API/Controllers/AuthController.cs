@@ -330,7 +330,7 @@ namespace FloorballTraining.API.Controllers
             try
             {
                 var user = await userManager.FindByEmailAsync(request.Email);
-                if (user != null)
+                if (user != null && !await context.IsGuestAsync(user.Id))
                 {
                     var token = await userManager.GeneratePasswordResetTokenAsync(user);
                     var frontendBaseUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
@@ -497,6 +497,7 @@ namespace FloorballTraining.API.Controllers
         private async Task<string> ResolveAccountTypeAsync(string userId, string effectiveRole)
         {
             if (effectiveRole != "User") return "Coach";
+            if (await context.IsGuestAsync(userId)) return "Guest";
             return await context.IsGuardianAsync(userId) ? "Guardian" : "Player";
         }
 

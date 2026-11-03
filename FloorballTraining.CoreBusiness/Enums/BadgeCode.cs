@@ -66,5 +66,7 @@ public enum BadgeCode
     CareerXp5000,
     CareerXp15000,
     CareerXp30000,
-    PlayerOfMatch3
+    PlayerOfMatch3,
+    GoalkeeperCleanSheets5,
+    GoalkeeperCleanSheetStreak3
 }

@@ -231,6 +231,10 @@ export type StringKey =
   | 'badge.PlayerOfTraining20.desc'
   | 'badge.PlayerOfMatch3.name'
   | 'badge.PlayerOfMatch3.desc'
+  | 'badge.GoalkeeperCleanSheets5.name'
+  | 'badge.GoalkeeperCleanSheets5.desc'
+  | 'badge.GoalkeeperCleanSheetStreak3.name'
+  | 'badge.GoalkeeperCleanSheetStreak3.desc'
   | 'badge.FairPlay5.name'
   | 'badge.FairPlay5.desc'
   | 'badge.FairPlay20.name'
@@ -361,6 +365,8 @@ export type StringKey =
   | 'xpHowto.name.TestPersonalRecord'
   | 'xpHowto.name.PlayerOfTraining'
   | 'xpHowto.name.PlayerOfMatch'
+  | 'xpHowto.name.GoalkeeperCleanSheet'
+  | 'xpHowto.name.GoalkeeperSavePct'
   | 'xpHowto.name.FairPlay'
   | 'xpHowto.name.FamilyCheered'
   | 'xpHowto.name.HomeTraining'
@@ -374,6 +380,8 @@ export type StringKey =
   | 'xpHowto.desc.TestPersonalRecord'
   | 'xpHowto.desc.PlayerOfTraining'
   | 'xpHowto.desc.PlayerOfMatch'
+  | 'xpHowto.desc.GoalkeeperCleanSheet'
+  | 'xpHowto.desc.GoalkeeperSavePct'
   | 'xpHowto.desc.FairPlay'
   | 'xpHowto.desc.FamilyCheered'
   | 'xpHowto.desc.HomeTraining'
@@ -681,6 +689,10 @@ const cs: Record<StringKey, string> = {
   'badge.PlayerOfTraining20.desc': '20× hráč tréninku',
   'badge.PlayerOfMatch3.name': 'Hráč zápasu',
   'badge.PlayerOfMatch3.desc': '3× hráč zápasu',
+  'badge.GoalkeeperCleanSheets5.name': 'Zeď',
+  'badge.GoalkeeperCleanSheets5.desc': '5 čistých kont',
+  'badge.GoalkeeperCleanSheetStreak3.name': 'Železná branka',
+  'badge.GoalkeeperCleanSheetStreak3.desc': '3 čistá konta v řadě',
   'badge.FairPlay5.name': 'Fair play I',
   'badge.FairPlay5.desc': '5× ocenění za fair play',
   'badge.FairPlay20.name': 'Fair play II',
@@ -812,6 +824,8 @@ const cs: Record<StringKey, string> = {
   'xpHowto.name.TestPersonalRecord': 'Osobní rekord v testu',
   'xpHowto.name.PlayerOfTraining': 'Nejlepší hráč',
   'xpHowto.name.PlayerOfMatch': 'Hráč zápasu',
+  'xpHowto.name.GoalkeeperCleanSheet': 'Čisté konto',
+  'xpHowto.name.GoalkeeperSavePct': 'Úspěšnost zákroků',
   'xpHowto.name.FairPlay': 'Fair play',
   'xpHowto.name.FamilyCheered': 'Rodina fandila',
   'xpHowto.name.HomeTraining': 'Domácí trénink',
@@ -825,6 +839,8 @@ const cs: Record<StringKey, string> = {
   'xpHowto.desc.TestPersonalRecord': 'Překonej svůj nejlepší výsledek v testu.',
   'xpHowto.desc.PlayerOfTraining': 'Buď vybrán jako nejlepší hráč tréninku.',
   'xpHowto.desc.PlayerOfMatch': 'Buď vybrán jako nejlepší hráč zápasu.',
+  'xpHowto.desc.GoalkeeperCleanSheet': 'Odchytej zápas bez inkasovaného gólu.',
+  'xpHowto.desc.GoalkeeperSavePct': 'Měj v zápase úspěšnost zákroků alespoň 85 % (min. 10 střel).',
   'xpHowto.desc.FairPlay': 'Fair play, pomoc spoluhráčům, vedení týmu.',
   'xpHowto.desc.FamilyCheered': 'Tvoje rodina přijde fandit na zápas.',
   'xpHowto.desc.HomeTraining': 'Zapiš potvrzený domácí trénink (se stropem).',

@@ -45,7 +45,11 @@ public enum BadgeMetric
     /// simplification this makes vs. XpService's capped/displayed total).</summary>
     CareerXp,
     /// <summary>Lifetime count of "player of the match" coach awards.</summary>
-    PlayerOfMatchCount
+    PlayerOfMatchCount,
+    /// <summary>Lifetime count of matches a goalkeeper finished without conceding.</summary>
+    CleanSheetCount,
+    /// <summary>Best run of consecutive clean-sheet matches (peak, not cumulative).</summary>
+    CleanSheetStreak
 }
 
 /// <summary>
@@ -64,6 +68,10 @@ public static class BadgeCatalog
     public const int IronManPercent = 80;
 
     public record Def(BadgeCode Code, string Icon, BadgeMetric Metric, int Threshold);
+
+    /// <summary>Catalog entries added after the first seeding; topped up into an already-seeded table by Code.</summary>
+    public static IEnumerable<Def> AddedLater => All.Where(d =>
+        d.Code is BadgeCode.GoalkeeperCleanSheets5 or BadgeCode.GoalkeeperCleanSheetStreak3);
 
     /// <summary>Icon is a path under wwwroot, served statically (e.g. "badges/attendance10.png") —
     /// same convention as <see cref="Video.FilePath"/>. Generated via Higgsfield MCP (gpt_image_2).</summary>
@@ -129,6 +137,8 @@ public static class BadgeCatalog
         new(BadgeCode.CareerXp5000,        "badges/careerxp5000.png",        BadgeMetric.CareerXp, 5000),
         new(BadgeCode.CareerXp15000,       "badges/careerxp15000.png",       BadgeMetric.CareerXp, 15000),
         new(BadgeCode.CareerXp30000,       "badges/careerxp30000.png",       BadgeMetric.CareerXp, 30000),
-        new(BadgeCode.PlayerOfMatch3,      "badges/playerofmatch3.png",      BadgeMetric.PlayerOfMatchCount, 3)
+        new(BadgeCode.PlayerOfMatch3,      "badges/playerofmatch3.png",      BadgeMetric.PlayerOfMatchCount, 3),
+        new(BadgeCode.GoalkeeperCleanSheets5,      "badges/cleansheets5.png",      BadgeMetric.CleanSheetCount, 5),
+        new(BadgeCode.GoalkeeperCleanSheetStreak3, "badges/cleansheetstreak3.png", BadgeMetric.CleanSheetStreak, 3)
     ];
 }

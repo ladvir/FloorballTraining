@@ -33,10 +33,17 @@ const METRICS = [
   'FamilyCheeredCount',
   'ChallengeCount',
   'CareerXp',
+  'CleanSheetCount',
+  'CleanSheetStreak',
 ]
 const PERIODS: BadgePeriod[] = ['Lifetime', 'Month', 'Season']
 // Mirrors BadgeService.IsCumulative / the controller rules so the form only offers valid combinations.
-const NON_CUMULATIVE = ['MaxGoalsInMatch', 'SeasonsPlayed', 'SeasonAttendancePct']
+const NON_CUMULATIVE = [
+  'MaxGoalsInMatch',
+  'SeasonsPlayed',
+  'SeasonAttendancePct',
+  'CleanSheetStreak',
+]
 
 const EMPTY: Partial<BadgeDefinitionDto> = {
   code: '',

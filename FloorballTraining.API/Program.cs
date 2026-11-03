@@ -117,6 +117,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<FloorballTraining.API.Middlewares.GuestReadOnlyMiddleware>();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {

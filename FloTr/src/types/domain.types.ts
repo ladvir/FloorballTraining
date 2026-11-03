@@ -66,6 +66,8 @@ export interface UserDto {
   clubMemberships?: UserClubMembershipInfo[]
   lastLoginAt?: string | null
   preferredLanguage?: string | null
+  /** Read-only team guest — no member card, never a player. */
+  isGuest?: boolean
 }
 
 /** A login account that can be linked to a member (link picker candidate). */

@@ -66,7 +66,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 // roleLabels moved inside DashboardPage to use t()
 
 export function DashboardPage() {
-  const { user, activeClubId, isCoach, isHeadCoach, isAdmin, isGuardian } = useAuthStore()
+  const { user, activeClubId, isCoach, isHeadCoach, isAdmin, isGuardian, isGuest } = useAuthStore()
   const myMembership = user?.clubMemberships?.find((m) => m.clubId === activeClubId)
   // XP/gamification is only shown to players — a member with no player role in any team has no XP (#104).
   const myMemberId = myMembership?.isPlayer ? (myMembership.memberId ?? null) : null
@@ -184,7 +184,7 @@ export function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">{t('dashboard.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
-          {!isGuardian && (
+          {!isGuardian && !isGuest && (
             <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
               <CalendarPlus className="h-4 w-4" />
               {t('dashboard.newEvent')}
@@ -210,7 +210,7 @@ export function DashboardPage() {
               {t('dashboard.newLineup')}
             </Button>
           )}
-          {!isGuardian && (
+          {!isGuardian && !isGuest && (
             <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
               <Layers className="h-4 w-4" />
               {t('dashboard.newActivity')}

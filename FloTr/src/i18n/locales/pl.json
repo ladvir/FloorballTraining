@@ -99,7 +99,8 @@
     "roleUser": "Użytkownik",
     "languageSk": "Słowacki",
     "languagePl": "Polski",
-    "languageDe": "Niemiecki"
+    "languageDe": "Niemiecki",
+    "roleGuest": "Gość"
   },
   "common": {
     "save": "Zapisz",
@@ -1376,7 +1377,13 @@
     "roleHeadCoachShort": "Gł. trener",
     "roleCoachShort": "Trener",
     "roleUserShort": "Użytkownik",
-    "memberData": "Dane członka"
+    "memberData": "Dane członka",
+    "roleGuest": "Gość (tylko odczyt)",
+    "roleGuestDesc": "Widzi to, co zawodnik wybranych drużyn. Nie może niczego zmieniać, nie ma profilu ani statusu zawodnika.",
+    "guestTeams": "Drużyny gościa",
+    "guestPickClub": "Najpierw wybierz klub.",
+    "guestNoTeams": "Klub nie ma drużyn.",
+    "roleGuestShort": "Gość"
   },
   "profile": {
     "title": "Profil i ustawienia",
@@ -1863,7 +1870,28 @@
     "ageGroupRequired": "Wybierz kategorię wiekową",
     "copyPlan": "Skopiuj plan sezonu",
     "copyPlanHint": "Mezocykle i mikrocykle przesuną się o różnicę początków sezonów.",
-    "colXp": "XP / poziom"
+    "colXp": "XP / poziom",
+    "guests": {
+      "title": "Goście (tylko odczyt)",
+      "hint": "Gość widzi to, co zawodnik, ale nie może niczego zmieniać, nawet swojego hasła.",
+      "invite": "Zaproś gościa",
+      "emailPlaceholder": "E-mail gościa",
+      "firstName": "Imię",
+      "lastName": "Nazwisko",
+      "sendCredentials": "Wyślij dane logowania e-mailem",
+      "added": "Gość dodany.",
+      "addedWithPassword": "Gość dodany. Hasło tymczasowe: {{password}}",
+      "addFailed": "Nie udało się dodać gościa.",
+      "remove": "Usuń gościa",
+      "removePrompt": "Usunąć gościa z drużyny?",
+      "removed": "Gość usunięty.",
+      "removeFailed": "Nie udało się usunąć gościa.",
+      "resend": "Nowe hasło e-mailem",
+      "resent": "Nowe hasło wysłane e-mailem.",
+      "resentWithPassword": "Nie udało się wysłać e-maila. Nowe hasło: {{password}}",
+      "resendFailed": "Nie udało się zresetować hasła.",
+      "passwordPlaceholder": "Hasło (puste = wygeneruj)"
+    }
   },
   "ratings": {
     "title": "Oceny",
@@ -3369,7 +3397,9 @@
       "PlayerOfMatch": "Zawodnik meczu",
       "FairPlay": "Fair play",
       "FamilyCheered": "Rodzina kibicowała",
-      "HomeTraining": "Trening domowy"
+      "HomeTraining": "Trening domowy",
+      "GoalkeeperCleanSheet": "Czyste konto",
+      "GoalkeeperSavePct": "Skuteczność obron"
     },
     "howto": {
       "desc": {
@@ -3385,7 +3415,9 @@
         "SkillGradeImprovement": "Popraw ocenę umiejętności względem poprzedniej.",
         "SkillTargetReached": "Osiągnij docelową ocenę umiejętności.",
         "TestPersonalRecord": "Pobij swój najlepszy wynik w teście.",
-        "HomeTraining": "Zapisz potwierdzony trening w domu (z limitem)."
+        "HomeTraining": "Zapisz potwierdzony trening w domu (z limitem).",
+        "GoalkeeperCleanSheet": "Zakończ mecz bez straconej bramki.",
+        "GoalkeeperSavePct": "Obroń co najmniej 85 % strzałów w meczu (min. 10 strzałów)."
       }
     }
   },
@@ -3629,6 +3661,14 @@
     "Loyalty3": {
       "name": "Lojalność",
       "desc": "3 rozegrane sezony"
+    },
+    "GoalkeeperCleanSheets5": {
+      "name": "Mur",
+      "desc": "5 czystych kont"
+    },
+    "GoalkeeperCleanSheetStreak3": {
+      "name": "Żelazna bramka",
+      "desc": "3 czyste konta z rzędu"
     }
   },
   "leaderboard": {
@@ -3901,7 +3941,8 @@
     "colAssists": "Asysty",
     "colReason": "Za co",
     "colXp": "XP",
-    "total": "Razem"
+    "total": "Razem",
+    "showDetails": "Pokaż szczegóły"
   },
   "teamChallenge": {
     "title": "Wyzwania zespołowe",
@@ -4131,7 +4172,9 @@
       "FairPlayCount": "Fair play",
       "FamilyCheeredCount": "Rodzina dopingowała",
       "ChallengeCount": "Ukończone wyzwania",
-      "CareerXp": "Łączne XP"
+      "CareerXp": "Łączne XP",
+      "CleanSheetCount": "Czyste konta",
+      "CleanSheetStreak": "Czyste konta z rzędu"
     },
     "filter": {
       "search": "Szukaj po nazwie…",

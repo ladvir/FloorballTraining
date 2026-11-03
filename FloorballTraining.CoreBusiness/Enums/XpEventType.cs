@@ -22,5 +22,8 @@ public enum XpEventType
     // #156 — team challenge bonus, derived from a TeamChallengeCompletion (one per rostered player).
     TeamChallengeReward,
     // Coach pick of the best player of a match (separate from PlayerOfTraining), derived from XpCoachAward.
-    PlayerOfMatch
+    PlayerOfMatch,
+    // Goalkeeper XP, derived per match from the stat tracker (score entries + "saves" metric).
+    GoalkeeperCleanSheet,
+    GoalkeeperSavePct
 }

@@ -74,7 +74,9 @@ namespace FloorballTraining.API.Controllers
 
                 // Admin sees every user (incl. those with no club or in other clubs);
                 // Coach/HeadCoach are scoped to the caller's active club.
-                if (!isAdmin && callerRole.ClubId.HasValue && !members.Any(m => m.ClubId == callerRole.ClubId))
+                var guestOfClub = members.Count == 0 && callerRole.ClubId.HasValue &&
+                    await context.TeamGuests.AnyAsync(g => g.AppUserId == user.Id && g.Team!.ClubId == callerRole.ClubId);
+                if (!isAdmin && callerRole.ClubId.HasValue && !guestOfClub && !members.Any(m => m.ClubId == callerRole.ClubId))
                     continue;
 
                 var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id, callerRole.ClubId);
@@ -98,6 +100,7 @@ namespace FloorballTraining.API.Controllers
                     ClubMemberships = clubMemberships,
                     LastLoginAt = user.LastLoginAt,
                     PreferredLanguage = user.PreferredLanguage,
+                    IsGuest = members.Count == 0 && await context.IsGuestAsync(user.Id),
                 });
             }
             return Ok(result);
@@ -161,6 +164,18 @@ namespace FloorballTraining.API.Controllers
             if (club == null) return BadRequest("Klub neexistuje.");
 
             var requestedRole = request.Role ?? "User";
+            var isGuest = requestedRole == "Guest";
+            List<int> guestTeamIds = [];
+            if (isGuest)
+            {
+                if (!(isAdmin || isClubAdmin || isHeadCoach)) return Forbid();
+                guestTeamIds = (request.TeamIds ?? []).Distinct().ToList();
+                if (guestTeamIds.Count == 0)
+                    return BadRequest("Host musí mít přiřazený alespoň jeden tým.");
+                var inClub = await context.Teams.CountAsync(t => guestTeamIds.Contains(t.Id) && t.ClubId == targetClubId.Value);
+                if (inClub != guestTeamIds.Count)
+                    return BadRequest("Týmy musí patřit do vybraného klubu.");
+            }
             if (!isAdmin && requestedRole == "Admin")
                 return Forbid();
             if (!isAdmin && !isClubAdmin && requestedRole == "ClubAdmin")
@@ -187,6 +202,26 @@ namespace FloorballTraining.API.Controllers
 
             var identityRole = requestedRole == "Admin" ? "Admin" : "User";
             await userManager.AddToRoleAsync(user, identityRole);
+
+            if (isGuest)
+            {
+                // Guest = login without a member card (never a player), read-only access to the chosen teams.
+                context.TeamGuests.AddRange(guestTeamIds.Select(id =>
+                    new CoreBusiness.TeamGuest { TeamId = id, AppUserId = user.Id, CreatedByUserId = caller.Id }));
+                await context.SaveChangesAsync();
+                await auditService.LogAsync(AuditActions.GuestLinked, "User", user.Id, details: new { guest = user.Email, teamIds = guestTeamIds });
+                if (request.SendCredentialsEmail)
+                {
+                    try { await credentialsEmailService.SendWelcomeAsync(request.Email, request.FirstName, request.Password); }
+                    catch (Exception ex) { logger.LogError(ex, "Failed to send credentials email after creating guest {Email}", request.Email); }
+                }
+                return Ok(new UserDto
+                {
+                    Id = user.Id, Email = user.Email!, FirstName = user.FirstName, LastName = user.LastName,
+                    Roles = await userManager.GetRolesAsync(user), EffectiveRole = "User",
+                    ClubName = club.Name, ClubId = club.Id, PreferredLanguage = user.PreferredLanguage,
+                });
+            }
 
             var member = new CoreBusiness.Member
             {
@@ -308,8 +343,7 @@ namespace FloorballTraining.API.Controllers
             if (!isAdmin)
             {
                 if (!callerRole.ClubId.HasValue) return Forbid();
-                var sharesClub = await context.Members
-                    .AnyAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                var sharesClub = await InClubAsync(id, callerRole.ClubId);
                 if (!sharesClub) return Forbid();
             }
 
@@ -384,6 +418,11 @@ namespace FloorballTraining.API.Controllers
             return NoContent();
         }
 
+        /// <summary>True when the user is a member of the club, or a read-only guest of one of its teams.</summary>
+        private async Task<bool> InClubAsync(string userId, int? clubId) =>
+            await context.Members.AnyAsync(m => m.AppUserId == userId && m.ClubId == clubId)
+            || await context.TeamGuests.AnyAsync(g => g.AppUserId == userId && g.Team!.ClubId == clubId);
+
         /// <summary>Normalize a UI language code (e.g. "cs", "en"); returns null when invalid.</summary>
         private static string? NormalizeLanguage(string? language)
         {
@@ -406,6 +445,8 @@ namespace FloorballTraining.API.Controllers
                 return Forbid();
 
             var user = await userManager.FindByIdAsync(id);
+            if (await context.IsGuestAsync(id))
+                return BadRequest(new { message = "Host je host – nelze mu změnit roli ani z něj udělat člena." });
             if (user == null) return NotFound();
 
             if (!isAdmin)
@@ -682,8 +723,7 @@ namespace FloorballTraining.API.Controllers
 
             if (!isAdmin)
             {
-                var sharesClub = await context.Members
-                    .AnyAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                var sharesClub = await InClubAsync(id, callerRole.ClubId);
                 if (!sharesClub)
                     return Forbid();
             }

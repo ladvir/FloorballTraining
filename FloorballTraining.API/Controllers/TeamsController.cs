@@ -76,6 +76,12 @@ public class TeamsController(
             return Ok(result.Where(t => teamIds.Contains(t.Id)).ToList());
         }
 
+        if (await context.IsGuestAsync(userId))
+        {
+            var guestTeamIds = await context.GuestTeamIdsAsync(userId);
+            return Ok(result.Where(t => guestTeamIds.Contains(t.Id)).ToList());
+        }
+
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
         if (roleInfo.ClubId.HasValue)
         {

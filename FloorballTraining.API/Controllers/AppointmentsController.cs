@@ -119,6 +119,10 @@ public class AppointmentsController(
                 .ToListAsync();
         }
 
+        // Guest: read-only view of the teams they were granted access to.
+        if (await context.IsGuestAsync(userId))
+            return await context.GuestTeamIdsAsync(userId);
+
         // Player / regular user: only teams where they are listed as a team member
         if (roleInfo.ClubId.HasValue)
         {

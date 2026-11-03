@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState, useRef, type ChangeEvent } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useTranslation } from 'react-i18next'
 import { toast } from '../../utils/toast'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -980,17 +981,19 @@ export function ActivityFormPage() {
                 <Copy className="h-3.5 w-3.5" />
                 {t('activities.copy')}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                loading={downloadingPdf}
-                onClick={() => setShowPdfOptions(true)}
-                className="whitespace-nowrap"
-              >
-                <FileDown className="h-3.5 w-3.5" />
-                PDF
-              </Button>
+              <HideForGuest>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  loading={downloadingPdf}
+                  onClick={() => setShowPdfOptions(true)}
+                  className="whitespace-nowrap"
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  PDF
+                </Button>
+              </HideForGuest>
               {isAdmin && (
                 <Button
                   type="button"

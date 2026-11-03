@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/refs -- last-used tool refs are intentionally read during render */
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { HideForGuest } from '../../shared/HideForGuest'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
@@ -1719,32 +1720,34 @@ const DrawingComponentInner = ({
           frames={committedFramesForExport}
           getStateJson={() => serializeDrawing()?.stateJson}
         />
-        <div className="tool-item">
-          <button
-            onClick={() => {
-              setActivityModalDrawingData(serializeDrawing() ?? undefined)
-              setActivityModalOpen(true)
-            }}
-            title={t('drawing.addDrawingToActivity')}
-          >
-            <svg
-              width={32}
-              height={32}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        <HideForGuest>
+          <div className="tool-item">
+            <button
+              onClick={() => {
+                setActivityModalDrawingData(serializeDrawing() ?? undefined)
+                setActivityModalOpen(true)
+              }}
+              title={t('drawing.addDrawingToActivity')}
             >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="12" y1="18" x2="12" y2="12" />
-              <line x1="9" y1="15" x2="15" y2="15" />
-            </svg>
-          </button>
-          <span>{t('drawing.addToActivity')}</span>
-        </div>
+              <svg
+                width={32}
+                height={32}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
+              </svg>
+            </button>
+            <span>{t('drawing.addToActivity')}</span>
+          </div>
+        </HideForGuest>
         <div className="toolbar-separator" />
         <UndoRedoToolbar
           onUndo={handleUndo}

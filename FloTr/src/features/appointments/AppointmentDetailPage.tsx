@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
@@ -462,7 +463,9 @@ export function AppointmentDetailPage() {
       {apt.teamId && (
         <Card className="mt-4">
           <CardContent className="p-4">
-            <RsvpWidget appointmentId={apt.id} />
+            <HideForGuest>
+              <RsvpWidget appointmentId={apt.id} />
+            </HideForGuest>
           </CardContent>
         </Card>
       )}

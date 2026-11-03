@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { dfLocale } from '../../utils/dateLocale'
@@ -723,7 +724,9 @@ export function AppointmentDetailModal({
           {apt.teamId &&
             (apt.appointmentType === 3 || apt.appointmentType === 0) &&
             (apt.memberAssignments?.length ?? 0) === 0 && (
-              <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
+              <HideForGuest>
+                <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
+              </HideForGuest>
             )}
 
           {apt.teamId &&
@@ -785,24 +788,30 @@ export function AppointmentDetailModal({
 
           {/* RSVP — only for future events with a team */}
           {!apt.isPast && apt.teamId && (apt.memberAssignments?.length ?? 0) === 0 && (
-            <RsvpWidget appointmentId={apt.id} />
+            <HideForGuest>
+              <RsvpWidget appointmentId={apt.id} />
+            </HideForGuest>
           )}
 
           {/* Rating section — only for past events */}
           {apt.isPast && (
-            <RatingSection
-              appointmentId={apt.id}
-              matchTeamId={apt.appointmentType === 3 ? apt.teamId : null}
-            />
+            <HideForGuest>
+              <RatingSection
+                appointmentId={apt.id}
+                matchTeamId={apt.appointmentType === 3 ? apt.teamId : null}
+              />
+            </HideForGuest>
           )}
-          {!apt.isPast && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Star className="h-3.5 w-3.5" />
-                <span>{t('appointments.ratingAvailable')}</span>
+          <HideForGuest>
+            {!apt.isPast && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Star className="h-3.5 w-3.5" />
+                  <span>{t('appointments.ratingAvailable')}</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </HideForGuest>
         </div>
 
         <div className="mt-4 flex justify-end">

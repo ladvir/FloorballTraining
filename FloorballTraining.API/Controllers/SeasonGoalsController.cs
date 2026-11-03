@@ -55,6 +55,10 @@ public class SeasonGoalsController(
             return [];
         }
 
+        // Read-only guest: the teams they were granted access to.
+        if (await context.IsGuestAsync(userId))
+            return await context.GuestTeamIdsAsync(userId);
+
         if (roleInfo.ClubId.HasValue)
         {
             var memberId = await context.Members

@@ -19,13 +19,26 @@ public class BadgeService(FloorballTrainingContext context)
 {
     /// <summary>Metrics that accumulate over time, so "every further multiple of the threshold" is meaningful.</summary>
     public static bool IsCumulative(BadgeMetric m) =>
-        m is not (BadgeMetric.MaxGoalsInMatch or BadgeMetric.SeasonsPlayed or BadgeMetric.SeasonAttendancePct);
+        m is not (BadgeMetric.MaxGoalsInMatch or BadgeMetric.SeasonsPlayed or BadgeMetric.SeasonAttendancePct or BadgeMetric.CleanSheetStreak);
 
     /// <summary>Copies the built-in <see cref="BadgeCatalog"/> into the table the first time it is empty.
     /// Removing a badge only deactivates it, so the table never goes empty again afterwards.</summary>
     public static async Task EnsureSeededAsync(FloorballTrainingContext ctx, CancellationToken ct = default)
     {
-        if (await ctx.BadgeDefinitions.AnyAsync(ct)) return;
+        if (await ctx.BadgeDefinitions.AnyAsync(ct))
+        {
+            // Already seeded (admin owns the table now): only top up catalog badges added later, by Code,
+            // so an existing database picks them up without clobbering admin edits or removals.
+            var have = await ctx.BadgeDefinitions.Select(d => d.Code).ToListAsync(ct);
+            var missing = BadgeCatalog.AddedLater.Where(d => !have.Contains(d.Code.ToString())).ToList();
+            if (missing.Count == 0) return;
+            ctx.BadgeDefinitions.AddRange(missing.Select(d => new BadgeDefinition
+            {
+                Code = d.Code.ToString(), Metric = d.Metric, Threshold = d.Threshold, IconPath = d.Icon, Period = BadgePeriod.Lifetime,
+            }));
+            await ctx.SaveChangesAsync(ct);
+            return;
+        }
         ctx.BadgeDefinitions.AddRange(BadgeCatalog.All.Select(d => new BadgeDefinition
         {
             Code = d.Code.ToString(), Metric = d.Metric, Threshold = d.Threshold, IconPath = d.Icon,
@@ -193,6 +206,8 @@ public class BadgeService(FloorballTrainingContext context)
         public int FamilyCheeredCount;
         public int ChallengeCount;
         public int CareerXp;
+        public int CleanSheetCount;
+        public int CleanSheetStreak;
 
         // Dated increments per metric → the date a threshold was crossed (lifetime or within one period).
         private readonly Dictionary<BadgeMetric, List<(DateTime When, int Amount)>> _timeline = new();
@@ -201,7 +216,7 @@ public class BadgeService(FloorballTrainingContext context)
 
         private static DateTime? Crossed(BadgeMetric m, IEnumerable<(DateTime When, int Amount)> l, int threshold)
         {
-            if (m == BadgeMetric.MaxGoalsInMatch) // single-match peak, not cumulative
+            if (m is BadgeMetric.MaxGoalsInMatch or BadgeMetric.CleanSheetStreak) // peak, not cumulative
                 return l.Where(x => x.Amount >= threshold).Select(x => (DateTime?)x.When).Min();
             var sum = 0;
             foreach (var (when, amount) in l.OrderBy(x => x.When))
@@ -222,7 +237,7 @@ public class BadgeService(FloorballTrainingContext context)
         public int PeriodValue(BadgeMetric m, BadgePeriod p, string? month, int? season)
         {
             var items = InPeriod(m, p, month, season).ToList();
-            return items.Count == 0 ? 0 : m == BadgeMetric.MaxGoalsInMatch ? items.Max(x => x.Amount) : items.Sum(x => x.Amount);
+            return items.Count == 0 ? 0 : m is BadgeMetric.MaxGoalsInMatch or BadgeMetric.CleanSheetStreak ? items.Max(x => x.Amount) : items.Sum(x => x.Amount);
         }
 
         /// <summary>Every month / season in which the metric reached <paramref name="threshold"/>.</summary>
@@ -259,6 +274,8 @@ public class BadgeService(FloorballTrainingContext context)
             BadgeMetric.FamilyCheeredCount => FamilyCheeredCount,
             BadgeMetric.ChallengeCount => ChallengeCount,
             BadgeMetric.CareerXp => CareerXp,
+            BadgeMetric.CleanSheetCount => CleanSheetCount,
+            BadgeMetric.CleanSheetStreak => CleanSheetStreak,
             _ => 0
         };
     }
@@ -398,6 +415,22 @@ public class BadgeService(FloorballTrainingContext context)
             var s = Get(mid);
             s.MaxGoalsInMatch = Math.Max(s.MaxGoalsInMatch, goals);
             s.Track(BadgeMetric.MaxGoalsInMatch, when, goals);
+        }
+
+        // --- Goalkeeper: clean-sheet count and best consecutive run (matches in date order) ---
+        foreach (var g in (await GoalkeeperMatches.LoadAsync(context, memberId, ct)).GroupBy(m => m.MemberId))
+        {
+            var s = Get(g.Key);
+            var run = 0;
+            foreach (var m in g.OrderBy(m => m.When))
+            {
+                run = m.CleanSheet ? run + 1 : 0;
+                if (!m.CleanSheet) continue;
+                s.CleanSheetCount++;
+                s.Track(BadgeMetric.CleanSheetCount, m.When);
+                s.CleanSheetStreak = Math.Max(s.CleanSheetStreak, run);
+                s.Track(BadgeMetric.CleanSheetStreak, m.When, run);
+            }
         }
 
         // --- Career expansion (10-season plan): counts derived from the XP ledger (XpEvent), which is

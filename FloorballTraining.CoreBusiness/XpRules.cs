@@ -22,6 +22,13 @@ public static class XpRules
     // Layer B — coach 1-click bonuses (#100).
     public const int PlayerOfTraining = 10;
     public const int PlayerOfMatch = 10;
+    // Goalkeeper XP, per tracked match.
+    public const int GoalkeeperCleanSheet = 20;
+    public const int GoalkeeperSavePct = 15;
+    /// <summary>Save % (saves / shots on goal) a goalkeeper needs in a match for <see cref="GoalkeeperSavePct"/>.</summary>
+    public const int SavePctThreshold = 85;
+    /// <summary>Minimum shots on goal (saves + goals against) for the save % bonus, so 1 save of 1 shot is not a "100 %" game.</summary>
+    public const int SavePctMinShots = 10;
     public const int FairPlay = 10;
     public const int FamilyCheered = 5;
     /// <summary>Family Fan XP per guardian check-in (#103) — a live family aggregate, not a child's career XP.</summary>
@@ -47,6 +54,8 @@ public static class XpRules
         XpEventType.TestPersonalRecord => TestPersonalRecord,
         XpEventType.PlayerOfTraining => PlayerOfTraining,
         XpEventType.PlayerOfMatch => PlayerOfMatch,
+        XpEventType.GoalkeeperCleanSheet => GoalkeeperCleanSheet,
+        XpEventType.GoalkeeperSavePct => GoalkeeperSavePct,
         XpEventType.FairPlay => FairPlay,
         XpEventType.FamilyCheered => FamilyCheered,
         XpEventType.HomeTraining => HomeTraining,
@@ -63,6 +72,7 @@ public static class XpRules
     {
         XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
         XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.PlayerOfMatch, XpEventType.FairPlay, XpEventType.FamilyCheered,
+        XpEventType.GoalkeeperCleanSheet, XpEventType.GoalkeeperSavePct,
         XpEventType.SkillGradeImprovement, XpEventType.SkillTargetReached, XpEventType.TestPersonalRecord,
         XpEventType.HomeTraining,
     };
@@ -75,6 +85,7 @@ public static class XpRules
     {
         XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
         XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.PlayerOfMatch, XpEventType.FairPlay, XpEventType.FamilyCheered,
+        XpEventType.GoalkeeperCleanSheet, XpEventType.GoalkeeperSavePct,
     };
 
     // ── Member-facing "How to earn XP" catalog metadata (#107) ──────────────────────────────

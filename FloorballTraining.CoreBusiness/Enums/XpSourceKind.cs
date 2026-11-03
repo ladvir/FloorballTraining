@@ -16,5 +16,7 @@ public enum XpSourceKind
     /// <summary>Etapa 6 — a derived <see cref="FloorballTraining.CoreBusiness.ChallengeCompletion"/> (#108).</summary>
     Challenge,
     /// <summary>#156 — a derived <see cref="FloorballTraining.CoreBusiness.TeamChallengeCompletion"/>.</summary>
-    TeamChallenge
+    TeamChallenge,
+    /// <summary>A goalkeeper's <see cref="FloorballTraining.CoreBusiness.StatTrackerParticipant"/> in a tracked match (clean sheet / save %).</summary>
+    StatTrackerParticipant
 }

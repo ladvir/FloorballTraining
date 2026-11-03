@@ -350,7 +350,7 @@ public class PlayerSkillsController(
     public async Task<IActionResult> GetCatalog()
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId());
-        if (roleInfo.EffectiveRole == "User") return Forbid();
+        if (roleInfo.EffectiveRole == "User" && !await context.IsGuestAsync(GetCurrentUserId())) return Forbid();
 
         var categories = await context.SkillCategories
             .Include(c => c.Skills)

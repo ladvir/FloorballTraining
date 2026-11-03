@@ -15,6 +15,7 @@ import {
   X,
   Building2,
   Mail,
+  Eye,
   KeyRound,
   AlertTriangle,
   Search,
@@ -32,7 +33,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { usersApi } from '../../api/users.api'
 import type { CreateUserData } from '../../api/users.api'
 import { filterAndSortUsers, type UserSortKey, type UserSortDir } from './userListUtils'
-import { clubsApi, membersApi } from '../../api/index'
+import { clubsApi, membersApi, teamsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { UserDto, ClubDto, EffectiveRole } from '../../types/domain.types'
 import { useConfirm } from '../../store/confirmStore'
@@ -364,7 +365,9 @@ export function AdminUsersPage() {
                 </tr>
               )}
               {processedUsers.map((user) => {
-                const badge = effectiveRoleBadge[user.effectiveRole] ?? effectiveRoleBadge.User
+                const badge = user.isGuest
+                  ? { label: t('admin.roleGuestShort'), variant: 'info' as const }
+                  : (effectiveRoleBadge[user.effectiveRole] ?? effectiveRoleBadge.User)
                 return (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
@@ -569,7 +572,9 @@ function UserEditModal({
     .filter((m) => m.effectiveRole === 'ClubAdmin')
     .map((m) => m.clubId)
   const queryClient = useQueryClient()
-  const [selectedRole, setSelectedRole] = useState<string>(user.effectiveRole ?? 'User')
+  const [selectedRole, setSelectedRole] = useState<string>(
+    user.isGuest ? 'Guest' : (user.effectiveRole ?? 'User')
+  )
   const [addingClubId, setAddingClubId] = useState<number | null>(null)
   const [linkingMemberId, setLinkingMemberId] = useState<number | null>(null)
 
@@ -666,14 +671,28 @@ function UserEditModal({
     }
   }, [hasClub, selectedRole])
 
-  const available = allRoles.filter((r) => {
-    if (r.minLevel > callerLevel) return false
-    if (r.value === 'Coach' || r.value === 'HeadCoach' || r.value === 'ClubAdmin') return hasClub
-    if (r.value === 'Admin') return isAdmin
-    return true
-  })
+  // A guest stays a guest (no member card, never a player) — their only role is Guest, so it is shown
+  // selected and nothing else is offered; other accounts are never converted into guests here.
+  const available: RoleEntry[] = user.isGuest
+    ? [
+        {
+          value: 'Guest',
+          label: t('admin.roleGuest'),
+          description: t('admin.roleGuestDesc'),
+          icon: Eye,
+          minLevel: roleLevels.HeadCoach,
+        },
+      ]
+    : allRoles.filter((r) => {
+        if (r.minLevel > callerLevel) return false
+        if (r.value === 'Coach' || r.value === 'HeadCoach' || r.value === 'ClubAdmin')
+          return hasClub
+        if (r.value === 'Admin') return isAdmin
+        return true
+      })
 
-  const hasRoleChange = selectedRole !== (user.effectiveRole ?? 'User')
+  const languageChanged = language !== (user.preferredLanguage ?? 'cs')
+  const hasRoleChange = !user.isGuest && selectedRole !== (user.effectiveRole ?? 'User')
 
   // Clubs available to add (not already a member).
   // Admin can add any club; ClubAdmin only their own club(s).
@@ -706,7 +725,7 @@ function UserEditModal({
         </div>
 
         {/* Club memberships — Admin + ClubAdmin */}
-        {isAdminLike && (
+        {isAdminLike && !user.isGuest && (
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               {t('admin.userClub')}
@@ -853,10 +872,7 @@ function UserEditModal({
           <select
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             value={language}
-            onChange={(e) => {
-              setLanguage(e.target.value)
-              languageMutation.mutate(e.target.value)
-            }}
+            onChange={(e) => setLanguage(e.target.value)}
           >
             <option value="cs">{t('profile.languageCs')}</option>
             <option value="sk">{t('profile.languageSk')}</option>
@@ -864,6 +880,9 @@ function UserEditModal({
             <option value="de">{t('profile.languageDe')}</option>
             <option value="en">{t('profile.languageEn')}</option>
           </select>
+          {languageMutation.isError && (
+            <p className="mt-1 text-xs text-red-500">{t('common.error')}</p>
+          )}
         </div>
 
         {/* Member data per club — Admin + ClubAdmin */}
@@ -940,7 +959,19 @@ function UserEditModal({
           <Button variant="outline" onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button onClick={() => onSave(selectedRole)} loading={loading} disabled={!hasRoleChange}>
+          <Button
+            onClick={async () => {
+              try {
+                if (languageChanged) await languageMutation.mutateAsync(language)
+              } catch {
+                return // error text is shown under the language field
+              }
+              if (hasRoleChange) onSave(selectedRole)
+              else onClose()
+            }}
+            loading={loading || languageMutation.isPending}
+            disabled={!hasRoleChange && !languageChanged}
+          >
             {t('common.save')}
           </Button>
         </div>
@@ -978,26 +1009,47 @@ function UserCreateModal({
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
   const [selectedRole, setSelectedRole] = useState('User')
   const [sendCredentialsEmail, setSendCredentialsEmail] = useState(false)
+  const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([])
 
   // Non-admin: club is always the active club (no selection needed)
   const hasClub = isAdmin ? selectedClubId != null : true
 
   useEffect(() => {
-    if (!hasClub && (selectedRole === 'Coach' || selectedRole === 'HeadCoach')) {
+    if (!hasClub && ['Coach', 'HeadCoach', 'Guest'].includes(selectedRole)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset role when club removed
       setSelectedRole('User')
     }
   }, [hasClub, selectedRole])
 
   // Only show roles the caller can assign
-  const available = allRoles.filter((r) => {
+  const available: RoleEntry[] = allRoles.filter((r) => {
     if (r.minLevel > callerLevel) return false
     if (r.value === 'Coach' || r.value === 'HeadCoach' || r.value === 'ClubAdmin') return hasClub
     if (r.value === 'Admin') return isAdmin
     return true
   })
+  // Read-only guest of chosen teams — HeadCoach+ only, never a member/player, so not a regular role.
+  if (callerLevel >= roleLevels.HeadCoach && hasClub)
+    available.push({
+      value: 'Guest',
+      label: t('admin.roleGuest'),
+      description: t('admin.roleGuestDesc'),
+      icon: Eye,
+      minLevel: roleLevels.HeadCoach,
+    })
+  const isGuest = selectedRole === 'Guest'
 
-  const canSubmit = email.trim() !== '' && password.length >= 6
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsApi.getAll(),
+    enabled: isGuest,
+  })
+  // Admin sees every club's teams, so narrow to the selected club; others only get their active club's.
+  const clubTeams = allTeams.filter((tm) => !isAdmin || tm.clubId === selectedClubId)
+  const guestTeamIds = selectedTeamIds.filter((id) => clubTeams.some((tm) => tm.id === id))
+
+  const canSubmit =
+    email.trim() !== '' && password.length >= 6 && (!isGuest || guestTeamIds.length > 0)
 
   const serverError = (() => {
     if (!error) return null
@@ -1020,12 +1072,13 @@ function UserCreateModal({
             password,
             firstName: firstName || undefined,
             lastName: lastName || undefined,
-            birthYear: birthYear ? Number(birthYear) : undefined,
-            gender: gender === '' ? undefined : Number(gender),
+            birthYear: !isGuest && birthYear ? Number(birthYear) : undefined,
+            gender: isGuest || gender === '' ? undefined : Number(gender),
             preferredLanguage: language,
             clubId: isAdmin ? (selectedClubId ?? undefined) : undefined,
             role: selectedRole,
             sendCredentialsEmail,
+            teamIds: isGuest ? guestTeamIds : undefined,
           })
         }}
       >
@@ -1072,30 +1125,32 @@ function UserCreateModal({
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            label={t('members.birthYear')}
-            type="number"
-            min={1900}
-            max={new Date().getFullYear()}
-            value={birthYear}
-            onChange={(e) => setBirthYear(e.target.value)}
-          />
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              {t('members.gender')}
-            </label>
-            <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              value={gender}
-              onChange={(e) => setGender(e.target.value === '' ? '' : Number(e.target.value))}
-            >
-              <option value="">{t('members.genderUnspecified')}</option>
-              <option value={0}>{t('members.genderMale')}</option>
-              <option value={1}>{t('members.genderFemale')}</option>
-            </select>
+        {!isGuest && (
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label={t('members.birthYear')}
+              type="number"
+              min={1900}
+              max={new Date().getFullYear()}
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+            />
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('members.gender')}
+              </label>
+              <select
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                value={gender}
+                onChange={(e) => setGender(e.target.value === '' ? '' : Number(e.target.value))}
+              >
+                <option value="">{t('members.genderUnspecified')}</option>
+                <option value={0}>{t('members.genderMale')}</option>
+                <option value={1}>{t('members.genderFemale')}</option>
+              </select>
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -1171,6 +1226,39 @@ function UserCreateModal({
             ))}
           </div>
         </div>
+
+        {isGuest && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('admin.guestTeams')}
+            </label>
+            {isAdmin && selectedClubId == null ? (
+              <p className="text-xs text-gray-500">{t('admin.guestPickClub')}</p>
+            ) : clubTeams.length === 0 ? (
+              <p className="text-xs text-gray-500">{t('admin.guestNoTeams')}</p>
+            ) : (
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-2">
+                {clubTeams.map((tm) => (
+                  <label key={tm.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={guestTeamIds.includes(tm.id)}
+                      onChange={(e) =>
+                        setSelectedTeamIds(
+                          e.target.checked
+                            ? [...guestTeamIds, tm.id]
+                            : guestTeamIds.filter((id) => id !== tm.id)
+                        )
+                      }
+                      className="h-4 w-4 rounded text-sky-500 focus:ring-sky-500/20"
+                    />
+                    {tm.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 hover:border-gray-300">

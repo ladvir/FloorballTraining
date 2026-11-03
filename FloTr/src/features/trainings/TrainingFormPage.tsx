@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useCallback, useState, useRef } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useTranslation } from 'react-i18next'
 import { toast } from '../../utils/toast'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -1950,17 +1951,19 @@ export function TrainingFormPage() {
                 <CalendarPlus className="h-3.5 w-3.5" />
                 {t('trainings.schedule')}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                loading={downloadingPdf}
-                onClick={() => setShowPdfOptions(true)}
-                className="whitespace-nowrap"
-              >
-                <FileDown className="h-3.5 w-3.5" />
-                PDF
-              </Button>
+              <HideForGuest>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  loading={downloadingPdf}
+                  onClick={() => setShowPdfOptions(true)}
+                  className="whitespace-nowrap"
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  PDF
+                </Button>
+              </HideForGuest>
               {isCoach && (
                 <Button
                   type="button"

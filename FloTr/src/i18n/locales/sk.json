@@ -99,7 +99,8 @@
     "roleUser": "Používateľ",
     "languageSk": "Slovenčina",
     "languagePl": "Poľština",
-    "languageDe": "Nemčina"
+    "languageDe": "Nemčina",
+    "roleGuest": "Hosť"
   },
   "common": {
     "save": "Uložiť",
@@ -1374,7 +1375,13 @@
     "roleHeadCoachShort": "Hl. tréner",
     "roleCoachShort": "Tréner",
     "roleUserShort": "Používateľ",
-    "memberData": "Údaje člena"
+    "memberData": "Údaje člena",
+    "roleGuest": "Hosť (len na čítanie)",
+    "roleGuestDesc": "Vidí to, čo hráč vybraných tímov. Nič nemôže meniť, nemá profil ani status hráča.",
+    "guestTeams": "Tímy hosťa",
+    "guestPickClub": "Najprv vyberte klub.",
+    "guestNoTeams": "Klub nemá žiadne tímy.",
+    "roleGuestShort": "Hosť"
   },
   "profile": {
     "title": "Profil a nastavenia",
@@ -1861,7 +1868,28 @@
     "ageGroupRequired": "Vyberte vekovú skupinu",
     "copyPlan": "Skopírovať plán sezóny",
     "copyPlanHint": "Mezocykly a mikrocykly sa posunú o rozdiel začiatkov sezón.",
-    "colXp": "XP / úroveň"
+    "colXp": "XP / úroveň",
+    "guests": {
+      "title": "Hostia (len na čítanie)",
+      "hint": "Hosť vidí to, čo hráč, ale nič nemôže meniť, ani svoje heslo.",
+      "invite": "Pozvať hosťa",
+      "emailPlaceholder": "E-mail hosťa",
+      "firstName": "Meno",
+      "lastName": "Priezvisko",
+      "sendCredentials": "Poslať prihlasovacie údaje e-mailom",
+      "added": "Hosť pridaný.",
+      "addedWithPassword": "Hosť pridaný. Dočasné heslo: {{password}}",
+      "addFailed": "Hosťa sa nepodarilo pridať.",
+      "remove": "Odobrať hosťa",
+      "removePrompt": "Odobrať hosťa z tímu?",
+      "removed": "Hosť odobraný.",
+      "removeFailed": "Hosťa sa nepodarilo odobrať.",
+      "resend": "Nové heslo e-mailom",
+      "resent": "Nové heslo odoslané e-mailom.",
+      "resentWithPassword": "E-mail sa nepodarilo odoslať. Nové heslo: {{password}}",
+      "resendFailed": "Heslo sa nepodarilo obnoviť.",
+      "passwordPlaceholder": "Heslo (prázdne = vygenerovať)"
+    }
   },
   "ratings": {
     "title": "Hodnotenia",
@@ -3366,7 +3394,9 @@
       "PlayerOfMatch": "Najlepší hráč zápasu",
       "FairPlay": "Fair play",
       "FamilyCheered": "Rodina fandila",
-      "HomeTraining": "Domáci tréning"
+      "HomeTraining": "Domáci tréning",
+      "GoalkeeperCleanSheet": "Čisté konto",
+      "GoalkeeperSavePct": "Úspešnosť zákrokov"
     },
     "howto": {
       "desc": {
@@ -3382,7 +3412,9 @@
         "SkillGradeImprovement": "Zlepši známku zručnosti oproti minulému hodnoteniu.",
         "SkillTargetReached": "Dosiahni cieľovú známku zručnosti.",
         "TestPersonalRecord": "Prekonaj svoj najlepší výsledok v teste.",
-        "HomeTraining": "Zapíš potvrdený domáci tréning (so stropom)."
+        "HomeTraining": "Zapíš potvrdený domáci tréning (so stropom).",
+        "GoalkeeperCleanSheet": "Odchyť zápas bez inkasovaného gólu.",
+        "GoalkeeperSavePct": "Maj v zápase úspešnosť zákrokov aspoň 85 % (min. 10 striel)."
       }
     }
   },
@@ -3626,6 +3658,14 @@
     "Loyalty3": {
       "name": "Vernosť",
       "desc": "3 odohrané sezóny"
+    },
+    "GoalkeeperCleanSheets5": {
+      "name": "Múr",
+      "desc": "5 čistých kont"
+    },
+    "GoalkeeperCleanSheetStreak3": {
+      "name": "Železná brána",
+      "desc": "3 čisté konta v rade"
     }
   },
   "leaderboard": {
@@ -3898,7 +3938,8 @@
     "colAssists": "Asistencie",
     "colReason": "Za čo",
     "colXp": "XP",
-    "total": "Spolu"
+    "total": "Spolu",
+    "showDetails": "Zobraziť detaily"
   },
   "teamChallenge": {
     "title": "Tímové výzvy",
@@ -4128,7 +4169,9 @@
       "FairPlayCount": "Fair play",
       "FamilyCheeredCount": "Rodina fandila",
       "ChallengeCount": "Splnené výzvy",
-      "CareerXp": "Celkové XP"
+      "CareerXp": "Celkové XP",
+      "CleanSheetCount": "Čisté konta",
+      "CleanSheetStreak": "Čisté konta v rade"
     },
     "filter": {
       "search": "Hľadať podľa názvu…",

@@ -32,6 +32,7 @@ export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) 
   const { t } = useTranslation()
   const [selectedLabel, setSelectedLabel] = useState<string>(initialLabel)
   const [showAll, setShowAll] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
   const [exporting, setExporting] = useState(false)
   const captureRef = useRef<HTMLDivElement>(null)
 
@@ -102,6 +103,14 @@ export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) 
               />
               {t('seasonReport.showAll')}
             </label>
+            <label className="flex items-center gap-1.5 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                checked={showDetails}
+                onChange={(e) => setShowDetails(e.target.checked)}
+              />
+              {t('seasonReport.showDetails')}
+            </label>
             <select
               value={selectedLabel}
               onChange={(e) => setSelectedLabel(e.target.value)}
@@ -138,12 +147,14 @@ export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) 
                 title={t('seasonReport.topXp')}
                 rows={selected.topXp}
                 crownLabel={crownLabel}
+                expanded={showDetails}
               />
               <RankList
                 icon={<Goal className="h-3.5 w-3.5 text-emerald-500" />}
                 title={t('seasonReport.topScoring')}
                 rows={selected.topScoring}
                 format={(v) => `${v} b.`}
+                expanded={showDetails}
               />
               <RankList
                 icon={<CalendarCheck className="h-3.5 w-3.5 text-sky-500" />}
@@ -175,11 +186,14 @@ function RankList({
   title,
   rows,
   format,
+  expanded = false,
 }: {
   icon: ReactNode
   title: string
   rows: PlayerRankRowDto[]
   format: (value: number) => string
+  /** Show each player's per-match details inline instead of on hover. */
+  expanded?: boolean
 }) {
   const { t } = useTranslation()
   return (
@@ -191,42 +205,52 @@ function RankList({
       {rows.length === 0 ? (
         <p className="text-xs text-gray-400">{t('seasonReport.noData')}</p>
       ) : (
-        <ol className="space-y-1.5">
-          {rows.map((r, i) => (
-            <li key={r.memberId} className="flex items-center justify-between gap-2 text-sm">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
-                <HoverTable
-                  trigger={<MemberLink memberId={r.memberId} name={r.name} />}
-                  head={[
-                    t('seasonReport.colDate'),
-                    t('seasonReport.match'),
-                    t('seasonReport.colGoals'),
-                    t('seasonReport.colAssists'),
-                  ]}
-                  rows={(r.matches ?? []).map((m) => [
-                    new Date(m.date).toLocaleDateString(),
-                    m.label || t('seasonReport.match'),
-                    m.goals,
-                    m.assists,
-                  ])}
-                  foot={
-                    r.matches?.length
-                      ? [
-                          t('seasonReport.total'),
-                          '',
-                          r.matches.reduce((s, m) => s + m.goals, 0),
-                          r.matches.reduce((s, m) => s + m.assists, 0),
-                        ]
-                      : undefined
-                  }
-                />
-              </span>
-              <span className="flex-shrink-0 font-medium tabular-nums text-gray-700">
-                {format(r.value)}
-              </span>
-            </li>
-          ))}
+        <ol className={expanded ? 'space-y-3' : 'space-y-1.5'}>
+          {rows.map((r, i) => {
+            const detail = {
+              head: [
+                t('seasonReport.colDate'),
+                t('seasonReport.match'),
+                t('seasonReport.colGoals'),
+                t('seasonReport.colAssists'),
+              ],
+              rows: (r.matches ?? []).map((m) => [
+                new Date(m.date).toLocaleDateString(),
+                m.label || t('seasonReport.match'),
+                m.goals,
+                m.assists,
+              ]),
+              foot: r.matches?.length
+                ? [
+                    t('seasonReport.total'),
+                    '',
+                    r.matches.reduce((s, m) => s + m.goals, 0),
+                    r.matches.reduce((s, m) => s + m.assists, 0),
+                  ]
+                : undefined,
+            }
+            return (
+              <li
+                key={r.memberId}
+                className={`text-sm ${expanded ? 'rounded-lg border border-gray-100 px-3 py-2.5' : ''}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
+                    <HoverTable
+                      trigger={<MemberLink memberId={r.memberId} name={r.name} />}
+                      disabled={expanded}
+                      {...detail}
+                    />
+                  </span>
+                  <span className="flex-shrink-0 font-medium tabular-nums text-gray-700">
+                    {format(r.value)}
+                  </span>
+                </div>
+                {expanded && <DetailTable {...detail} className="mt-2.5 pl-6" />}
+              </li>
+            )
+          })}
         </ol>
       )}
     </div>
@@ -238,11 +262,14 @@ function XpRankList({
   title,
   rows,
   crownLabel,
+  expanded = false,
 }: {
   icon: ReactNode
   title: string
   rows: XpRankRowDto[]
   crownLabel: string
+  /** Show each player's XP breakdown inline instead of on hover. */
+  expanded?: boolean
 }) {
   const { t } = useTranslation()
   const topValue = rows[0]?.value
@@ -255,48 +282,57 @@ function XpRankList({
       {rows.length === 0 ? (
         <p className="text-xs text-gray-400">{t('seasonReport.noData')}</p>
       ) : (
-        <ol className="space-y-1.5">
+        <ol className={expanded ? 'space-y-3' : 'space-y-1.5'}>
           {rows.map((r, i) => {
             const isTop = topValue! > 0 && r.value === topValue
+            const detail = {
+              head: [t('seasonReport.colReason'), t('seasonReport.colXp')],
+              rows: r.breakdown.map((b) => [
+                t(`xp.type.${b.type}`, { defaultValue: b.type }),
+                `+${b.points}`,
+              ]),
+              foot: [t('seasonReport.total'), `${r.value}`],
+            }
             return (
               <li
                 key={r.memberId}
-                className={`flex items-center justify-between gap-2 rounded-md text-sm ${
-                  isTop ? 'border border-amber-200 bg-amber-50 px-1.5 py-1' : ''
+                className={`text-sm ${
+                  expanded
+                    ? `rounded-lg border px-3 py-2.5 ${isTop ? 'border-amber-200 bg-amber-50' : 'border-gray-100'}`
+                    : `rounded-md ${isTop ? 'border border-amber-200 bg-amber-50 px-1.5 py-1' : ''}`
                 }`}
               >
-                <span className="flex min-w-0 items-center gap-1.5">
-                  {isTop ? (
-                    <Trophy className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                  ) : (
-                    <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
-                  )}
-                  <HoverTable
-                    trigger={<MemberLink memberId={r.memberId} name={r.name} />}
-                    head={[t('seasonReport.colReason'), t('seasonReport.colXp')]}
-                    rows={r.breakdown.map((b) => [
-                      t(`xp.type.${b.type}`, { defaultValue: b.type }),
-                      `+${b.points}`,
-                    ])}
-                    foot={[t('seasonReport.total'), `${r.value}`]}
-                  />
-                  {isTop && (
-                    <span className="whitespace-nowrap rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                      {crownLabel}
-                    </span>
-                  )}
-                </span>
-                <span className="flex flex-shrink-0 items-center gap-1.5">
-                  <img
-                    src={`${API_BASE_URL}/badges/rank${r.levelIndex}.png`}
-                    alt=""
-                    className="h-5 w-5 object-contain"
-                  />
-                  <span className="whitespace-nowrap text-xs text-gray-500">
-                    {t(`xp.rank${r.levelIndex}`, { defaultValue: r.levelName })}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {isTop ? (
+                      <Trophy className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    ) : (
+                      <span className="w-4 flex-shrink-0 text-xs text-gray-400">{i + 1}.</span>
+                    )}
+                    <HoverTable
+                      trigger={<MemberLink memberId={r.memberId} name={r.name} />}
+                      disabled={expanded}
+                      {...detail}
+                    />
+                    {isTop && (
+                      <span className="whitespace-nowrap rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                        {crownLabel}
+                      </span>
+                    )}
                   </span>
-                  <span className="font-medium tabular-nums text-gray-700">{r.value} XP</span>
-                </span>
+                  <span className="flex flex-shrink-0 items-center gap-1.5">
+                    <img
+                      src={`${API_BASE_URL}/badges/rank${r.levelIndex}.png`}
+                      alt=""
+                      className="h-5 w-5 object-contain"
+                    />
+                    <span className="whitespace-nowrap text-xs text-gray-500">
+                      {t(`xp.rank${r.levelIndex}`, { defaultValue: r.levelName })}
+                    </span>
+                    <span className="font-medium tabular-nums text-gray-700">{r.value} XP</span>
+                  </span>
+                </div>
+                {expanded && <DetailTable {...detail} className="mt-2.5 pl-5" />}
               </li>
             )
           })}
@@ -349,18 +385,14 @@ function BadgeList({
   )
 }
 
-/** Wraps `trigger`; on hover/focus shows a small styled table. Numeric cells are right-aligned. */
-function HoverTable({
-  trigger,
-  head,
-  rows,
-  foot,
-}: {
-  trigger: ReactNode
+type DetailProps = {
   head: string[]
   rows: (string | number)[][]
   foot?: (string | number)[]
-}) {
+}
+
+/** Small styled table (header, rows, optional total row). Numeric cells are right-aligned. */
+function DetailTable({ head, rows, foot, className = '' }: DetailProps & { className?: string }) {
   const cell = (v: string | number, i: number) => (
     <td
       key={i}
@@ -369,37 +401,49 @@ function HoverTable({
       {v}
     </td>
   )
-  if (rows.length === 0) return <>{trigger}</>
+  if (rows.length === 0) return null
+  return (
+    <div className={className}>
+      <table className="w-full text-xs text-gray-700">
+        <thead>
+          <tr className="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400">
+            {head.map((h, i) => (
+              <th
+                key={i}
+                className={`px-2 py-1 font-medium ${i === 0 ? 'text-left' : 'text-right'}`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {rows.map((row, ri) => (
+            <tr key={ri}>{row.map(cell)}</tr>
+          ))}
+        </tbody>
+        {foot && (
+          <tfoot>
+            <tr className="border-t border-gray-200 bg-gray-50 font-semibold">{foot.map(cell)}</tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  )
+}
+
+/** Wraps `trigger`; on hover/focus shows the detail table in a popover (`disabled` = details are shown inline instead). */
+function HoverTable({
+  trigger,
+  disabled = false,
+  ...detail
+}: DetailProps & { trigger: ReactNode; disabled?: boolean }) {
+  if (disabled || detail.rows.length === 0) return <>{trigger}</>
   return (
     <span className="group relative inline-block">
       {trigger}
-      <div className="invisible absolute left-0 top-full z-20 mt-1 min-w-[12rem] rounded-lg border border-gray-200 bg-white p-1 text-xs text-gray-700 opacity-0 shadow-lg transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
-        <table className="w-full whitespace-nowrap">
-          <thead>
-            <tr className="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400">
-              {head.map((h, i) => (
-                <th
-                  key={i}
-                  className={`px-2 py-1 font-medium ${i === 0 ? 'text-left' : 'text-right'}`}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {rows.map((row, ri) => (
-              <tr key={ri}>{row.map(cell)}</tr>
-            ))}
-          </tbody>
-          {foot && (
-            <tfoot>
-              <tr className="border-t border-gray-200 bg-gray-50 font-semibold">
-                {foot.map(cell)}
-              </tr>
-            </tfoot>
-          )}
-        </table>
+      <div className="invisible absolute left-0 top-full z-20 mt-1 min-w-[12rem] whitespace-nowrap rounded-lg border border-gray-200 bg-white p-1 opacity-0 shadow-lg transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+        <DetailTable {...detail} />
       </div>
     </span>
   )

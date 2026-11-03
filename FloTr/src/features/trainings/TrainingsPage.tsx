@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { HideForGuest } from '../../components/shared/HideForGuest'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -372,14 +373,16 @@ export function TrainingsPage() {
       <div
         className={`flex items-start gap-2 border-b px-2.5 py-1.5 ${training.isIndividual ? 'border-violet-100 bg-violet-50 text-violet-900' : 'border-sky-100 bg-sky-50 text-sky-900'}`}
       >
-        <input
-          type="checkbox"
-          checked={compareSelected.has(training.id)}
-          onChange={() => toggleCompare(training.id)}
-          onClick={(e) => e.stopPropagation()}
-          title={t('trainings.selectToCompare')}
-          className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-        />
+        <HideForGuest>
+          <input
+            type="checkbox"
+            checked={compareSelected.has(training.id)}
+            onChange={() => toggleCompare(training.id)}
+            onClick={(e) => e.stopPropagation()}
+            title={t('trainings.selectToCompare')}
+            className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+          />
+        </HideForGuest>
         <h3 className="min-w-0 flex-1 text-sm font-semibold leading-snug line-clamp-2">
           {training.name}
         </h3>
@@ -454,19 +457,23 @@ export function TrainingsPage() {
               <Pencil className="h-3.5 w-3.5" />
             </CardIconButton>
           )}
-          <CardIconButton
-            title={t('trainings.schedule')}
-            onClick={() => setScheduleTarget(training)}
-          >
-            <CalendarPlus className="h-3.5 w-3.5" />
-          </CardIconButton>
-          <CardIconButton
-            title="PDF"
-            disabled={downloadingId === training.id}
-            onClick={() => setPdfTarget(training)}
-          >
-            <FileDown className="h-3.5 w-3.5" />
-          </CardIconButton>
+          <HideForGuest>
+            <CardIconButton
+              title={t('trainings.schedule')}
+              onClick={() => setScheduleTarget(training)}
+            >
+              <CalendarPlus className="h-3.5 w-3.5" />
+            </CardIconButton>
+          </HideForGuest>
+          <HideForGuest>
+            <CardIconButton
+              title="PDF"
+              disabled={downloadingId === training.id}
+              onClick={() => setPdfTarget(training)}
+            >
+              <FileDown className="h-3.5 w-3.5" />
+            </CardIconButton>
+          </HideForGuest>
           {isAdmin && (
             <CardIconButton
               tone="danger"
@@ -491,13 +498,15 @@ export function TrainingsPage() {
       onClick={() => setDetailTrainingId(training.id)}
     >
       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={compareSelected.has(training.id)}
-          onChange={() => toggleCompare(training.id)}
-          title={t('trainings.selectToCompare')}
-          className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-        />
+        <HideForGuest>
+          <input
+            type="checkbox"
+            checked={compareSelected.has(training.id)}
+            onChange={() => toggleCompare(training.id)}
+            title={t('trainings.selectToCompare')}
+            className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+          />
+        </HideForGuest>
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-1.5">
@@ -543,26 +552,30 @@ export function TrainingsPage() {
               <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setScheduleTarget(training)
-            }}
-            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-            title={t('trainings.schedule')}
-          >
-            <CalendarPlus className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setPdfTarget(training)
-            }}
-            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-            title="PDF"
-          >
-            <FileDown className="h-3.5 w-3.5" />
-          </button>
+          <HideForGuest>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setScheduleTarget(training)
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title={t('trainings.schedule')}
+            >
+              <CalendarPlus className="h-3.5 w-3.5" />
+            </button>
+          </HideForGuest>
+          <HideForGuest>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setPdfTarget(training)
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title="PDF"
+            >
+              <FileDown className="h-3.5 w-3.5" />
+            </button>
+          </HideForGuest>
           {isAdmin && (
             <button
               onClick={(e) => {
@@ -621,17 +634,19 @@ export function TrainingsPage() {
                 {t('trainings.checkAll')}
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={compareSelected.size < 2}
-              onClick={() => setCompareOpen(true)}
-              title={compareSelected.size < 2 ? t('trainings.compareTip') : undefined}
-            >
-              <GitCompare className="h-4 w-4" />
-              {t('trainings.compare')}
-              {compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
-            </Button>
+            <HideForGuest>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={compareSelected.size < 2}
+                onClick={() => setCompareOpen(true)}
+                title={compareSelected.size < 2 ? t('trainings.compareTip') : undefined}
+              >
+                <GitCompare className="h-4 w-4" />
+                {t('trainings.compare')}
+                {compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
+              </Button>
+            </HideForGuest>
             {isCoach && aiStatus?.enabled && aiStatus.hasCredential && (
               <Button size="sm" variant="outline" onClick={() => navigate('/trainings/generate')}>
                 <Sparkles className="h-4 w-4" />
@@ -645,10 +660,12 @@ export function TrainingsPage() {
               </Button>
             )}
             {isCoach && (
-              <Button size="sm" onClick={() => navigate('/trainings/new')}>
-                <Plus className="h-4 w-4" />
-                {t('trainings.newTraining')}
-              </Button>
+              <HideForGuest>
+                <Button size="sm" onClick={() => navigate('/trainings/new')}>
+                  <Plus className="h-4 w-4" />
+                  {t('trainings.newTraining')}
+                </Button>
+              </HideForGuest>
             )}
           </div>
         }
@@ -942,10 +959,12 @@ export function TrainingsPage() {
                   {t('trainings.clearFilters')}
                 </Button>
               ) : isCoach ? (
-                <Button size="sm" onClick={() => navigate('/trainings/new')}>
-                  <Plus className="h-4 w-4" />
-                  {t('trainings.createFirst')}
-                </Button>
+                <HideForGuest>
+                  <Button size="sm" onClick={() => navigate('/trainings/new')}>
+                    <Plus className="h-4 w-4" />
+                    {t('trainings.createFirst')}
+                  </Button>
+                </HideForGuest>
               ) : undefined
             }
           />
@@ -996,10 +1015,12 @@ export function TrainingsPage() {
                 {t('trainings.clearFilters')}
               </Button>
             ) : isCoach ? (
-              <Button size="sm" onClick={() => navigate('/trainings/new')}>
-                <Plus className="h-4 w-4" />
-                {t('trainings.createFirst')}
-              </Button>
+              <HideForGuest>
+                <Button size="sm" onClick={() => navigate('/trainings/new')}>
+                  <Plus className="h-4 w-4" />
+                  {t('trainings.createFirst')}
+                </Button>
+              </HideForGuest>
             ) : undefined
           }
         />

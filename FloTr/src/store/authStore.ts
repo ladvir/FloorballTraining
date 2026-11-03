@@ -34,6 +34,8 @@ interface AuthState {
   isCoach: boolean
   /** Pure guardian (parent) account — restricted menu, no XP/training content (#104). */
   isGuardian: boolean
+  /** Read-only team guest — sees player content, can create/edit/export nothing. */
+  isGuest: boolean
   clubMemberships: UserClubMembership[]
   activeClubId: number | null
   activeClubName: string | null
@@ -97,6 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   effectiveRole: initialRole,
   ...computeRoleFlags(initialRole),
   isGuardian: initialUser?.accountType === 'Guardian',
+  isGuest: initialUser?.accountType === 'Guest',
   ...initialClubInfo,
 
   setUser: (user: AuthResponse) => {
@@ -111,6 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       effectiveRole: role,
       ...computeRoleFlags(role),
       isGuardian: user.accountType === 'Guardian',
+      isGuest: user.accountType === 'Guest',
       ...clubInfo,
     })
   },
@@ -147,6 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isHeadCoach: false,
       isCoach: false,
       isGuardian: false,
+      isGuest: false,
       clubMemberships: [],
       activeClubId: null,
       activeClubName: null,
