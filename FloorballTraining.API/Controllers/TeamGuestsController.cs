@@ -66,7 +66,7 @@ public class TeamGuestsController(
             var chosenPassword = !string.IsNullOrWhiteSpace(request.Password);
             if (chosenPassword && request.Password!.Length < 6)
                 return BadRequest(new { message = "Heslo musí mít alespoň 6 znaků." });
-            generatedPassword = chosenPassword ? request.Password : PasswordGenerator.GenerateTemporary();
+            generatedPassword = chosenPassword ? request.Password! : PasswordGenerator.GenerateTemporary();
             var lang = (request.Language ?? string.Empty).Trim().ToLowerInvariant();
             user = new AppUser
             {
