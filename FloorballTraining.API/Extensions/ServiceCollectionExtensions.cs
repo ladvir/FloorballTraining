@@ -500,8 +500,8 @@ public static class ServiceCollectionExtensions
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Program>();
 
-        // AutoMapper
-        services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);
+        // Entity -> DTO mapping (Mapperly, stateless)
+        services.AddSingleton<FloorballTraining.UseCases.Helpers.AppMapper>();
 
         // Validation error collecting
         services.Configure<ApiBehaviorOptions>(options => options.InvalidModelStateResponseFactory = actionContext =>

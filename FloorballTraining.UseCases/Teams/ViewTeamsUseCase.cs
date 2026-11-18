@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
@@ -10,7 +9,7 @@ namespace FloorballTraining.UseCases.Teams;
 
 public class ViewTeamsWithSpecificationUseCase(
     ITeamRepository repository,
-    IMapper mapper) : IViewTeamsWithSpecificationUseCase
+    AppMapper mapper) : IViewTeamsWithSpecificationUseCase
 {
     public async Task<Pagination<TeamDto>> ExecuteAsync(TeamSpecificationParameters parameters)
     {
@@ -27,7 +26,7 @@ public class ViewTeamsWithSpecificationUseCase(
     {
         var specification = new TeamsSpecification(parameters);
         var items = await repository.GetListAsync(specification);
-        return mapper.Map<IReadOnlyList<Team>, IReadOnlyList<TeamDto>>(items);
+        return mapper.ToTeamDtos(items);
 
     }
 }

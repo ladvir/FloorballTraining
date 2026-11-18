@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Equipments.Interfaces;
@@ -10,7 +9,7 @@ namespace FloorballTraining.UseCases.Equipments;
 
 public class ViewEquipmentsUseCase(
     IEquipmentRepository equipmentRepository,
-    IMapper mapper)
+    AppMapper mapper)
     : IViewEquipmentsUseCase
 {
     public async Task<Pagination<EquipmentDto>> ExecuteAsync(EquipmentSpecificationParameters parameters)
@@ -23,7 +22,7 @@ public class ViewEquipmentsUseCase(
 
         var equipments = await equipmentRepository.GetListAsync(specification);
 
-        var data = mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
+        var data = mapper.ToEquipmentDtos(equipments);
 
         return new Pagination<EquipmentDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

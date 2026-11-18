@@ -1,4 +1,3 @@
-using AutoMapper;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
@@ -10,7 +9,7 @@ namespace FloorballTraining.UseCases.Activities;
 
 public class ViewActivityNamesAndDescriptionsUseCase(
     IActivityRepository repository,
-    IMapper mapper) : IViewActivityNamesAndDescriptionsUseCase
+    AppMapper mapper) : IViewActivityNamesAndDescriptionsUseCase
 {
     public async Task<Pagination<ActivityNameAndDescriptionDto>> ExecuteAsync(ActivitySpecificationParameters parameters)
     {
@@ -22,7 +21,7 @@ public class ViewActivityNamesAndDescriptionsUseCase(
  
         var items = await repository.GetListAsync(specification);
  
-        var data = mapper.Map<IReadOnlyList<Activity>, IReadOnlyList<ActivityNameAndDescriptionDto>>(items);
+        var data = mapper.ToActivityNameAndDescriptionDtos(items);
  
         return new Pagination<ActivityNameAndDescriptionDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

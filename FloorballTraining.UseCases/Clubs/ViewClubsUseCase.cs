@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Clubs.Interfaces;
@@ -10,7 +9,7 @@ namespace FloorballTraining.UseCases.Clubs;
 
 public class ViewClubsUseCase(
     IClubRepository clubRepository,
-    IMapper mapper) : IViewClubsUseCase
+    AppMapper mapper) : IViewClubsUseCase
 {
     public async Task<Pagination<ClubDto>> ExecuteAsync(ClubSpecificationParameters parameters)
     {
@@ -22,7 +21,7 @@ public class ViewClubsUseCase(
 
         var clubs = await clubRepository.GetListAsync(specification);
 
-        var data = mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(clubs);
+        var data = mapper.ToClubDtos(clubs);
 
         return new Pagination<ClubDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

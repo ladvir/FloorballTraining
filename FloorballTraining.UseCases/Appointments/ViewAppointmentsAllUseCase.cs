@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Appointments.Interfaces;
@@ -8,12 +8,12 @@ namespace FloorballTraining.UseCases.Appointments;
 
 public class ViewAppointmentsAllUseCase(
     IAppointmentRepository appointmentRepository,
-    IMapper mapper) : IViewAppointmentsAllUseCase
+    AppMapper mapper) : IViewAppointmentsAllUseCase
 {
     public async Task<IReadOnlyList<AppointmentDto>> ExecuteAsync()
     {
         var appointments = await appointmentRepository.GetAllAsync();
 
-        return mapper.Map<IReadOnlyList<Appointment>, IReadOnlyList<AppointmentDto>>(appointments);
+        return mapper.ToAppointmentDtos(appointments);
     }
 }

@@ -1,4 +1,4 @@
-using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -8,12 +8,12 @@ namespace FloorballTraining.UseCases.Seasons;
 
 public class ViewSeasonsAllUseCase(
         ISeasonRepository repository,
-        IMapper mapper) : IViewSeasonsAllUseCase
+        AppMapper mapper) : IViewSeasonsAllUseCase
     {
         public async Task<IReadOnlyList<SeasonDto>> ExecuteAsync()
         {
             var items = await repository.GetAllAsync();
-            return mapper.Map<IReadOnlyList<Season>, IReadOnlyList<SeasonDto>>(items);
+            return mapper.ToSeasonDtos(items);
         }
 
         public async Task<IReadOnlyList<SeasonDto>> ExecuteAsync(int? clubId)
@@ -21,6 +21,6 @@ public class ViewSeasonsAllUseCase(
             if (!clubId.HasValue) return await ExecuteAsync();
 
             var items = await repository.GetSeasonsByClubIdAsync(clubId);
-            return mapper.Map<IEnumerable<Season>, IReadOnlyList<SeasonDto>>(items);
+            return mapper.ToSeasonDtos(items);
         }
     }

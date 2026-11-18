@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -8,12 +8,12 @@ namespace FloorballTraining.UseCases.TeamMembers;
 
 public class ViewTeamMembersAllUseCase(
 ITeamMemberRepository repository,
-    IMapper mapper) : IViewTeamMembersAllUseCase
+    AppMapper mapper) : IViewTeamMembersAllUseCase
 {
     public async Task<IReadOnlyList<TeamMemberDto>> ExecuteAsync()
     {
         var items = await repository.GetAllAsync();
 
-        return mapper.Map<IReadOnlyList<TeamMember>, IReadOnlyList<TeamMemberDto>>(items);
+        return mapper.ToTeamMemberDtos(items);
     }
 }

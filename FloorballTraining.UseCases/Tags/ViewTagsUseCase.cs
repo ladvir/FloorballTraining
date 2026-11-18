@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
@@ -9,7 +8,7 @@ namespace FloorballTraining.UseCases.Tags;
 
 public class ViewTagsWithSpecificationUseCase(
     ITagRepository repository,
-    IMapper mapper) : IViewTagsWithSpecificationUseCase
+    AppMapper mapper) : IViewTagsWithSpecificationUseCase
 {
     public async Task<Pagination<TagDto>> ViewPaginatedAsync(TagSpecificationParameters parameters)
     {
@@ -26,7 +25,7 @@ public class ViewTagsWithSpecificationUseCase(
     {
         var specification = new TagsWithParentTagSpecification(parameters);
         var items = await repository.GetListAsync(specification);
-        return mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
+        return mapper.ToTagDtos(items);
 
     }
 }

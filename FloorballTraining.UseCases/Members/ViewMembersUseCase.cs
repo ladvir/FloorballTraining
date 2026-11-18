@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
@@ -10,7 +9,7 @@ namespace FloorballTraining.UseCases.Members;
 
 public class ViewMembersWithSpecificationUseCase(
     IMemberRepository repository,
-    IMapper mapper) : IViewMembersWithSpecificationUseCase
+    AppMapper mapper) : IViewMembersWithSpecificationUseCase
 {
     public async Task<Pagination<MemberDto>> ViewPaginatedAsync(MemberSpecificationParameters parameters)
     {
@@ -27,7 +26,7 @@ public class ViewMembersWithSpecificationUseCase(
     {
         var specification = new MembersSpecification(parameters);
         var items = await repository.GetListAsync(specification);
-        return mapper.Map<IReadOnlyList<Member>, IReadOnlyList<MemberDto>>(items);
+        return mapper.ToMemberDtos(items);
 
     }
 }

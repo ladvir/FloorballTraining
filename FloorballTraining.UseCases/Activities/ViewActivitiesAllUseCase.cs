@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Activities.Interfaces;
@@ -8,12 +8,12 @@ namespace FloorballTraining.UseCases.Activities;
 
 public class ViewActivitiesAllUseCase(
     IActivityRepository repository,
-    IMapper mapper) : IViewActivitiesAllUseCase
+    AppMapper mapper) : IViewActivitiesAllUseCase
 {
     public async Task<IReadOnlyList<ActivityDto>> ExecuteAsync()
     {
         var items = await repository.GetAllAsync();
 
-        return mapper.Map<IReadOnlyList<Activity>, IReadOnlyList<ActivityDto>>(items);
+        return mapper.ToActivityDtos(items);
     }
 }

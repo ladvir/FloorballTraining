@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -8,7 +7,7 @@ namespace FloorballTraining.UseCases.Places;
 
 public class ViewAgeGroupsUseCase(
     IAgeGroupRepository repository,
-    IMapper mapper) : IViewAgeGroupsUseCase
+    AppMapper mapper) : IViewAgeGroupsUseCase
 {
     public async Task<Pagination<AgeGroupDto>> ExecuteAsync(AgeGroupSpecificationParameters parameters)
     {
@@ -20,7 +19,7 @@ public class ViewAgeGroupsUseCase(
 
         var items = await repository.GetListAsync(specification);
 
-        var data = mapper.Map<IReadOnlyList<CoreBusiness.AgeGroup>, IReadOnlyList<AgeGroupDto>>(items);
+        var data = mapper.ToAgeGroupDtos(items);
 
         return new Pagination<AgeGroupDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

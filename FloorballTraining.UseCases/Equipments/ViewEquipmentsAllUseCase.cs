@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Equipments.Interfaces;
@@ -8,13 +8,13 @@ namespace FloorballTraining.UseCases.Equipments;
 
 public class ViewEquipmentsAllUseCase(
     IEquipmentRepository equipmentRepository,
-    IMapper mapper)
+    AppMapper mapper)
     : IViewEquipmentsAllUseCase
 {
     public async Task<IReadOnlyList<EquipmentDto>> ExecuteAsync()
     {
         var equipments = await equipmentRepository.GetAllAsync();
 
-        return mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
+        return mapper.ToEquipmentDtos(equipments);
     }
 }

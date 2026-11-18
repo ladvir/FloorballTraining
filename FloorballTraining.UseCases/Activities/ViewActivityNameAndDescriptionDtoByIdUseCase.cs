@@ -1,4 +1,4 @@
-using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
@@ -6,7 +6,7 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities;
 
-public class ViewActivityNameAndDescriptionByIdUseCase(IActivityRepository repository, IMapper mapper) : IViewActivityNameAndDescriptionByIdUseCase
+public class ViewActivityNameAndDescriptionByIdUseCase(IActivityRepository repository, AppMapper mapper) : IViewActivityNameAndDescriptionByIdUseCase
 {
     public async Task<ActivityNameAndDescriptionDto> ExecuteAsync(int tagId)
     {
@@ -14,6 +14,6 @@ public class ViewActivityNameAndDescriptionByIdUseCase(IActivityRepository repos
  
         var tag = await repository.GetWithSpecification(specification);
  
-        return mapper.Map<Activity?, ActivityNameAndDescriptionDto>(tag);
+        return mapper.ToActivityNameAndDescriptionDto(tag)!; // null stays null (as before), callers check
     }
 }

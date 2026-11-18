@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -7,12 +7,12 @@ namespace FloorballTraining.UseCases.Tags;
 
 public class ViewTagsAllUseCase(
     ITagRepository repository,
-    IMapper mapper) : IViewTagsAllUseCase
+    AppMapper mapper) : IViewTagsAllUseCase
 {
     public async Task<IReadOnlyList<TagDto>> ExecuteAsync()
     {
         var items = await repository.GetAllAsync();
 
-        return mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
+        return mapper.ToTagDtos(items);
     }
 }
