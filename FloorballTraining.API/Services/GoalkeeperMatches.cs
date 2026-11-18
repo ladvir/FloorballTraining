@@ -7,7 +7,8 @@ namespace FloorballTraining.API.Services;
 /// <summary>One goalkeeper's tracked match, shared by <see cref="XpService"/> (clean sheet / save % XP)
 /// and <see cref="BadgeService"/> (clean-sheet badges) so both read the match the same way.</summary>
 public record GoalkeeperMatch(
-    int MemberId, int ParticipantId, int TeamId, DateTime When, bool CleanSheet, bool SavePctHit);
+    int MemberId, int ParticipantId, int TeamId, DateTime When, bool CleanSheet, bool SavePctHit,
+    int TrackerId, int Saves, int Conceded, bool Solo);
 
 public static class GoalkeeperMatches
 {
@@ -54,7 +55,8 @@ public static class GoalkeeperMatches
                     var shots = saves.GetValueOrDefault(g.Id) + t.Conceded;
                     hit = shots >= XpRules.SavePctMinShots && saves.GetValueOrDefault(g.Id) * 100 >= XpRules.SavePctThreshold * shots;
                 }
-                result.Add(new GoalkeeperMatch(g.MemberId, g.Id, t.TeamId, t.When, t.Conceded <= 0, hit));
+                result.Add(new GoalkeeperMatch(g.MemberId, g.Id, t.TeamId, t.When, t.Conceded <= 0, hit,
+                    t.Id, saves.GetValueOrDefault(g.Id), t.Conceded, played.Count == 1));
             }
         }
         return result;

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import type { Locale } from 'date-fns/locale'
 import { toPng } from 'html-to-image'
-import { Trophy, Zap, Goal, CalendarCheck, Award, Gift, Download } from 'lucide-react'
+import { Trophy, Zap, Goal, CalendarCheck, Award, Gift, Download, Shield } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -161,6 +161,16 @@ export function TeamSeasonReportTab({ teamId, initialLabel = 'season' }: Props) 
                 title={t('seasonReport.topAttendance')}
                 rows={selected.topAttendance}
                 format={(v) => `${v}%`}
+                expanded={showDetails}
+                attendance
+              />
+              <RankList
+                icon={<Shield className="h-3.5 w-3.5 text-indigo-500" />}
+                title={t('seasonReport.topGoalkeepers')}
+                rows={selected.topGoalkeepers ?? []}
+                format={(v) => `${v}%`}
+                expanded={showDetails}
+                goalkeeper
               />
               <BadgeList
                 icon={<Award className="h-3.5 w-3.5 text-amber-500" />}
@@ -187,6 +197,8 @@ function RankList({
   rows,
   format,
   expanded = false,
+  attendance = false,
+  goalkeeper = false,
 }: {
   icon: ReactNode
   title: string
@@ -194,6 +206,10 @@ function RankList({
   format: (value: number) => string
   /** Show each player's per-match details inline instead of on hover. */
   expanded?: boolean
+  /** Attendance list: show "present/total" and the per-training table instead of matches. */
+  attendance?: boolean
+  /** Goalkeeper list: per-match saves / goals against in the detail. */
+  goalkeeper?: boolean
 }) {
   const { t } = useTranslation()
   return (
@@ -207,28 +223,64 @@ function RankList({
       ) : (
         <ol className={expanded ? 'space-y-3' : 'space-y-1.5'}>
           {rows.map((r, i) => {
-            const detail = {
-              head: [
-                t('seasonReport.colDate'),
-                t('seasonReport.match'),
-                t('seasonReport.colGoals'),
-                t('seasonReport.colAssists'),
-              ],
-              rows: (r.matches ?? []).map((m) => [
-                new Date(m.date).toLocaleDateString(),
-                m.label || t('seasonReport.match'),
-                m.goals,
-                m.assists,
-              ]),
-              foot: r.matches?.length
-                ? [
-                    t('seasonReport.total'),
-                    '',
-                    r.matches.reduce((s, m) => s + m.goals, 0),
-                    r.matches.reduce((s, m) => s + m.assists, 0),
-                  ]
-                : undefined,
-            }
+            const gk = r.goalkeeperMatches ?? []
+            const detail = goalkeeper
+              ? {
+                  head: [
+                    t('seasonReport.colDate'),
+                    t('seasonReport.colTeam'),
+                    t('seasonReport.match'),
+                    t('seasonReport.colSaves'),
+                    t('seasonReport.colConceded'),
+                  ],
+                  rows: gk.map((m) => [
+                    new Date(m.date).toLocaleDateString(),
+                    m.teamName ?? '',
+                    m.label || t('seasonReport.match'),
+                    m.saves,
+                    m.conceded,
+                  ]),
+                  foot: gk.length
+                    ? [
+                        t('seasonReport.total'),
+                        '',
+                        '',
+                        gk.reduce((s, m) => s + m.saves, 0),
+                        gk.reduce((s, m) => s + m.conceded, 0),
+                      ]
+                    : undefined,
+                }
+              : attendance
+                ? {
+                    head: [t('seasonReport.colTeam'), t('seasonReport.colStatus')],
+                    rows: attendanceByTeam(r),
+                    foot: undefined,
+                  }
+                : {
+                    head: [
+                      t('seasonReport.colDate'),
+                      t('seasonReport.colTeam'),
+                      t('seasonReport.match'),
+                      t('seasonReport.colGoals'),
+                      t('seasonReport.colAssists'),
+                    ],
+                    rows: (r.matches ?? []).map((m) => [
+                      new Date(m.date).toLocaleDateString(),
+                      m.teamName ?? '',
+                      m.label || t('seasonReport.match'),
+                      m.goals,
+                      m.assists,
+                    ]),
+                    foot: r.matches?.length
+                      ? [
+                          t('seasonReport.total'),
+                          '',
+                          '',
+                          r.matches.reduce((s, m) => s + m.goals, 0),
+                          r.matches.reduce((s, m) => s + m.assists, 0),
+                        ]
+                      : undefined,
+                  }
             return (
               <li
                 key={r.memberId}
@@ -244,6 +296,7 @@ function RankList({
                     />
                   </span>
                   <span className="flex-shrink-0 font-medium tabular-nums text-gray-700">
+                    {attendance && r.total ? `${r.present}/${r.total} · ` : ''}
                     {format(r.value)}
                   </span>
                 </div>
@@ -286,12 +339,17 @@ function XpRankList({
           {rows.map((r, i) => {
             const isTop = topValue! > 0 && r.value === topValue
             const detail = {
-              head: [t('seasonReport.colReason'), t('seasonReport.colXp')],
+              head: [
+                t('seasonReport.colReason'),
+                t('seasonReport.colTeam'),
+                t('seasonReport.colXp'),
+              ],
               rows: r.breakdown.map((b) => [
                 t(`xp.type.${b.type}`, { defaultValue: b.type }),
+                b.teamName ?? '',
                 `+${b.points}`,
               ]),
-              foot: [t('seasonReport.total'), `${r.value}`],
+              foot: [t('seasonReport.total'), '', `${r.value}`],
             }
             return (
               <li
@@ -393,25 +451,23 @@ type DetailProps = {
 
 /** Small styled table (header, rows, optional total row). Numeric cells are right-aligned. */
 function DetailTable({ head, rows, foot, className = '' }: DetailProps & { className?: string }) {
+  if (rows.length === 0) return null
+  // A column is right-aligned (header + cells) only when every body value in it is numeric.
+  const isNum = (v: string | number) => typeof v === 'number' || /^\+?\d+$/.test(v)
+  const numeric = head.map((_, i) => rows.every((r) => isNum(r[i])))
+  const align = (i: number) => (numeric[i] ? 'text-right tabular-nums' : 'text-left')
   const cell = (v: string | number, i: number) => (
-    <td
-      key={i}
-      className={`px-2 py-1 ${typeof v === 'number' || /^\+?\d+$/.test(v) ? 'text-right tabular-nums' : ''}`}
-    >
+    <td key={i} className={`px-2 py-1 ${align(i)}`}>
       {v}
     </td>
   )
-  if (rows.length === 0) return null
   return (
     <div className={className}>
       <table className="w-full text-xs text-gray-700">
         <thead>
           <tr className="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400">
             {head.map((h, i) => (
-              <th
-                key={i}
-                className={`px-2 py-1 font-medium ${i === 0 ? 'text-left' : 'text-right'}`}
-              >
+              <th key={i} className={`px-2 py-1 font-medium ${align(i)}`}>
                 {h}
               </th>
             ))}
@@ -447,6 +503,19 @@ function HoverTable({
       </div>
     </span>
   )
+}
+
+/** Attendance detail rows: one per team, "present/total". */
+function attendanceByTeam(r: PlayerRankRowDto): string[][] {
+  const byTeam = new Map<string, { present: number; total: number }>()
+  for (const x of r.trainings ?? []) {
+    const k = x.teamName ?? ''
+    const e = byTeam.get(k) ?? { present: 0, total: 0 }
+    e.total++
+    if (x.present) e.present++
+    byTeam.set(k, e)
+  }
+  return [...byTeam].map(([team, e]) => [team, `${e.present}/${e.total}`])
 }
 
 function monthLabel(label: string, locale: Locale) {

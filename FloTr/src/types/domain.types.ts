@@ -631,7 +631,25 @@ export interface PlayerRankRowDto {
   name: string
   value: number
   /** Scoring ranking only: goals/assists per match in the period (hover tooltip). */
-  matches?: { date: string; label?: string | null; goals: number; assists: number }[]
+  matches?: {
+    date: string
+    teamName?: string | null
+    label?: string | null
+    goals: number
+    assists: number
+  }[]
+  /** Attendance ranking only: trainings attended / held (missed = total - present). */
+  present?: number
+  total?: number
+  trainings?: { date: string; teamName?: string | null; present: boolean }[]
+  /** Goalkeeper ranking only: per-match saves / conceded goals (value = save %). */
+  goalkeeperMatches?: {
+    date: string
+    teamName?: string | null
+    label?: string | null
+    saves: number
+    conceded: number
+  }[]
 }
 
 export interface XpRankRowDto {
@@ -642,7 +660,7 @@ export interface XpRankRowDto {
   levelIndex: number
   levelName: string
   /** XP earned in the period by event type, largest first (hover tooltip). */
-  breakdown: { type: string; points: number }[]
+  breakdown: { type: string; teamName?: string | null; points: number }[]
 }
 
 export interface BadgeEarnRowDto {
@@ -660,6 +678,7 @@ export interface MonthlyTeamReportDto {
   topXp: XpRankRowDto[]
   topScoring: PlayerRankRowDto[]
   topAttendance: PlayerRankRowDto[]
+  topGoalkeepers: PlayerRankRowDto[]
   topBadges: BadgeEarnRowDto[]
   topRewards: PlayerRankRowDto[]
 }

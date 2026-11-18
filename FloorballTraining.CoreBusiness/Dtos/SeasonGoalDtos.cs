@@ -88,6 +88,29 @@ public class PlayerRankRowDto
     public double Value { get; set; }
     /// <summary>Scoring ranking only: goals/assists per match in the period (hover tooltip).</summary>
     public List<ScoringMatchDto> Matches { get; set; } = [];
+    /// <summary>Attendance ranking only: trainings attended / held in the period (Total - Present = missed).</summary>
+    public int Present { get; set; }
+    public int Total { get; set; }
+    public List<AttendanceItemDto> Trainings { get; set; } = [];
+    /// <summary>Goalkeeper ranking only: per-match saves / conceded goals (Value = save %).</summary>
+    public List<GoalkeeperMatchDto> GoalkeeperMatches { get; set; } = [];
+}
+
+public class GoalkeeperMatchDto
+{
+    public DateTime Date { get; set; }
+    public string? TeamName { get; set; }
+    /// <summary>Opponent name, else the appointment name.</summary>
+    public string? Label { get; set; }
+    public int Saves { get; set; }
+    public int Conceded { get; set; }
+}
+
+public class AttendanceItemDto
+{
+    public DateTime Date { get; set; }
+    public string? TeamName { get; set; }
+    public bool Present { get; set; }
 }
 
 /// <summary>One badge earned by a player — name/description are frontend i18n keys off <see cref="Code"/>.</summary>
@@ -122,6 +145,7 @@ public class MonthlyTeamReportDto
     public List<XpRankRowDto> TopXp { get; set; } = [];
     public List<PlayerRankRowDto> TopScoring { get; set; } = [];
     public List<PlayerRankRowDto> TopAttendance { get; set; } = [];
+    public List<PlayerRankRowDto> TopGoalkeepers { get; set; } = [];
     public List<BadgeEarnRowDto> TopBadges { get; set; } = [];
     public List<PlayerRankRowDto> TopRewards { get; set; } = [];
 }
@@ -153,11 +177,14 @@ public class XpBreakdownDto
     /// <summary>An <see cref="Enums.XpEventType"/> name — frontend i18n key is xp.type.{type}.</summary>
     public string Type { get; set; } = string.Empty;
     public int Points { get; set; }
+    /// <summary>Team the points came from; null for sources without a team (coach awards, challenges, …).</summary>
+    public string? TeamName { get; set; }
 }
 
 public class ScoringMatchDto
 {
     public DateTime Date { get; set; }
+    public string? TeamName { get; set; }
     /// <summary>Opponent name, else the appointment name; null when the tracker has no match.</summary>
     public string? Label { get; set; }
     public int Goals { get; set; }

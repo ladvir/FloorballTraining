@@ -189,10 +189,11 @@ public class SeasonGoalsController(
 
     private const int RankTakeCount = 7;
 
-    private sealed record XpRow(int MemberId, int Points, DateTime When, XpEventType Type);
+    private sealed record XpRow(int MemberId, int Points, DateTime When, XpEventType Type, XpSourceKind Kind, int? SourceId, string? TeamName = null);
     /// <summary>When = the match's date (appointment start), not when the tracker was created — trackers are often entered days later.</summary>
-    private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When, int TrackerId, string? Label);
-    private sealed record AttendanceRow(int MemberId, int AppointmentId, int Status, DateTime When);
+    private sealed record ScoringRow(int MemberId, string Code, int Delta, DateTime When, int TrackerId, string? Label, string? TeamName);
+    private sealed record AttendanceRow(int MemberId, int AppointmentId, int Status, DateTime When, string? TeamName);
+    private sealed record GkRow(int MemberId, DateTime When, string? Label, string TeamName, int Saves, int Conceded);
     private sealed record EarnRow(int MemberId, DateTime When);
     private sealed record BadgeEarnRow(int MemberId, string Code, DateTime When);
 
@@ -259,8 +260,9 @@ public class SeasonGoalsController(
 
         var xpRaw = await context.XpEvents.AsNoTracking()
             .Where(e => rosterMemberIds.Contains(e.MemberId) && e.OccurredAt >= seasonStart && e.OccurredAt < reportEndExcl)
-            .Select(e => new XpRow(e.MemberId, e.Points, e.OccurredAt, e.Type))
+            .Select(e => new XpRow(e.MemberId, e.Points, e.OccurredAt, e.Type, e.SourceKind, e.SourceId, null))
             .ToListAsync();
+        await AttachXpTeamNamesAsync(xpRaw);
 
         var scoringRaw = (await context.StatTrackerEntries.AsNoTracking()
             .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker != null
@@ -279,11 +281,31 @@ public class SeasonGoalsController(
                 OpponentName = e.StatTracker.Appointment != null && e.StatTracker.Appointment.Opponent != null
                     ? e.StatTracker.Appointment.Opponent.Name : null,
                 AppointmentName = e.StatTracker.Appointment != null ? e.StatTracker.Appointment.Name : null,
+                TeamName = e.StatTracker.Team!.Name,
             })
             .ToListAsync())
             // Names are coalesced here, not in SQL: Opponent.Name and Appointment.Name have different collations.
             .Select(x => new ScoringRow(x.MemberId, x.Code, x.Delta, x.When, x.StatTrackerId,
-                string.IsNullOrEmpty(x.OpponentName) ? x.AppointmentName : x.OpponentName))
+                string.IsNullOrEmpty(x.OpponentName) ? x.AppointmentName : x.OpponentName, x.TeamName))
+            .ToList();
+
+        // Goalkeepers: only matches with a single playing goalkeeper (conceded goals can't be split between two).
+        var gkMatches = (await GoalkeeperMatches.LoadAsync(context))
+            .Where(m => m.TeamId == teamId && m.Solo && rosterMemberIds.Contains(m.MemberId)
+                        && m.When >= seasonStart && m.When < reportEndExcl)
+            .ToList();
+        var gkTrackerIds = gkMatches.Select(m => m.TrackerId).Distinct().ToList();
+        var gkLabels = (await context.StatTrackers.AsNoTracking().Where(t => gkTrackerIds.Contains(t.Id))
+                .Select(t => new
+                {
+                    t.Id,
+                    Opponent = t.Appointment != null && t.Appointment.Opponent != null ? t.Appointment.Opponent.Name : null,
+                    AppointmentName = t.Appointment != null ? t.Appointment.Name : null,
+                })
+                .ToListAsync())
+            .ToDictionary(x => x.Id, x => string.IsNullOrEmpty(x.Opponent) ? x.AppointmentName : x.Opponent);
+        var gkRaw = gkMatches
+            .Select(m => new GkRow(m.MemberId, m.When, gkLabels.GetValueOrDefault(m.TrackerId), team.Name, m.Saves, m.Conceded))
             .ToList();
 
         // Attendance stats count trainings only — matches track participation via the lineup/
@@ -293,7 +315,7 @@ public class SeasonGoalsController(
                         && a.Appointment.AppointmentType == AppointmentType.Training
                         && rosterMemberIds.Contains(a.MemberId)
                         && a.Appointment.Start >= seasonStart && a.Appointment.Start < reportEndExcl)
-            .Select(a => new AttendanceRow(a.MemberId, a.AppointmentId, a.Status, a.Appointment!.Start))
+            .Select(a => new AttendanceRow(a.MemberId, a.AppointmentId, a.Status, a.Appointment!.Start, a.Appointment.Team!.Name))
             .ToListAsync();
 
         // Players who also train with another team: an absence here is not counted when they were
@@ -329,6 +351,7 @@ public class SeasonGoalsController(
                 TopXp = RankXp(xpRaw, monthStart, monthEndExcl, priorXpByMember, names, take),
                 TopScoring = RankScoring(scoringRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
                 TopAttendance = RankAttendance(attendanceRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
+                TopGoalkeepers = RankGoalkeepers(gkRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
                 TopBadges = ListBadges(badgeRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take, badgeIcons),
                 TopRewards = RankCount(rewardRaw.Where(x => x.When >= monthStart && x.When < monthEndExcl), names, take),
             });
@@ -340,11 +363,39 @@ public class SeasonGoalsController(
             TopXp = RankXp(xpRaw, seasonStart, reportEndExcl, priorXpByMember, names, take),
             TopScoring = RankScoring(scoringRaw, names, take),
             TopAttendance = RankAttendance(attendanceRaw, names, take),
+            TopGoalkeepers = RankGoalkeepers(gkRaw, names, take),
             TopBadges = ListBadges(badgeRaw, names, take, badgeIcons),
             TopRewards = RankCount(rewardRaw, names, take),
         };
 
         return Ok(dto);
+    }
+
+    /// <summary>Fills <see cref="XpRow.TeamName"/> for XP sources that belong to a team (attendance, tracked match stats); other sources stay null.</summary>
+    private async Task AttachXpTeamNamesAsync(List<XpRow> rows)
+    {
+        List<int> Ids(XpSourceKind k) => rows.Where(r => r.Kind == k && r.SourceId != null).Select(r => r.SourceId!.Value).Distinct().ToList();
+        var att = Ids(XpSourceKind.Attendance);
+        var ent = Ids(XpSourceKind.StatTrackerEntry);
+        var par = Ids(XpSourceKind.StatTrackerParticipant);
+        var attTeams = await context.AppointmentAttendances.AsNoTracking().Where(a => att.Contains(a.Id) && a.Appointment!.Team != null)
+            .Select(a => new { a.Id, Name = a.Appointment!.Team!.Name }).ToDictionaryAsync(x => x.Id, x => x.Name);
+        var entTeams = await context.StatTrackerEntries.AsNoTracking().Where(e => ent.Contains(e.Id))
+            .Select(e => new { e.Id, Name = e.StatTracker!.Team!.Name }).ToDictionaryAsync(x => x.Id, x => x.Name);
+        var parTeams = await context.StatTrackerParticipants.AsNoTracking().Where(p => par.Contains(p.Id))
+            .Select(p => new { p.Id, Name = p.StatTracker!.Team!.Name }).ToDictionaryAsync(x => x.Id, x => x.Name);
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            var map = r.Kind switch
+            {
+                XpSourceKind.Attendance => attTeams,
+                XpSourceKind.StatTrackerEntry => entTeams,
+                XpSourceKind.StatTrackerParticipant => parTeams,
+                _ => null,
+            };
+            if (map != null && r.SourceId != null && map.TryGetValue(r.SourceId.Value, out var n)) rows[i] = r with { TeamName = n };
+        }
     }
 
     /// <summary>
@@ -374,8 +425,8 @@ public class SeasonGoalsController(
                     LevelIndex = career.RankIndex,
                     LevelName = career.Rank,
                     Breakdown = allRows.Where(r => r.MemberId == kv.Key && r.When >= periodStart && r.When < periodEndExcl)
-                        .GroupBy(r => r.Type)
-                        .Select(g => new XpBreakdownDto { Type = g.Key.ToString(), Points = g.Sum(x => x.Points) })
+                        .GroupBy(r => (r.Type, r.TeamName))
+                        .Select(g => new XpBreakdownDto { Type = g.Key.Type.ToString(), TeamName = g.Key.TeamName, Points = g.Sum(x => x.Points) })
                         .Where(b => b.Points != 0).OrderByDescending(b => b.Points).ToList(),
                 };
             })
@@ -430,6 +481,7 @@ public class SeasonGoalsController(
                     {
                         Date = m.Min(x => x.When),
                         Label = m.First().Label,
+                        TeamName = m.First().TeamName,
                         Goals = m.Where(x => x.Code == "goals").Sum(x => x.Delta),
                         Assists = m.Where(x => x.Code == "assists").Sum(x => x.Delta),
                     })
@@ -441,16 +493,40 @@ public class SeasonGoalsController(
         return TakeTopWithTies(ranked, r => r.Value, take);
     }
 
+    /// <summary>Save % = saves / (saves + conceded) over the period's matches; goalkeepers with no shots faced are skipped.</summary>
+    private static List<PlayerRankRowDto> RankGoalkeepers(IEnumerable<GkRow> rows, Dictionary<int, string> names, int take)
+    {
+        var ranked = rows.GroupBy(r => r.MemberId)
+            .Select(g => new { g, Shots = g.Sum(x => x.Saves + x.Conceded) })
+            .Where(x => x.Shots > 0)
+            .Select(x => new PlayerRankRowDto
+            {
+                MemberId = x.g.Key,
+                Name = names.GetValueOrDefault(x.g.Key, "?"),
+                Value = Math.Round(100.0 * x.g.Sum(m => m.Saves) / x.Shots, 1),
+                GoalkeeperMatches = x.g.OrderBy(m => m.When)
+                    .Select(m => new GoalkeeperMatchDto { Date = m.When, TeamName = m.TeamName, Label = m.Label, Saves = m.Saves, Conceded = m.Conceded })
+                    .ToList(),
+            })
+            .OrderByDescending(r => r.Value)
+            .ToList();
+        return TakeTopWithTies(ranked, r => r.Value, take);
+    }
+
     private static List<PlayerRankRowDto> RankAttendance(IEnumerable<AttendanceRow> rows, Dictionary<int, string> names, int take)
     {
         var ranked = rows.GroupBy(r => r.MemberId)
-            .Select(g => new { MemberId = g.Key, Total = g.Count(), Present = g.Count(x => x.Status == 1) })
+            .Select(g => new { MemberId = g.Key, Total = g.Count(), Present = g.Count(x => x.Status == 1), Items = g })
             .Where(x => x.Present > 0) // only players with non-zero attendance
             .Select(x => new PlayerRankRowDto
             {
                 MemberId = x.MemberId,
                 Name = names.GetValueOrDefault(x.MemberId, "?"),
                 Value = Math.Round(100.0 * x.Present / x.Total, 1),
+                Present = x.Present,
+                Total = x.Total,
+                Trainings = x.Items.OrderBy(i => i.When)
+                    .Select(i => new AttendanceItemDto { Date = i.When, TeamName = i.TeamName, Present = i.Status == 1 }).ToList(),
             })
             .OrderByDescending(r => r.Value)
             .ToList();
