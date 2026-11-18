@@ -78,7 +78,7 @@ public class AccountDeletionTests
             db.XpEvents.Add(new XpEvent
             {
                 MemberId = memberId, Type = XpEventType.TrainingAttendance, Points = 10,
-                SourceKind = XpSourceKind.Attendance, SourceId = 1, OccurredAt = DateTime.UtcNow,
+                SourceKind = XpSourceKind.Attendance, SourceId = Random.Shared.Next(1_000_000, int.MaxValue), OccurredAt = DateTime.UtcNow,
             });
             await db.SaveChangesAsync();
         }

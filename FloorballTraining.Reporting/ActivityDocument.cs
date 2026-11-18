@@ -31,7 +31,7 @@ public class ActivityDocument : IDocument
 
         Settings.License = LicenseType.Community;
 
-        Settings.CheckIfAllTextGlyphsAreAvailable = false;
+        Settings.ThrowOnMissingTextGlyphs = false;
     }
 
     public DocumentMetadata GetMetadata() => new()
@@ -54,7 +54,7 @@ public class ActivityDocument : IDocument
             .Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri).FontFamily(Fonts.Verdana));
+                page.DefaultTextStyle(x => x.FontSize(10));
                 page.Margin(8, Unit.Millimetre);
 
                 page.Header().Element(ComposeHeader);

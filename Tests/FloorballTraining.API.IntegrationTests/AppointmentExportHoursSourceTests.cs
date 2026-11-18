@@ -23,7 +23,9 @@ namespace FloorballTraining.API.IntegrationTests;
 [Collection("Api")]
 public class AppointmentExportHoursSourceTests(CustomWebApplicationFactory factory) : IAsyncLifetime
 {
-    private readonly DateTime _start = new(2026, 3, 5, 18, 0, 0, DateTimeKind.Utc);
+    // A month no other test class seeds into: the admin "all" export aggregates every appointment
+    // system-wide, and the shared DB keeps other classes' March-2026 attendance forever.
+    private readonly DateTime _start = new(2035, 3, 5, 18, 0, 0, DateTimeKind.Utc);
     private string _coachUserId = "";
     private int _appointmentId;
     private int _memberId;

@@ -28,7 +28,7 @@ public class PlayerReportDocument : IDocument
         _recommendations = recommendations;
 
         Settings.License = LicenseType.Community;
-        Settings.CheckIfAllTextGlyphsAreAvailable = false;
+        Settings.ThrowOnMissingTextGlyphs = false;
     }
 
     /// <summary>Renders this document to PDF bytes (keeps the QuestPDF dependency inside this assembly).</summary>
@@ -52,7 +52,7 @@ public class PlayerReportDocument : IDocument
         {
             page.Size(PageSizes.A4);
             page.Margin(12, Unit.Millimetre);
-            page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri));
+            page.DefaultTextStyle(x => x.FontSize(10));
 
             page.Header().Element(ComposeHeader);
             page.Content().Element(ComposeContent);

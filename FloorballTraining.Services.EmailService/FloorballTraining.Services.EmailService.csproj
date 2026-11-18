@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="4.17.0" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
+    <PackageReference Include="MailKit" Version="5.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
   </ItemGroup>
 
 </Project>

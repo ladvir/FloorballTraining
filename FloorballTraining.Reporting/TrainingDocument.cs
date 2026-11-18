@@ -41,7 +41,7 @@ public class TrainingDocument : IDocument
         _options = options ?? new PdfOptions();
         Settings.License = LicenseType.Community;
 
-        Settings.CheckIfAllTextGlyphsAreAvailable = false;
+        Settings.ThrowOnMissingTextGlyphs = false;
 
         if (_options.IncludeImages && !_options.Compact)
             PreloadImages();
@@ -113,7 +113,7 @@ public class TrainingDocument : IDocument
             .Page(page =>
             {
                 page.Size(_pageSize);
-                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri).FontFamily(Fonts.Verdana));
+                page.DefaultTextStyle(x => x.FontSize(10));
                 page.Margin(8, Unit.Millimetre);
 
                 page.Header().Element(ComposeHeader);
