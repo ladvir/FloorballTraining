@@ -48,12 +48,12 @@ builder.Services
     .AddBackgroundJobs(builder.Configuration, builder.Environment);
 
 // Honour X-Forwarded-For/Proto from the reverse proxy so the real client IP is
-// available to audit logging and rate limiting. KnownNetworks/Proxies are cleared
+// available to audit logging and rate limiting. KnownIPNetworks/Proxies are cleared
 // because the proxy address is not fixed in our PaaS/container deployment.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
 

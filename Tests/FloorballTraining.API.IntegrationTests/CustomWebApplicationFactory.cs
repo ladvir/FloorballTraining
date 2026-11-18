@@ -47,6 +47,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             var toRemove = services.Where(d =>
                 d.ServiceType == typeof(DbContextOptions<FloorballTrainingContext>) ||
                 d.ServiceType == typeof(DbContextOptions) ||
+                // EF 9+: provider setup is kept as a separate options-configuration service.
+                d.ServiceType == typeof(IDbContextOptionsConfiguration<FloorballTrainingContext>) ||
                 d.ServiceType == typeof(IDbContextFactory<FloorballTrainingContext>) ||
                 d.ServiceType == typeof(FloorballTrainingContext) ||
                 (d.ServiceType.IsGenericType &&
