@@ -26,7 +26,7 @@ public class MemberDto : BaseEntityDto
     public DateTime? LastLoginAt { get; set; }
     public string? PreferredLanguage { get; set; }
 
-    public ClubDto Club { get; set; } = null!;
+    public ClubDto? Club { get; set; }
 
     public int ClubId { get; set; }
     public bool HasClubRoleClubAdmin { get; set; }
@@ -50,6 +50,8 @@ public class MemberDto : BaseEntityDto
 
     public string GetTeamRoleList()
     {
+        if (Club == null) return string.Empty;
+
         var teamMembers = Club.Teams.SelectMany(x => x.TeamMembers.Where(tm => tm.MemberId == Id).Select(mtm => new { mtm.Team.Name, mtm.IsCoach, mtm.IsPlayer }));
 
         if (!teamMembers.Any()) return string.Empty;

@@ -30,7 +30,9 @@ public class TeamEFCoreFactory(
                 entity.Id = dto.Id;
                 entity.Name = dto.Name;
                 entity.AgeGroupId = dto.AgeGroupId;
-                entity.AgeGroup = await ageGroupFactory.GetMergedOrBuild(dto.AgeGroup);
+                // AgeGroupId is the contract; the nested DTO is only merged when the client sent it.
+                if (dto.AgeGroup != null)
+                    entity.AgeGroup = await ageGroupFactory.GetMergedOrBuild(dto.AgeGroup);
                 entity.ClubId = dto.ClubId;
                 entity.SeasonId = dto.SeasonId;
                 entity.PersonsMin = dto.PersonsMin;

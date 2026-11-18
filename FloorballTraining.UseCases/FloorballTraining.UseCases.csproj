@@ -5,9 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;Production database</Configurations>
-    <!-- CS8601: Mapperly (like AutoMapper before) assigns a null navigation to a non-nullable DTO property
-         in the generated AppMapper.g.cs; severity of generated nullable warnings cannot be set via .editorconfig. -->
-    <NoWarn>$(NoWarn);CS8601</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

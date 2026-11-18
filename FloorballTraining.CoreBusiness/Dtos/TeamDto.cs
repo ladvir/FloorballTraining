@@ -4,10 +4,10 @@ public class TeamDto : BaseEntityDto
 {
     public string Name { get; set; } = null!;
 
-    public AgeGroupDto AgeGroup { get; set; } = null!;
+    public AgeGroupDto? AgeGroup { get; set; }
     public int AgeGroupId { get; set; }
 
-    public ClubDto Club { get; set; } = new();
+    public ClubDto? Club { get; set; }
     public int ClubId { get; set; }
 
     public int? SeasonId { get; set; }

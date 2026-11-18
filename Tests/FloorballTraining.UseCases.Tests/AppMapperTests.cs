@@ -105,7 +105,7 @@ public class AppMapperTests
 
         dto.Teams.Should().HaveCount(1);
         dto.Teams[0].Club.Should().BeSameAs(dto);
-        dto.Teams[0].TeamMembers[0].Member.Club.Should().BeSameAs(dto);
+        dto.Teams[0].TeamMembers[0].Member!.Club.Should().BeSameAs(dto);
     }
 
     [Fact]
