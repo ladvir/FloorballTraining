@@ -56,6 +56,15 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 .ToList();
             foreach (var d in toRemove) services.Remove(d);
 
+            // No Hangfire worker in tests: it writes to the single shared SQLite connection from a
+            // background thread, which intermittently fails other tests with "database is locked"
+            // (VideoEndpointsTests). Jobs are still enqueued; tests assert the enqueue, not the run.
+            var hangfireWorkers = services.Where(d =>
+                d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) &&
+                (d.ImplementationType?.Namespace ?? d.ImplementationFactory?.Method.DeclaringType?.Namespace ?? "")
+                    .StartsWith("Hangfire")).ToList();
+            foreach (var d in hangfireWorkers) services.Remove(d);
+
             services.AddDbContextFactory<FloorballTrainingContext>(
                 (sp, options) =>
                 {
